@@ -1,13 +1,20 @@
-import Nav from "./Nav";
-import { Outlet } from "react-router-dom";
+import type React from "react";
+import "../styles/global.css";
+import { ThemeProvider } from "../components/theme-provider";
 
-export function Layout() {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export default function RootLayout({ children }: LayoutProps) {
   return (
-    <div className="min-h-screen">
-      <Nav />
-      <main className=" ">
-        <Outlet />
-      </main>
-    </div>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <div className="min-h-screen font-sans antialiased">{children}</div>
+    </ThemeProvider>
   );
 }

@@ -2,9 +2,10 @@
 import App from "../components/App";
 import Layout from "../layouts/Layout.astro";
 
+// Enable SSR
 export const prerender = false;
 ---
 
-<Layout title="My Portfolio">
-  <App client:only />
+<Layout title="Codeforces Portal">
+  <App client:load />
 </Layout>
