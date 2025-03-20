@@ -1,8 +1,15 @@
 "use client";
-
-import type React from "react";
 import { useState } from "react";
-import { Menu, Github, Plus, Trash2, Edit, Save, Info } from "lucide-react";
+import {
+  Menu,
+  Github,
+  Plus,
+  Trash2,
+  Edit,
+  Save,
+  Info,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,7 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
 
 interface Contestant {
   id: string;
@@ -157,8 +163,12 @@ export default function ContestTrackerHome() {
           </Button>
           <h1 className="text-xl font-bold">SWE C.Tracker</h1>
         </div>
-        <Button variant="ghost" size="icon" className="text-white">
-          <Github className="h-6 w-6" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-white border-2 rounded-full"
+        >
+          <User className="h-6 w-6" />
         </Button>
       </header>
 
