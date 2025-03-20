@@ -1,12 +1,12 @@
 import ContestTrackerHome from "./pages/home";
-import Layout from "@/layouts/Layout";
+import ContestantDetails from "./pages/about";
 
 export default function App() {
+  const isAboutPage = window.location.pathname.includes("/about/");
+
   return (
-    <Layout>
-      <main className="min-h-screen">
-        <ContestTrackerHome />
-      </main>
-    </Layout>
+    <main className="min-h-screen">
+      {isAboutPage ? <ContestantDetails /> : <ContestTrackerHome />}
+    </main>
   );
 }

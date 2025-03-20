@@ -2,10 +2,18 @@
 import App from "../components/App";
 import Layout from "../layouts/Layout.astro";
 
-// Enable SSR
-export const prerender = false;
+export function getStaticPaths() {
+  return [
+    { params: { index: undefined } }, // Home page
+    { params: { index: "about" } }, // About page
+  ];
+}
+
+const { index } = Astro.params;
+const title =
+  index === "about" ? "About - Codeforces Portal" : "Codeforces Portal";
 ---
 
-<Layout title="Codeforces Portal">
+<Layout title={title}>
   <App client:load />
 </Layout>
