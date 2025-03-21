@@ -2,7 +2,6 @@ import type { APIRoute } from 'astro';
 import connect from '@/lib/connection';
 import User from '@/model/user';
 import jwt from 'jsonwebtoken';
-import type { Token } from '@/types/token';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -12,15 +11,15 @@ export const POST: APIRoute = async ({ request }) => {
     // Connect to database
     await connect();
 
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
       return new Response(
         JSON.stringify({
-          message: 'Invalid credentials',
+          message: 'Email already registered',
         }),
         {
-          status: 401,
+          status: 400,
           headers: {
             'Content-Type': 'application/json',
           },
@@ -28,38 +27,29 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Verify password
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return new Response(
-        JSON.stringify({
-          message: 'Invalid credentials',
-        }),
-        {
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-    }
+    // Create new user
+    console.log('🚀 ~ constPOST:APIRoute= ~ email:', email);
+    const username = String(email).split('@')[0];
+    console.log('🚀 ~ constPOST:APIRoute= ~ username:', username);
+    const user = new User({
+      email,
+      password, // Password will be hashed by mongoose pre-save hook
+      name: username,
+    });
 
-    const payload: Token = {
-      userId: user._id,
-    };
+    await user.save();
 
     // Generate JWT token
     const token = jwt.sign(
-      payload,
+      { userId: user._id },
       import.meta.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' },
     );
 
     return new Response(
       JSON.stringify({
-        _id: user._id,
         token,
-        message: 'Login successful',
+        message: 'Registration successful',
       }),
       {
         status: 200,
@@ -69,7 +59,7 @@ export const POST: APIRoute = async ({ request }) => {
       },
     );
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Registration error:', error);
     return new Response(
       JSON.stringify({
         message: 'Internal server error',

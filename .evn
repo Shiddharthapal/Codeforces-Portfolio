@@ -1,7 +1,0 @@
-# MongoDB Configuration
-
-MONGODB_URI=mongodb+srv://pal351069:221-1069-35@cluster0.panax.mongodb.net/codeForces_portal
-
-# Authentication
-
-JWT_SECRET=your-secure-jwt-secret

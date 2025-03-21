@@ -1,15 +1,7 @@
 "use client";
 import { useState } from "react";
-import {
-  Menu,
-  Github,
-  Plus,
-  Trash2,
-  Edit,
-  Save,
-  Info,
-  User,
-} from "lucide-react";
+import { userData } from "@/const/fakeData";
+import { Menu, Plus, Trash2, Edit, Save, Info, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -38,53 +30,7 @@ interface Contestant {
 }
 
 export default function ContestTrackerHome() {
-  const [contestants, setContestants] = useState<Contestant[]>([
-    {
-      id: "221-35-1065",
-      name: "Md. Iffatul Islam Anon",
-      vjudgeHandle: "http://vjudge.net/user/iffatul_",
-      cfHandle: "http://codeforces.com/profile/iffatul",
-      clistHandle: "http://clist.by/coder/iffatul_ar",
-      score: 0,
-      totalSolve: 90,
-      totalParticipation: 0,
-      solveCount: 1451,
-      averageSolve: 0,
-      cfRound913: "A",
-      atcoderBeginner: "A",
-      cf3: "3",
-    },
-    {
-      id: "221-35-993",
-      name: "Piyash Basak",
-      vjudgeHandle: "https://vjudge.net/user/Piyash",
-      cfHandle: "https://codeforces.com/profile/piyash",
-      clistHandle: "https://clist.by/coder/piyash_b",
-      score: 0,
-      totalSolve: 90,
-      totalParticipation: 0,
-      solveCount: 1379,
-      averageSolve: 0,
-      cfRound913: "A",
-      atcoderBeginner: "A",
-      cf3: "3",
-    },
-    {
-      id: "0242310005341058",
-      name: "Md. Eusha Hasan",
-      vjudgeHandle: "https://vjudge.net/user/esh29",
-      cfHandle: "https://codeforces.com/profile/eusha",
-      clistHandle: "https://clist.by/coder/esh29/",
-      score: 0,
-      totalSolve: 80,
-      totalParticipation: 0,
-      solveCount: 1101,
-      averageSolve: 0,
-      cfRound913: "A",
-      atcoderBeginner: "A",
-      cf3: "A",
-    },
-  ]);
+  const [contestants, setContestants] = useState<Contestant[]>(userData);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
