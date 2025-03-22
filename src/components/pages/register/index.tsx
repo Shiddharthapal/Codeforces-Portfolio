@@ -1,19 +1,17 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-  loginStart,
-  loginSuccess,
-  loginFailure,
-} from "@/redux/slices/authSlice";
-import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { handleRegister } from "@/lib/auth";
+import type { RootState } from "@/redux/store";
 
 interface RegisterFormData {
+  name: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -22,9 +20,10 @@ interface RegisterFormData {
 export default function Register() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { loading, error } = useAppSelector((state) => state.auth);
+  const { loading, error } = useAppSelector((state: RootState) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -35,51 +34,52 @@ export default function Register() {
   const password = watch("password");
 
   const onSubmit = async (data: RegisterFormData) => {
-    try {
-      dispatch(loginStart());
+    if (data.password !== data.confirmPassword) {
+      return;
+    }
 
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+    try {
+      await handleRegister(
+        {
+          name: data.name,
           email: data.email,
           password: data.password,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Registration failed");
-      }
-
-      dispatch(
-        loginSuccess({
-          _id: result._id,
-          email: data.email,
-          token: result.token,
-        })
+        },
+        dispatch
       );
-
-      // Redirect to user page after successful registration
-      navigate("/user");
+      // Redirect to home page after successful registration
+      navigate("/");
     } catch (err) {
-      dispatch(
-        loginFailure(err instanceof Error ? err.message : "Registration failed")
-      );
+      // Error is handled by handleRegister through Redux
+      console.error("Registration error:", err);
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-background">
-      <Card className="w-[350px]">
+      <Card className="w-[400px]">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Register</CardTitle>
+          <CardTitle className="text-2xl text-center">Create Account</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                {...register("name", {
+                  required: "Full name is required",
+                  minLength: {
+                    value: 2,
+                    message: "Name must be at least 2 characters",
+                  },
+                })}
+              />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -109,6 +109,11 @@ export default function Register() {
                     minLength: {
                       value: 6,
                       message: "Password must be at least 6 characters",
+                    },
+                    pattern: {
+                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                      message:
+                        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
                     },
                   })}
                 />
@@ -167,7 +172,7 @@ export default function Register() {
             {error && <p className="text-sm text-red-500">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Loading..." : "Register"}
+              {loading ? "Creating Account..." : "Register"}
             </Button>
 
             <div className="text-center text-sm">

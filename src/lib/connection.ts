@@ -1,18 +1,27 @@
 import mongoose from 'mongoose';
 
-const connect = async () => {
-  let conected = mongoose.connection.readyState;
+let isConnected = false;
 
-  if (conected) {
-    console.log('already connected');
+const connect = async () => {
+  if (isConnected) {
+    console.log('Using existing MongoDB connection');
     return;
-  } else {
-    let res = await mongoose.connect(import.meta.env.MONGODB_URI);
-    if (res) {
-      console.log('connected');
-    } else {
-      console.log('not connected');
+  }
+
+  try {
+    const MONGODB_URI = import.meta.env.MONGODB_URI;
+    
+    if (!MONGODB_URI) {
+      throw new Error('MONGODB_URI environment variable is not defined');
     }
+
+    await mongoose.connect(MONGODB_URI);
+    
+    isConnected = true;
+    console.log('New MongoDB connection established');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
   }
 };
 

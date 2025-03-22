@@ -3,14 +3,14 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import authReducer from './slices/authSlice';
 
-const authPersistConfig = {
-  key: 'auth',
+// Configure Redux Persist
+const persistConfig = {
+  key: 'root',
   storage,
-  whitelist: ['user', 'isAuthenticated'],
+  whitelist: ['auth'], // Only persist auth state
 };
 
-
-const persistedAuthReducer = persistReducer(authPersistConfig, authReducer);
+const persistedAuthReducer = persistReducer(persistConfig, authReducer);
 
 export const store = configureStore({
   reducer: {
@@ -19,6 +19,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
+        // Ignore Redux Persist actions
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
       },
     }),
@@ -26,5 +27,6 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
+// Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

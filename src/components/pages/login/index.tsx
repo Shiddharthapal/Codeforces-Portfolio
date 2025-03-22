@@ -6,12 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-  loginStart,
-  loginSuccess,
-  loginFailure,
-} from "@/redux/slices/authSlice";
 import { Eye, EyeOff } from "lucide-react";
+import { handleLogin } from "@/lib/auth";
+import type { RootState } from "@/redux/store";
 
 interface LoginFormData {
   email: string;
@@ -21,7 +18,7 @@ interface LoginFormData {
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { loading, error } = useAppSelector((state) => state.auth);
+  const { loading, error } = useAppSelector((state: RootState) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
   const {
     register,
@@ -31,36 +28,12 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      dispatch(loginStart());
-
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Login failed");
-      }
-
-      dispatch(
-        loginSuccess({
-          _id: result._id,
-          email: data.email,
-          token: result.token,
-        })
-      );
-
-      // Redirect to user page after successful login
-      navigate("/user");
+      await handleLogin(data, dispatch);
+      // Redirect to home page after successful login
+      navigate("/");
     } catch (err) {
-      dispatch(
-        loginFailure(err instanceof Error ? err.message : "Login failed")
-      );
+      // Error is handled by handleLogin through Redux
+      console.error("Login error:", err);
     }
   };
 
