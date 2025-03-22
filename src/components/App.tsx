@@ -8,7 +8,6 @@ import Login from "./pages/login";
 import Register from "./pages/register";
 import ProtectedRoute from "./ProtectedRoute";
 export default function App() {
-  const isAboutPage = window.location.pathname.includes("/about/");
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
@@ -21,7 +20,7 @@ export default function App() {
             </Route>
 
             <Route
-              path="/about"
+              path="/about/:id"
               element={
                 <ProtectedRoute>
                   <About />

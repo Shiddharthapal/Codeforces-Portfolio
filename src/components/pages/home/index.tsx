@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+
 import { userData } from "@/const/fakeData";
 import { Menu, Plus, Trash2, Edit, Save, Info, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,7 @@ export default function ContestTrackerHome() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingContestant, setEditingContestant] = useState<Contestant | null>(
     null
@@ -90,10 +93,6 @@ export default function ContestTrackerHome() {
     setContestants(updatedContestants);
   };
 
-  const viewContestantDetails = (id: string) => {
-    window.location.href = `/about/${id}`;
-  };
-
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
@@ -109,13 +108,44 @@ export default function ContestTrackerHome() {
           </Button>
           <h1 className="text-xl font-bold">SWE C.Tracker</h1>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white border-2 rounded-full"
-        >
-          <User className="h-6 w-6" />
-        </Button>
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white border-2 rounded-full"
+            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+          >
+            <User className="h-6 w-6" />
+          </Button>
+          {isUserMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+              <button
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                onClick={() => {
+                  /* Add sign in logic */
+                }}
+              >
+                Sign in
+              </button>
+              <button
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                onClick={() => {
+                  /* Add sign up logic */
+                }}
+              >
+                Sign up
+              </button>
+              <button
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                onClick={() => {
+                  /* Add sign out logic */
+                }}
+              >
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main content */}
@@ -174,31 +204,16 @@ export default function ContestTrackerHome() {
             >
               <div className="font-medium">{contestant.name}</div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => viewContestantDetails(contestant.id)}
-                >
-                  <Info className="h-4 w-4 mr-1" />
-                  About
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEditContestant(contestant)}
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-500"
-                  onClick={() => handleDeleteContestant(contestant.id)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
+                <Link to={`/about/${contestant.id}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-[#1b78a9] text-white hover:bg-white hover:text-black"
+                  >
+                    <Info className="h-4 w-4 mr-1" />
+                    About
+                  </Button>
+                </Link>
               </div>
             </div>
           ))}
