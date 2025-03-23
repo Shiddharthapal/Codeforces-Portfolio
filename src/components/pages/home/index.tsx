@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import AccountForm from "./form";
 
 import { userData } from "@/const/fakeData";
 import { Menu, Plus, Trash2, Edit, Save, Info, User } from "lucide-react";
@@ -163,34 +164,11 @@ export default function ContestTrackerHome() {
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-1">
-                <Plus className="h-4 w-4" /> Add Contestant
+                <Plus className="h-4 w-4" /> Create Account
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Contestant</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={newContestant.name || ""}
-                    onChange={(e) =>
-                      setNewContestant({
-                        ...newContestant,
-                        name: e.target.value,
-                      })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button onClick={handleAddContestant}>Add Contestant</Button>
-              </div>
+              <AccountForm />
             </DialogContent>
           </Dialog>
         </div>

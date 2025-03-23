@@ -19,6 +19,8 @@ export default function ProtectedRoute({
     (state: RootState) => state.auth
   );
 
+  console.log("isAuthenticated=>", isAuthenticated);
+
   useEffect(() => {
     // Verify token validity on mount and after any auth state changes
     const isValid = checkAuth();
@@ -45,6 +47,17 @@ export default function ProtectedRoute({
   return <>{children}</>;
 }
 function checkAuth(): boolean {
-  // Implement your authentication check logic here
-  return false; // Temporary return value
+  // Check if token is valid
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return false;
+  }
+
+  // Check if token is expired
+  const decoded = JSON.parse(atob(token.split(".")[1]));
+  if (decoded.exp * 1000 < Date.now()) {
+    return false;
+  }
+
+  return true;
 }

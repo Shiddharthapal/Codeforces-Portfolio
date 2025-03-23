@@ -1,14 +1,21 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { Eye, EyeOff } from "lucide-react";
 import { handleRegister } from "@/lib/auth";
 import type { RootState } from "@/redux/store";
+
+// Create a forwardRef version of Input
+const Input = forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>((props, ref) => {
+  return <input ref={ref} {...props} className={props.className} />;
+});
 
 interface RegisterFormData {
   name: string;
@@ -39,7 +46,7 @@ export default function Register() {
     }
 
     try {
-      await handleRegister(
+      const response = await handleRegister(
         {
           name: data.name,
           email: data.email,
@@ -47,6 +54,7 @@ export default function Register() {
         },
         dispatch
       );
+      console.log("response=>", response);
       // Redirect to home page after successful registration
       navigate("/");
     } catch (err) {
@@ -67,6 +75,7 @@ export default function Register() {
               <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 {...register("name", {
                   required: "Full name is required",
                   minLength: {
@@ -85,6 +94,7 @@ export default function Register() {
               <Input
                 id="email"
                 type="email"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 {...register("email", {
                   required: "Email is required",
                   pattern: {
@@ -104,6 +114,7 @@ export default function Register() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   {...register("password", {
                     required: "Password is required",
                     minLength: {
@@ -143,6 +154,7 @@ export default function Register() {
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   {...register("confirmPassword", {
                     required: "Please confirm your password",
                     validate: (value) =>

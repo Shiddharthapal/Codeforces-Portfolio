@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -10,6 +9,12 @@ import { Eye, EyeOff } from "lucide-react";
 import { handleLogin } from "@/lib/auth";
 import type { RootState } from "@/redux/store";
 
+const Input = forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>((props, ref) => {
+  return <input ref={ref} {...props} />;
+});
 interface LoginFormData {
   email: string;
   password: string;
@@ -49,6 +54,7 @@ export default function Login() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 type="email"
                 {...register("email", {
                   required: "Email is required",
@@ -68,6 +74,7 @@ export default function Login() {
               <div className="relative">
                 <Input
                   id="password"
+                  className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   type={showPassword ? "text" : "password"}
                   {...register("password", {
                     required: "Password is required",
