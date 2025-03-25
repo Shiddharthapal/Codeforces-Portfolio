@@ -1,4 +1,8 @@
 export interface UserMetadata{
-    title:String,
-  description: string,
+  name:String,  
+  image?: String,
+  description?:String,
+  email: String,
+  password:String,
+  createdAt?: Date,   
 }

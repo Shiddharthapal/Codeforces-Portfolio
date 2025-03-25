@@ -1,15 +1,10 @@
 "use client";
 import { useState } from "react";
-import {
-  Menu,
-  Github,
-  Plus,
-  Trash2,
-  Edit,
-  Save,
-  Info,
-  User,
-} from "lucide-react";
+import { Link } from "react-router-dom";
+import AccountForm from "./form";
+
+import { userData } from "@/const/fakeData";
+import { Menu, Plus, Trash2, Edit, Save, Info, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -38,56 +33,11 @@ interface Contestant {
 }
 
 export default function ContestTrackerHome() {
-  const [contestants, setContestants] = useState<Contestant[]>([
-    {
-      id: "221-35-1065",
-      name: "Md. Iffatul Islam Anon",
-      vjudgeHandle: "http://vjudge.net/user/iffatul_",
-      cfHandle: "http://codeforces.com/profile/iffatul",
-      clistHandle: "http://clist.by/coder/iffatul_ar",
-      score: 0,
-      totalSolve: 90,
-      totalParticipation: 0,
-      solveCount: 1451,
-      averageSolve: 0,
-      cfRound913: "A",
-      atcoderBeginner: "A",
-      cf3: "3",
-    },
-    {
-      id: "221-35-993",
-      name: "Piyash Basak",
-      vjudgeHandle: "https://vjudge.net/user/Piyash",
-      cfHandle: "https://codeforces.com/profile/piyash",
-      clistHandle: "https://clist.by/coder/piyash_b",
-      score: 0,
-      totalSolve: 90,
-      totalParticipation: 0,
-      solveCount: 1379,
-      averageSolve: 0,
-      cfRound913: "A",
-      atcoderBeginner: "A",
-      cf3: "3",
-    },
-    {
-      id: "0242310005341058",
-      name: "Md. Eusha Hasan",
-      vjudgeHandle: "https://vjudge.net/user/esh29",
-      cfHandle: "https://codeforces.com/profile/eusha",
-      clistHandle: "https://clist.by/coder/esh29/",
-      score: 0,
-      totalSolve: 80,
-      totalParticipation: 0,
-      solveCount: 1101,
-      averageSolve: 0,
-      cfRound913: "A",
-      atcoderBeginner: "A",
-      cf3: "A",
-    },
-  ]);
+  const [contestants, setContestants] = useState<Contestant[]>(userData);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingContestant, setEditingContestant] = useState<Contestant | null>(
     null
@@ -144,10 +94,6 @@ export default function ContestTrackerHome() {
     setContestants(updatedContestants);
   };
 
-  const viewContestantDetails = (id: string) => {
-    window.location.href = `/about/${id}`;
-  };
-
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
@@ -163,13 +109,44 @@ export default function ContestTrackerHome() {
           </Button>
           <h1 className="text-xl font-bold">SWE C.Tracker</h1>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white border-2 rounded-full"
-        >
-          <User className="h-6 w-6" />
-        </Button>
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white border-2 rounded-full"
+            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+          >
+            <User className="h-6 w-6" />
+          </Button>
+          {isUserMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+              <button
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                onClick={() => {
+                  /* Add sign in logic */
+                }}
+              >
+                Sign in
+              </button>
+              <button
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                onClick={() => {
+                  /* Add sign up logic */
+                }}
+              >
+                Sign up
+              </button>
+              <button
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                onClick={() => {
+                  /* Add sign out logic */
+                }}
+              >
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main content */}
@@ -187,34 +164,11 @@ export default function ContestTrackerHome() {
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-1">
-                <Plus className="h-4 w-4" /> Add Contestant
+                <Plus className="h-4 w-4" /> Create Account
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Contestant</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={newContestant.name || ""}
-                    onChange={(e) =>
-                      setNewContestant({
-                        ...newContestant,
-                        name: e.target.value,
-                      })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button onClick={handleAddContestant}>Add Contestant</Button>
-              </div>
+              <AccountForm />
             </DialogContent>
           </Dialog>
         </div>
@@ -228,31 +182,16 @@ export default function ContestTrackerHome() {
             >
               <div className="font-medium">{contestant.name}</div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => viewContestantDetails(contestant.id)}
-                >
-                  <Info className="h-4 w-4 mr-1" />
-                  About
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEditContestant(contestant)}
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-500"
-                  onClick={() => handleDeleteContestant(contestant.id)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
+                <Link to={`/about/${contestant.id}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-[#1b78a9] text-white hover:bg-white hover:text-black"
+                  >
+                    <Info className="h-4 w-4 mr-1" />
+                    About
+                  </Button>
+                </Link>
               </div>
             </div>
           ))}
