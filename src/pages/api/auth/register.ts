@@ -43,7 +43,6 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Generate tokens
     const token = user.generateAuthToken();
-    const refreshToken = user.generateRefreshToken();
 
     return new Response(
       JSON.stringify({
@@ -52,7 +51,6 @@ export const POST: APIRoute = async ({ request }) => {
         email: user.email,
         name: user.name,
         token,
-        refreshToken,
       }),
       {
         status: 201,

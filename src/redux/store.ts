@@ -25,6 +25,7 @@ export const store = configureStore({
     }),
 });
 
+console.log("store=>", store);
 export const persistor = persistStore(store);
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

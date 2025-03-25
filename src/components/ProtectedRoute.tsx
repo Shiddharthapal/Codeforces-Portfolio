@@ -23,7 +23,7 @@ export default function ProtectedRoute({
 
   useEffect(() => {
     // Verify token validity on mount and after any auth state changes
-    const isValid = checkAuth();
+    const isValid = await checkAuth();
     if (!isValid && isAuthenticated) {
       // If token is invalid but state shows authenticated, logout
       dispatch({ type: "auth/logout" });
