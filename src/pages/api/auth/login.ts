@@ -1,34 +1,27 @@
+import jwt  from 'jsonwebtoken';
 import type { APIRoute } from "astro";
-import { User } from "@/models/User";
+import  User  from "@/model/User";
 import connect from "@/lib/connection";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    await connect();
-
+  
     const { email, password } = await request.json();
 
-    // Validate input
-    if (!email || !password) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Please provide email and password",
-        }),
-        { status: 400 }
-      );
-    }
-
+     await connect();
     // Find user and include password for verification
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email });
 
     if (!user) {
       return new Response(
         JSON.stringify({
-          success: false,
           message: "Invalid credentials",
         }),
-        { status: 401 }
+        { status: 401 ,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
     }
 
@@ -38,25 +31,28 @@ export const POST: APIRoute = async ({ request }) => {
     if (!isPasswordValid) {
       return new Response(
         JSON.stringify({
-          success: false,
-          message: "Invalid credentials",
+          message: "Password is incorrect",
         }),
-        { status: 401 }
+        { status: 401,
+          headers: {
+            "Content-Type": "application/json",
+          },
+         }
       );
     }
 
     // Generate tokens
-    const token = user.generateAuthToken();
-    const refreshToken = user.generateRefreshToken();
+    const token = jwt.sign(
+      { id: user._id},
+      import.meta.env.JWT_SECRET || "your_jwt_secret",
+      { expiresIn: "24h" }
+    );
 
     return new Response(
       JSON.stringify({
-        success: true,
         _id: user._id,
-        email: user.email,
-        name: user.name,
         token,
-        refreshToken,
+        message: "Login successful",
       }),
       {
         status: 200,
@@ -69,10 +65,13 @@ export const POST: APIRoute = async ({ request }) => {
     console.error("Login error:", error);
     return new Response(
       JSON.stringify({
-        success: false,
         message: "Internal server error",
       }),
-      { status: 500 }
+      { status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+       }
     );
   }
 };
