@@ -55,6 +55,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     return new Response(
       JSON.stringify({
+        name,
         token,
         message: "Registration successful",
       }),

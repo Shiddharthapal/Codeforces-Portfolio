@@ -6,8 +6,10 @@ import connect from "@/lib/connection";
 export const POST: APIRoute = async ({ request }) => {
   try {
   
+    console.log("request==>", request);
     const { email, password } = await request.json();
 
+    console.log("hi");
      await connect();
     // Find user and include password for verification
     const user = await User.findOne({ email });
@@ -27,6 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Check password
     const isPasswordValid = await user.comparePassword(password);
+    console.log("isPasswordValid ==> ", isPasswordValid);
 
     if (!isPasswordValid) {
       return new Response(
@@ -51,6 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         _id: user._id,
+        name: user.name,
         token,
         message: "Login successful",
       }),

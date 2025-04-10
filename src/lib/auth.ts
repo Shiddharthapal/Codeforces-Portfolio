@@ -12,28 +12,14 @@ interface RegisterCredentials {
   password: string;
 }
 
-interface AuthResponse {
-  success: boolean;
-  message?: string;
-  _id: string;
-  email: string;
-  name: string;
-  token: string;
-  refreshToken: string;
-}
-
-interface ErrorResponse {
-  success: boolean;
-  message: string;
-}
 
 export const handleLogin = async (
   credentials: LoginCredentials,
   dispatch: AppDispatch
 ) => {
   try {
+    //console.log("credential=>",credentials);
     dispatch(loginStart());
-
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
@@ -41,27 +27,22 @@ export const handleLogin = async (
       },
       body: JSON.stringify(credentials),
     });
+   
 
+    const result= await response.json();
     if (!response.ok) {
-      const errorData = await response.json() as ErrorResponse;
-      throw new Error(errorData.message || 'Login failed');
+      throw new Error(result.message || 'Login failed');
     }
-
-    const data = await response.json() as AuthResponse;
-
-    // Store tokens
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('refreshToken', data.refreshToken);
 
     // Update Redux state
     dispatch(loginSuccess({
-      _id: data._id,
-      email: data.email,
-      name: data.name,
-      token: data.token,
+      _id: result._id,
+      email: credentials.email,
+      name: result.name,
+      token: result.token,
     }));
 
-    return data;
+    return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Login failed';
     dispatch(loginFailure(message));
@@ -84,26 +65,22 @@ export const handleRegister = async (
       body: JSON.stringify(credentials),
     });
 
+    const result = await response.json();
     if (!response.ok) {
-      const errorData = await response.json() as ErrorResponse;
-      throw new Error(errorData.message || 'Registration failed');
+
+      throw new Error(result.message || 'Registration failed');
     }
 
-    const data = await response.json() as AuthResponse;
-
-    // Store tokens
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('refreshToken', data.refreshToken);
 
     // Update Redux state
     dispatch(loginSuccess({
-      _id: data._id,
-      email: data.email,
-      name: data.name,
-      token: data.token,
+      _id: result._id,
+      email: credentials.email,
+      name: credentials.name,
+      token: result.token,
     }));
 
-    return data;
+    return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Registration failed';
     dispatch(loginFailure(message));
