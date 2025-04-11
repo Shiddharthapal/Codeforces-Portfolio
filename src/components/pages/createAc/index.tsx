@@ -1,88 +1,30 @@
 import React, { useState } from "react";
 import { useAppSelector } from "@/redux/hooks";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { X } from "lucide-react"; // for close icon
 
-// Mock UI components to simulate shadcn/ui look and feel
-const DialogContent = ({ children }: { children: React.ReactNode }) => (
-  <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-    {children}
-  </div>
-);
-
-const DialogHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="mb-4 pb-4 border-b border-gray-200">{children}</div>
-);
-
-const DialogTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-lg font-semibold text-gray-900">{children}</h2>
-);
-
-const Label = ({
-  htmlFor,
-  className,
-  children,
-}: {
-  htmlFor: string;
-  className?: string;
-  children: React.ReactNode;
-}) => (
-  <label
-    htmlFor={htmlFor}
-    className={`text-sm font-medium text-gray-700 ${className}`}
-  >
-    {children}
-  </label>
-);
-
-const Input = ({
-  id,
-  value,
-  onChange,
-  className,
-  type = "text",
-}: {
-  id: string;
-  value: string;
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
-  className?: string;
-  type?: string;
-}) => (
-  <input
-    id={id}
-    type={type}
-    value={value}
-    onChange={onChange}
-    className={`flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
-  />
-);
-
-const Button = ({
-  onClick,
-  children,
-}: {
-  onClick: React.MouseEventHandler<HTMLButtonElement>;
-  children: React.ReactNode;
-}) => (
+// Close button component
+const CloseButton = ({ onClick }: { onClick: () => void }) => (
   <button
     onClick={onClick}
-    className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors"
+    className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
   >
-    {children}
+    <X className="h-4 w-4" />
+    <span className="sr-only">Close</span>
   </button>
 );
-const CloseButton = ({
-  onClick,
-}: {
-  onClick: React.MouseEventHandler<HTMLButtonElement>;
-}) => (
-  <button
-    onClick={onClick}
-    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
-    aria-label="Close"
-  ></button>
-);
 
-// The actual form component
-export default function accountForm() {
+export default function CreateAc() {
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [newContestant, setNewContestant] = useState({
     name: "",
     department: "",
@@ -93,11 +35,26 @@ export default function accountForm() {
     atcoderLink: "",
     ccLink: "",
   });
+
   const user = useAppSelector((state) => state.auth.user);
   const token = user?.token;
 
-  const handleAddContestant = async () => {
-    // Create contestant data object
+  const handleAddContestant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Validation
+    if (
+      !newContestant.name ||
+      !newContestant.department ||
+      !newContestant.semester
+    ) {
+      alert("Please fill in all required fields");
+      setIsLoading(false);
+      return;
+    }
+
+    console.log("token=>", token);
     const contestantData = {
       userId: token,
       name: newContestant.name,
@@ -108,60 +65,62 @@ export default function accountForm() {
       clist: newContestant.clistLink,
       atcoder: newContestant.atcoderLink,
       codechef: newContestant.ccLink,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     };
 
+    console.log("contestantData=>", contestantData);
     try {
-      // Send POST request to your API endpoint
       const response = await fetch("/api/contestants", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `${token}`,
         },
         body: JSON.stringify(contestantData),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add contestant");
+        throw new Error(`Error: ${response.status}`);
       }
 
-      // Clear the form
-      setNewContestant({
-        name: "",
-        department: "",
-        semester: "",
-        vjudgeLink: "",
-        cfLink: "",
-        clistLink: "",
-        atcoderLink: "",
-        ccLink: "",
-      });
-
+      const data = await response.json();
       alert("Contestant added successfully!");
+      setOpen(false);
+      resetForm();
     } catch (error) {
       console.error("Error adding contestant:", error);
       alert("Failed to add contestant. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
-  const handleClose = () => {
-    alert("Form would close here!");
+
+  const resetForm = () => {
+    setNewContestant({
+      name: "",
+      department: "",
+      semester: "",
+      vjudgeLink: "",
+      cfLink: "",
+      clistLink: "",
+      atcoderLink: "",
+      ccLink: "",
+    });
   };
 
-  // Helper function to create form fields
   const renderField = (
     id: keyof typeof newContestant,
-    label: any,
+    label: string,
+    required = false,
     type = "text"
   ) => (
-    <div className="grid grid-cols-4 items-center gap-4 mb-2">
+    <div className="grid grid-cols-4 items-center gap-4 mb-4">
       <Label htmlFor={id} className="text-right">
-        {label}
+        {label} {required && <span className="text-red-500">*</span>}
       </Label>
       <Input
         id={id}
         type={type}
-        value={newContestant[id] || ""}
+        value={newContestant[id]}
         onChange={(e) =>
           setNewContestant({
             ...newContestant,
@@ -169,31 +128,48 @@ export default function accountForm() {
           })
         }
         className="col-span-3 h-8"
+        required={required}
+        disabled={isLoading}
       />
     </div>
   );
 
   return (
-    <div className="flex justify-center items-center">
-      <DialogContent>
-        <CloseButton onClick={handleClose} />
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Button onClick={() => setOpen(true)} className="mb-4">
+        Add New Contestant
+      </Button>
+      <DialogContent className="sm:max-w-[425px]">
+        <CloseButton onClick={() => setOpen(false)} />
         <DialogHeader>
           <DialogTitle>Add New Contestant</DialogTitle>
         </DialogHeader>
-        <div className="">
-          {renderField("name", "Name")}
-          {renderField("department", "Department")}
-          {renderField("semester", "Semester")}
+        <form onSubmit={handleAddContestant} className="space-y-4">
+          {renderField("name", "Name", true)}
+          {renderField("department", "Department", true)}
+          {renderField("semester", "Semester", true)}
           {renderField("vjudgeLink", "Vjudge Link")}
-          {renderField("cfLink", "CF Link")}
+          {renderField("cfLink", "Codeforces Link")}
           {renderField("clistLink", "Clist Link")}
-          {renderField("atcoderLink", "Atcoder Link")}
-          {renderField("ccLink", "CC Link")}
-        </div>
-        <div className="flex justify-end pt-4 border-t border-gray-200">
-          <Button onClick={handleAddContestant}>Add Contestant</Button>
-        </div>
+          {renderField("atcoderLink", "AtCoder Link")}
+          {renderField("ccLink", "CodeChef Link")}
+
+          <div className="flex justify-end pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              className="mr-2"
+              onClick={() => setOpen(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Adding..." : "Add Contestant"}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
-    </div>
+    </Dialog>
   );
 }

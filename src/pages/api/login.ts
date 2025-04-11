@@ -2,11 +2,12 @@ import jwt  from 'jsonwebtoken';
 import type { APIRoute } from "astro";
 import  User  from "@/model/User";
 import connect from "@/lib/connection";
+import type { Token } from '@/types/token';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
   
-    console.log("request==>", request);
+
     const { email, password } = await request.json();
 
     console.log("hi");
@@ -44,9 +45,12 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    const payload: Token = {
+      userId: user._id,
+    };
     // Generate tokens
     const token = jwt.sign(
-      { id: user._id},
+      payload,
       import.meta.env.JWT_SECRET || "your_jwt_secret",
       { expiresIn: "24h" }
     );
@@ -54,7 +58,6 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         _id: user._id,
-        name: user.name,
         token,
         message: "Login successful",
       }),

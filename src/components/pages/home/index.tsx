@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import AccountForm from "../createAc";
+import CreateAc from "../createAc";
 
 import { userData } from "@/const/fakeData";
 import { Menu, Plus, Trash2, Edit, Save, Info, User } from "lucide-react";
@@ -161,16 +161,18 @@ export default function ContestTrackerHome() {
 
         {/* Action buttons */}
         <div className="mb-4 flex justify-end">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-1">
-                <Plus className="h-4 w-4" /> Create Account
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <AccountForm />
-            </DialogContent>
-          </Dialog>
+          <Link to={`/createAc`}>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-1">
+                  <Plus className="h-4 w-4" /> Create Account
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <CreateAc />
+              </DialogContent>
+            </Dialog>
+          </Link>
         </div>
 
         {/* User List */}

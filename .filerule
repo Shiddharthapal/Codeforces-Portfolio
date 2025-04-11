@@ -1,0 +1,5 @@
+index.tsx:40
+POST http://localhost:4321/api/login 500 (Internal Server Error)
+
+index.tsx:49 Uncaught (in promise) Error: Internal server error
+at onSubmit (index.tsx:49:15)

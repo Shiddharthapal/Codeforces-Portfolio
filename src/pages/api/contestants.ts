@@ -1,15 +1,15 @@
 import { verifyToken } from './../../utils/token';
 import type { APIRoute } from "astro";
 import  UserDetails  from "@/model/UserDetails";
-import  User  from '@/model/User';
 import connect from "@/lib/connection";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     console.log("request=>",request);
     const {userId, name, department, semester,vjudge,codeforces,clist,atcoder,codechef } = await request.json();
+    const token= await request.headers.get("Authorization");
     
-    if (!userId) {
+    if (!token) {
       return new Response(
         JSON.stringify({
           message: "Authorization token is missing",
@@ -23,7 +23,7 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
     
-    const verifyTokenData = await verifyToken(userId);
+    const verifyTokenData = await verifyToken(token);
     await connect();
 
     const user = await UserDetails.findById(verifyTokenData?.userId);
@@ -45,7 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
       return newUser;
     }
     // Update user details
-    if(userId) user.userId = userId;
+    if(userId) user.userId = verifyTokenData?.userId;
     if (name) user.name = name;
     if (department) user.department = department;
     if (semester) user.semester = semester;

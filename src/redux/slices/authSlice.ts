@@ -4,7 +4,6 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 interface User {
   _id: string;
   email: string;
-  name: string;
   token: string;
 }
 

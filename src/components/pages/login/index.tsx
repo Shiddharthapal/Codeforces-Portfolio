@@ -54,7 +54,6 @@ export default function Login() {
         loginSuccess({
           _id: result._id,
           email: data.email,
-          name: result.name,
           token: result.token,
         })
       );
