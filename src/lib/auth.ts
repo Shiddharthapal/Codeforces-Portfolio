@@ -20,7 +20,7 @@ export const handleLogin = async (
   try {
     //console.log("credential=>",credentials);
     dispatch(loginStart());
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch('/api/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export const handleRegister = async (
   try {
     dispatch(loginStart());
 
-    const response = await fetch('/api/auth/register', {
+    const response = await fetch('/api/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

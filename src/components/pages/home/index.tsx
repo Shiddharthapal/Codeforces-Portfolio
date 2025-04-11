@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import AccountForm from "./form";
+import AccountForm from "../createAc";
 
 import { userData } from "@/const/fakeData";
 import { Menu, Plus, Trash2, Edit, Save, Info, User } from "lucide-react";

@@ -15,6 +15,7 @@ const Home = lazy(() => import("./pages/home"));
 const About = lazy(() => import("./pages/about"));
 const Login = lazy(() => import("./pages/login"));
 const Register = lazy(() => import("./pages/register"));
+const CreateAc = lazy(() => import("./pages/createAc"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -41,6 +42,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <About />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/createAc"
+                element={
+                  <ProtectedRoute>
+                    <CreateAc />
                   </ProtectedRoute>
                 }
               />

@@ -6,9 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { Eye, EyeOff } from "lucide-react";
-import { handleLogin } from "@/lib/auth";
 import type { RootState } from "@/redux/store";
-
+import {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+} from "@/redux/slices/authSlice";
 const Input = forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement>
@@ -33,12 +36,34 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await handleLogin(data, dispatch);
-      // Redirect to home page after successful login
+      dispatch(loginStart());
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Login failed");
+      }
+
+      // Update Redux state
+      dispatch(
+        loginSuccess({
+          _id: result._id,
+          email: data.email,
+          name: result.name,
+          token: result.token,
+        })
+      );
+
       navigate("/");
-    } catch (err) {
-      // Error is handled by handleLogin through Redux
-      console.error("Login error:", err);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Login failed";
+      dispatch(loginFailure(message));
+      throw error;
     }
   };
 

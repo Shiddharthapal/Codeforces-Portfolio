@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAppSelector } from "@/redux/hooks";
 
 // Mock UI components to simulate shadcn/ui look and feel
 const DialogContent = ({ children }: { children: React.ReactNode }) => (
@@ -86,16 +87,62 @@ export default function accountForm() {
     name: "",
     department: "",
     semester: "",
-    vjudgeHandle: "",
-    cfHandle: "",
-    clistHandle: "",
-    cfRound913: "",
-    atcoderBeginner: "",
-    cf3: "",
+    vjudgeLink: "",
+    cfLink: "",
+    clistLink: "",
+    atcoderLink: "",
+    ccLink: "",
   });
+  const user = useAppSelector((state) => state.auth.user);
+  const token = user?.token;
 
-  const handleAddContestant = () => {
-    alert("Contestant would be added here!");
+  const handleAddContestant = async () => {
+    // Create contestant data object
+    const contestantData = {
+      userId: token,
+      name: newContestant.name,
+      department: newContestant.department,
+      semester: newContestant.semester,
+      vjudge: newContestant.vjudgeLink,
+      codeforces: newContestant.cfLink,
+      clist: newContestant.clistLink,
+      atcoder: newContestant.atcoderLink,
+      codechef: newContestant.ccLink,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    try {
+      // Send POST request to your API endpoint
+      const response = await fetch("/api/contestants", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(contestantData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add contestant");
+      }
+
+      // Clear the form
+      setNewContestant({
+        name: "",
+        department: "",
+        semester: "",
+        vjudgeLink: "",
+        cfLink: "",
+        clistLink: "",
+        atcoderLink: "",
+        ccLink: "",
+      });
+
+      alert("Contestant added successfully!");
+    } catch (error) {
+      console.error("Error adding contestant:", error);
+      alert("Failed to add contestant. Please try again.");
+    }
   };
   const handleClose = () => {
     alert("Form would close here!");
@@ -137,12 +184,11 @@ export default function accountForm() {
           {renderField("name", "Name")}
           {renderField("department", "Department")}
           {renderField("semester", "Semester")}
-          {renderField("vjudgeHandle", "Vjudge Handle")}
-          {renderField("cfHandle", "CF Handle")}
-          {renderField("clistHandle", "Clist Handle")}
-          {renderField("cfRound913", "CF Round 913")}
-          {renderField("atcoderBeginner", "Atcoder Beginner")}
-          {renderField("cf3", "CF 3")}
+          {renderField("vjudgeLink", "Vjudge Link")}
+          {renderField("cfLink", "CF Link")}
+          {renderField("clistLink", "Clist Link")}
+          {renderField("atcoderLink", "Atcoder Link")}
+          {renderField("ccLink", "CC Link")}
         </div>
         <div className="flex justify-end pt-4 border-t border-gray-200">
           <Button onClick={handleAddContestant}>Add Contestant</Button>

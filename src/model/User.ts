@@ -3,22 +3,17 @@ import type { Document, Model, CallbackError } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-export interface IUser extends Document {
+export interface User extends Document {
   name: string;
   email: string;
   password: string;
-  createdAt: Date;
-  updatedAt: Date;
-  comparePassword(candidatePassword: string): Promise<boolean>;
-  generateAuthToken(): string;
-  generateRefreshToken(): string;
 }
 
-interface IUserModel extends Model<IUser> {
-  build(attrs: { name: string; email: string; password: string }): IUser;
+interface IUserModel extends Model<User> {
+  build(attrs: { name: string; email: string; password: string }): User;
 }
 
-const userSchema = new mongoose.Schema<IUser>(
+const userSchema = new mongoose.Schema<User>(
   {
     name: {
       type: String,
@@ -48,7 +43,7 @@ const userSchema = new mongoose.Schema<IUser>(
 );
 
 // Hash password before saving
-userSchema.pre('save', async function (this: IUser, next: (err?: CallbackError) => void) {
+userSchema.pre('save', async function (this: User, next: (err?: CallbackError) => void) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -68,25 +63,25 @@ userSchema.pre('save', async function (this: IUser, next: (err?: CallbackError) 
 
 // Method to compare password
 userSchema.methods.comparePassword = async function (
-  this: IUser,
+  this: User,
   candidatePassword: string
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Generate JWT token
-userSchema.methods.generateAuthToken = function (this: IUser): string {
+userSchema.methods.generateAuthToken = function (this: User): string {
   return jwt.sign(
     { id: this._id },
     process.env.JWT_SECRET || 'your-jwt-secret',
     {
-      expiresIn: '15m', // Token expires in 15 minutes
+      expiresIn: '24h', // Token expires in 15 minutes
     }
   );
 };
 
 // Generate Refresh token
-userSchema.methods.generateRefreshToken = function (this: IUser): string {
+userSchema.methods.generateRefreshToken = function (this: User): string {
   return jwt.sign(
     { id: this._id },
     process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret',
@@ -97,7 +92,7 @@ userSchema.methods.generateRefreshToken = function (this: IUser): string {
 };
 
 // Static method to build a new user
-userSchema.statics.build = (attrs: { name: string; email: string; password: string }): IUser => {
+userSchema.statics.build = (attrs: { name: string; email: string; password: string }): User => {
   return new User(attrs);
 };
 
@@ -109,6 +104,6 @@ userSchema.set('toJSON', {
   },
 });
 
-export const User = (mongoose.models.User || mongoose.model<IUser, IUserModel>('User', userSchema)) as IUserModel;
+export const User = (mongoose.models.User || mongoose.model<User, IUserModel>('User', userSchema)) as IUserModel;
 
 export default User;
