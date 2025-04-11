@@ -2,68 +2,98 @@ import { verifyToken } from './../../utils/token';
 import type { APIRoute } from "astro";
 import  UserDetails  from "@/model/UserDetails";
 import connect from "@/lib/connection";
+import mongoose from "mongoose";
 
 export const POST: APIRoute = async ({ request }) => {
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  console.log("hi=>");
+
   try {
-    console.log("request=>",request);
-    const {userId, name, department, semester,vjudge,codeforces,clist,atcoder,codechef } = await request.json();
-    const token= await request.headers.get("Authorization");
+
+    const data = await request.json();
+    const {
+      name,
+      department,
+      semester,
+      vjudge,
+      codeforces,
+      clist,
+      atcoder,
+      codechef
+    } = data;
+
     
-    if (!token) {
+
+    // Validate required fields
+    if (!name || !department) {
       return new Response(
         JSON.stringify({
-          message: "Authorization token is missing",
+          message: "Missing required fields",
+          details: {
+            
+            name: !name ? "Name is required" : null,
+            department: !department ? "Department is required" : null
+          }
         }),
-        { 
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        { status: 400, headers }
       );
     }
-    
-    const verifyTokenData = await verifyToken(token);
+
+    const token = request.headers.get("Authorization");
+    // Verify token
+    let verifiedUserId;
+    try {
+      const verifyTokenData = await verifyToken(token||"");
+      verifiedUserId = verifyTokenData.userId;
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          message: "Invalid authorization token",
+          error: error instanceof Error ? error.message : "Token verification failed"
+        }),
+        { status: 401, headers }
+      );
+    }
+
+    // Connect to database
     await connect();
 
-    const user = await UserDetails.findById(verifyTokenData?.userId);
-    
+    // Find existing user
+    let user = await UserDetails.findOne({ userId: verifiedUserId });
+    console.log("user ==> ", user);
+    let isNewUser = false;
+
     if (!user) {
-      // Create new user if not exists
-      const newUser = new UserDetails({
-        userId,
+      // Create new user if doesn't exist
+      isNewUser = true;
+      user = new UserDetails({
+        userId: verifiedUserId,
         name,
-        department,
-        semester,
-        vjudge,
-        codeforces,
-        clist,
-        atcoder,
-        codechef
+        department
       });
-      await newUser.save();
-      return newUser;
     }
+    console.log("user ==> ", user);
     // Update user details
-    if(userId) user.userId = verifyTokenData?.userId;
-    if (name) user.name = name;
-    if (department) user.department = department;
-    if (semester) user.semester = semester;
-    if (vjudge) user.vjudge = vjudge;
-    if (codeforces) user.codeforces = codeforces;
-    if (clist) user.clist = clist;
-    if (atcoder) user.atcoder = atcoder;
-    if (codechef) user.codechef = codechef;
-    // Save the updated user
+    user.name = name;
+    user.department = department;
+    if (semester !== undefined) user.semester = semester;
+    if (vjudge !== undefined) user.vjudge = vjudge;
+    if (codeforces !== undefined) user.codeforces = codeforces;
+    if (clist !== undefined) user.clist = clist;
+    if (atcoder !== undefined) user.atcoder = atcoder;
+    if (codechef !== undefined) user.codechef = codechef;
+
+    // Save user
     await user.save();
-    
+    console.log("user ==> ", user);
     return new Response(
       JSON.stringify({
-        message: "User details updated successfully",
+        message: isNewUser ? "User details created successfully" : "User details updated successfully",
         user: {
           userId: user.userId,
           name: user.name,
-          email: user.email,
           department: user.department,
           semester: user.semester,
           vjudge: user.vjudge,
@@ -71,30 +101,41 @@ export const POST: APIRoute = async ({ request }) => {
           clist: user.clist,
           atcoder: user.atcoder,
           codechef: user.codechef
-
         }
       }),
-      { 
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      { status: isNewUser ? 201 : 200, headers }
     );
+
   } catch (error) {
-    console.error("Error updating user details:", error);
-    
+    console.error("Error handling user details:", error);
+
+    // Handle specific error types
+    if (error instanceof mongoose.Error.ValidationError) {
+      return new Response(
+        JSON.stringify({
+          message: "Validation error",
+          errors: Object.values(error.errors).map(err => err.message)
+        }),
+        { status: 400, headers }
+      );
+    }
+
+    if (error instanceof mongoose.Error.CastError) {
+      return new Response(
+        JSON.stringify({
+          message: "Invalid data format",
+          
+        }),
+        { status: 400, headers }
+      );
+    }
+
     return new Response(
       JSON.stringify({
-        message: "Failed to update user details",
+        message: "Failed to handle user details",
         error: error instanceof Error ? error.message : "Unknown error"
       }),
-      { 
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      { status: 500, headers }
     );
   }
 };

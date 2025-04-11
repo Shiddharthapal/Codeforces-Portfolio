@@ -9,19 +9,32 @@ const connect = async () => {
   }
 
   try {
-    const MONGODB_URI = import.meta.env.MONGODB_URI;
+    const MONGODB_URI = import.meta.env.PUBLIC_MONGODB_URI || import.meta.env.MONGODB_URI;
     
     if (!MONGODB_URI) {
-      throw new Error('MONGODB_URI environment variable is not defined');
+      throw new Error(
+        'MONGODB_URI environment variable is not defined. ' +
+        'Please set it in your .env file as PUBLIC_MONGODB_URI or MONGODB_URI'
+      );
     }
 
-    await mongoose.connect(MONGODB_URI);
+    const options = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    };
+
+    await mongoose.connect(MONGODB_URI, options);
     
     isConnected = true;
     console.log('New MongoDB connection established');
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    throw error;
+    isConnected = false;
+    if (error instanceof Error) {
+      throw new Error(`Failed to connect to MongoDB: ${error.message}`);
+    }
+    throw new Error('Failed to connect to MongoDB: Unknown error');
   }
 };
 

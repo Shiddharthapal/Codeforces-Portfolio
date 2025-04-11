@@ -43,32 +43,29 @@ export default function CreateAc() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validation
-    if (
-      !newContestant.name ||
-      !newContestant.department ||
-      !newContestant.semester
-    ) {
-      alert("Please fill in all required fields");
-      setIsLoading(false);
-      return;
-    }
-
-    console.log("token=>", token);
-    const contestantData = {
-      userId: token,
-      name: newContestant.name,
-      department: newContestant.department,
-      semester: newContestant.semester,
-      vjudge: newContestant.vjudgeLink,
-      codeforces: newContestant.cfLink,
-      clist: newContestant.clistLink,
-      atcoder: newContestant.atcoderLink,
-      codechef: newContestant.ccLink,
-    };
-
-    console.log("contestantData=>", contestantData);
     try {
+      // Check authentication
+      if (!token) {
+        alert("Please login to add contestants");
+        return;
+      }
+
+      // Validation
+      if (!newContestant.name || !newContestant.department) {
+        alert("Name and department are required");
+        return;
+      }
+      const contestantData = {
+        name: newContestant.name.trim(),
+        department: newContestant.department.trim(),
+        semester: newContestant.semester.trim() || undefined,
+        vjudge: newContestant.vjudgeLink.trim() || undefined,
+        codeforces: newContestant.cfLink.trim() || undefined,
+        clist: newContestant.clistLink.trim() || undefined,
+        atcoder: newContestant.atcoderLink.trim() || undefined,
+        codechef: newContestant.ccLink.trim() || undefined,
+      };
+
       const response = await fetch("/api/contestants", {
         method: "POST",
         headers: {
@@ -78,17 +75,30 @@ export default function CreateAc() {
         body: JSON.stringify(contestantData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        // Handle different error cases
+        switch (response.status) {
+          case 400:
+            throw new Error(data.message || "Invalid input data");
+          case 401:
+            throw new Error("Authentication failed. Please login again.");
+          case 500:
+            throw new Error("Server error. Please try again later.");
+          default:
+            throw new Error(data.message || "Failed to add contestant");
+        }
       }
 
-      const data = await response.json();
       alert("Contestant added successfully!");
       setOpen(false);
       resetForm();
     } catch (error) {
       console.error("Error adding contestant:", error);
-      alert("Failed to add contestant. Please try again.");
+      alert(
+        error instanceof Error ? error.message : "Failed to add contestant"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -136,9 +146,11 @@ export default function CreateAc() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button onClick={() => setOpen(true)} className="mb-4">
-        Add New Contestant
-      </Button>
+      <div className="flex justify-center  items-center h-screen w-full">
+        <Button onClick={() => setOpen(true)} className="mb-4">
+          Add New Contestant
+        </Button>
+      </div>
       <DialogContent className="sm:max-w-[425px]">
         <CloseButton onClick={() => setOpen(false)} />
         <DialogHeader>
@@ -147,7 +159,7 @@ export default function CreateAc() {
         <form onSubmit={handleAddContestant} className="space-y-4">
           {renderField("name", "Name", true)}
           {renderField("department", "Department", true)}
-          {renderField("semester", "Semester", true)}
+          {renderField("semester", "Semester")}
           {renderField("vjudgeLink", "Vjudge Link")}
           {renderField("cfLink", "Codeforces Link")}
           {renderField("clistLink", "Clist Link")}

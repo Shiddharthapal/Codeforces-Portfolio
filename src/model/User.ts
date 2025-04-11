@@ -4,8 +4,11 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export interface IUser extends Document {
+  _id: mongoose.Types.ObjectId;
   email: string;
   password: string;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  generateAuthToken(): string;
 }
 
 interface IUserModel extends Model<IUser> {

@@ -36,7 +36,9 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      // Clear any previous errors
       dispatch(loginStart());
+
       const response = await fetch("/api/login", {
         method: "POST",
         headers: {
@@ -44,25 +46,44 @@ export default function Login() {
         },
         body: JSON.stringify(data),
       });
+
       const result = await response.json();
+
       if (!response.ok) {
-        throw new Error(result.message || "Login failed");
+        // Handle different types of errors
+        switch (response.status) {
+          case 400:
+            dispatch(loginFailure(result.message || "Invalid input"));
+            break;
+          case 401:
+            dispatch(loginFailure("Invalid email or password"));
+            break;
+          case 500:
+            dispatch(loginFailure("Server error. Please try again later."));
+            break;
+          default:
+            dispatch(loginFailure(result.message || "Login failed"));
+        }
+        return; // Don't throw error, just return
       }
 
-      // Update Redux state
+      // Update Redux state on success
       dispatch(
         loginSuccess({
           _id: result._id,
-          email: data.email,
+          email: result.email,
           token: result.token,
         })
       );
 
       navigate("/");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Login failed";
+      // Handle network or parsing errors
+      const message =
+        error instanceof Error
+          ? "Connection error. Please check your internet connection."
+          : "Login failed";
       dispatch(loginFailure(message));
-      throw error;
     }
   };
 
