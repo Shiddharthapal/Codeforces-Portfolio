@@ -84,7 +84,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Ensure JWT_SECRET is set
-    const jwtSecret = import.meta.env.PUBLIC_JWT_SECRET || import.meta.env.JWT_SECRET;
+    const jwtSecret = import.meta.env.JWT_SECRET || "your_jwt_secret";
     if (!jwtSecret) {
       console.error("JWT_SECRET is not set in environment variables");
       return new Response(
@@ -103,14 +103,14 @@ export const POST: APIRoute = async ({ request }) => {
     };
 
     // Generate token
-    const token = jwt.sign(payload, jwtSecret, { expiresIn: "24h" });
+    const token = jwt.sign(payload, jwtSecret, { expiresIn: "7d" });
+
 
     // Return success response
     return new Response(
       JSON.stringify({
         _id: user._id,
         token,
-        email: user.email,
         message: "Login successful",
       }),
       { status: 200, headers }

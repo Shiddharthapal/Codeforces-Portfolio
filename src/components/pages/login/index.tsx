@@ -71,12 +71,12 @@ export default function Login() {
       dispatch(
         loginSuccess({
           _id: result._id,
-          email: result.email,
+          email: data.email,
           token: result.token,
         })
       );
 
-      navigate("/");
+      navigate("/about/");
     } catch (error) {
       // Handle network or parsing errors
       const message =
