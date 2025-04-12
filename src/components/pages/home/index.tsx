@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CreateAc from "../createAc";
 
 import { userData } from "@/const/fakeData";
@@ -15,6 +15,28 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { logout } from "@/redux/slices/authSlice";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+}
+
+interface UserDetails {
+  userId: string;
+  name: string;
+  email: string;
+  password: string;
+  vjudgeHandle: string;
+  cfHandle: string;
+  clistHandle: string;
+  atcoderHandle: string;
+  ccHandle: string;
+  atcoderBeginner: string;
+}
 
 interface Contestant {
   id: string;
@@ -39,6 +61,8 @@ export default function ContestTrackerHome() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [userDetails, setUserDetails] = useState<User | null>(null);
+  const [createDetails, setCreateDetails] = useState<UserDetails | null>(null);
   const [editingContestant, setEditingContestant] = useState<Contestant | null>(
     null
   );
@@ -46,9 +70,18 @@ export default function ContestTrackerHome() {
     id: "",
     name: "",
   });
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    setUserDetails(null);
+    setIsUserMenuOpen(false);
+    dispatch(logout());
+    navigate("/");
   };
 
   const handleAddContestant = () => {
@@ -73,6 +106,7 @@ export default function ContestTrackerHome() {
     setIsAddDialogOpen(false);
   };
 
+  const ifSameUserDetails = createDetails?.userId === userDetails?.id;
   const handleEditContestant = (contestant: Contestant) => {
     setEditingContestant(contestant);
     setIsEditDialogOpen(true);
@@ -123,26 +157,11 @@ export default function ContestTrackerHome() {
               <button
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                 onClick={() => {
-                  /* Add sign in logic */
+                  handleLogout();
+                  setIsUserMenuOpen(false);
                 }}
               >
-                Sign in
-              </button>
-              <button
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                onClick={() => {
-                  /* Add sign up logic */
-                }}
-              >
-                Sign up
-              </button>
-              <button
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                onClick={() => {
-                  /* Add sign out logic */
-                }}
-              >
-                Sign out
+                Log out
               </button>
             </div>
           )}
@@ -160,7 +179,7 @@ export default function ContestTrackerHome() {
         </div>
 
         {/* Action buttons */}
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex justify-end gap-4">
           <Link to={`/createAc`}>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
@@ -173,6 +192,20 @@ export default function ContestTrackerHome() {
               </DialogContent>
             </Dialog>
           </Link>
+          {ifSameUserDetails && (
+            <Link to={`/editAc`}>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-1">
+                    <Edit className="h-4 w-4" /> Edit Account
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <CreateAc />
+                </DialogContent>
+              </Dialog>
+            </Link>
+          )}
         </div>
 
         {/* User List */}
@@ -235,4 +268,7 @@ export default function ContestTrackerHome() {
       </div>
     </div>
   );
+}
+function dispatch(arg0: any) {
+  throw new Error("Function not implemented.");
 }
