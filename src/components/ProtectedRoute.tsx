@@ -1,17 +1,18 @@
-import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { useAppSelector } from "@/redux/hooks";
+import { useAppSelector } from "../redux/hooks";
+import type { ReactNode } from "react";
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { token } = useAppSelector((state) => state.auth);
+  const storedToken = localStorage.getItem("authToken");
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
-
-  if (!isAuthenticated) {
+  if (!token && !storedToken) {
+    // Redirect to login if no token in Redux or localStorage
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return children;
 }
