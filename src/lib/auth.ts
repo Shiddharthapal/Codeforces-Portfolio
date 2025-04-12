@@ -38,7 +38,7 @@ export const handleLogin = async (
     dispatch(loginSuccess({
       _id: result._id,
       email: credentials.email,
-      name: result.name,
+
       token: result.token,
     }));
 
@@ -76,7 +76,7 @@ export const handleRegister = async (
     dispatch(loginSuccess({
       _id: result._id,
       email: credentials.email,
-      name: credentials.name,
+    
       token: result.token,
     }));
 

@@ -27,13 +27,13 @@ const UserDetailsSchema = new mongoose.Schema(
       type: String,
     },
     clist: {
-      type: Number,
+      type: String,
     },
     atcoder: {
-      type: Number,
+      type: String,
     },
     codechef: {
-      type: Number,
+      type: String,
     },
     createdAt: {
     type: Date,
@@ -44,6 +44,17 @@ const UserDetailsSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// Add pre-save middleware to ensure string conversion
+UserDetailsSchema.pre('save', function(next) {
+  // Convert all profile link fields to strings
+  if (this.clist !== undefined) this.clist = String(this.clist);
+  if (this.atcoder !== undefined) this.atcoder = String(this.atcoder);
+  if (this.codechef !== undefined) this.codechef = String(this.codechef);
+  if (this.codeforces !== undefined) this.codeforces = String(this.codeforces);
+  if (this.vjudge !== undefined) this.vjudge = String(this.vjudge);
+  next();
+});
 
 const UserDetails = mongoose.models.UserDetails || mongoose.model('UserDetails', UserDetailsSchema);
 export default UserDetails;

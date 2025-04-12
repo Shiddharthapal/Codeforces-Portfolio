@@ -1,7 +1,1 @@
-index.tsx:71
-POST http://localhost:4321/api/contestants 500 (Internal Server Error)
-handleAddContestant @ index.tsx:71
-
-index.tsx:89 Error adding contestant: Error: Error: 500
-at handleAddContestant (index.tsx:81:15)
-handleAddContestant @ index.tsx:89
+Error handling user details: Error: UserDetails validation failed: clist: Cast to Number failed for value "qwrfqw3t2qt" (type string) at path "clist", atcoder: Cast to Number failed for value "2r31r" (type string) at path "atcoder", codechef: Cast to Number failed for value "wqetqw3q32" (type string) at path "codechef"

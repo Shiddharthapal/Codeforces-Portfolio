@@ -79,7 +79,7 @@ export const POST: APIRoute = async ({ request }) => {
     user.name = name;
     user.department = department;
     if (semester !== undefined) user.semester = semester;
-    if (vjudge !== undefined) user.vjudge = vjudge;
+    if (vjudge !== undefined) user.vjudge = String(vjudge);
     if (codeforces !== undefined) user.codeforces = codeforces;
     if (clist !== undefined) user.clist = clist;
     if (atcoder !== undefined) user.atcoder = atcoder;
