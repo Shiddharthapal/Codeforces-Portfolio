@@ -163,9 +163,13 @@ export default function ContestTrackerHome() {
               >
                 Log out
               </button>
-              <button className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
+              <Link
+                to="/profile"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                onClick={() => setIsUserMenuOpen(false)}
+              >
                 Profile
-              </button>
+              </Link>
             </div>
           )}
         </div>
