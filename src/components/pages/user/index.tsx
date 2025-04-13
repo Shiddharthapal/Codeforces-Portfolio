@@ -91,18 +91,22 @@ export default function UserProfile() {
             <h2 className="text-lg font-semibold mb-3">Basic Information</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-500">Name</label>
-                <div className="text-gray-900">{userDetails.name}</div>
+                <label className="block text-sm font-semibold  text-gray-900">
+                  Name
+                </label>
+                <div className="text-gray-500">{userDetails.name}</div>
               </div>
               <div>
-                <label className="block text-sm text-gray-500">
+                <label className="block text-sm font-semibold  text-gray-900">
                   Department
                 </label>
-                <div className="text-gray-900">{userDetails.department}</div>
+                <div className="text-gray-500">{userDetails.department}</div>
               </div>
               <div>
-                <label className="block text-sm text-gray-500">Semester</label>
-                <div className="text-gray-900">{userDetails.semester}</div>
+                <label className="block text-sm font-semibold  text-gray-900">
+                  Semester
+                </label>
+                <div className="text-gray-500">{userDetails.semester}</div>
               </div>
             </div>
           </div>
@@ -112,34 +116,42 @@ export default function UserProfile() {
             <h2 className="text-lg font-semibold mb-3">Online Judge Handles</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-500">VJudge</label>
-                <div className="text-gray-900">
+                <label className="block text-sm font-semibold  text-gray-900">
+                  VJudge
+                </label>
+                <div className="text-gray-500">
                   {userDetails.vjudge || "Not set"}
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-500">
+                <label className="block text-sm font-semibold  text-gray-900">
                   Codeforces
                 </label>
-                <div className="text-gray-900">
+                <div className="text-gray-500">
                   {userDetails.codeforces || "Not set"}
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-500">Clist</label>
-                <div className="text-gray-900">
+                <label className="block text-sm font-semibold  text-gray-900">
+                  Clist
+                </label>
+                <div className="text-gray-500">
                   {userDetails.clist || "Not set"}
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-500">AtCoder</label>
-                <div className="text-gray-900">
+                <label className="block text-sm font-semibold  text-gray-900">
+                  AtCoder
+                </label>
+                <div className="text-gray-500">
                   {userDetails.atcoder || "Not set"}
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-500">CodeChef</label>
-                <div className="text-gray-900">
+                <label className="block text-sm font-semibold  text-gray-900">
+                  CodeChef
+                </label>
+                <div className="text-gray-500">
                   {userDetails.codechef || "Not set"}
                 </div>
               </div>
@@ -150,10 +162,10 @@ export default function UserProfile() {
           <div>
             <h2 className="text-lg font-semibold mb-3">Account Information</h2>
             <div>
-              <label className="block text-sm text-gray-500">
+              <label className="block text-sm font-semibold  text-gray-900">
                 Account Created
               </label>
-              <div className="text-gray-900">
+              <div className="text-gray-500">
                 {new Date(userDetails.createdAt).toLocaleDateString()}
               </div>
             </div>

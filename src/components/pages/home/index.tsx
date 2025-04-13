@@ -61,8 +61,7 @@ export default function ContestTrackerHome() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [userDetails, setUserDetails] = useState<User | null>(null);
-  const [createDetails, setCreateDetails] = useState<UserDetails | null>(null);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [editingContestant, setEditingContestant] = useState<Contestant | null>(
     null
   );
@@ -72,6 +71,8 @@ export default function ContestTrackerHome() {
   });
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const user = useAppSelector((state) => state.auth);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -83,6 +84,8 @@ export default function ContestTrackerHome() {
     dispatch(logout());
     navigate("/");
   };
+
+  const ifSameUserDetails = user?._id === userDetails?.userId;
 
   const handleAddContestant = () => {
     const contestant: Contestant = {
@@ -106,7 +109,6 @@ export default function ContestTrackerHome() {
     setIsAddDialogOpen(false);
   };
 
-  const ifSameUserDetails = createDetails?.userId === userDetails?.id;
   const handleEditContestant = (contestant: Contestant) => {
     setEditingContestant(contestant);
     setIsEditDialogOpen(true);
