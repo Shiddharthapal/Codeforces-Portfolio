@@ -46,9 +46,31 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/about/:id" element={<About />} />
-              <Route path="/createAc" element={<CreateAc />} />
-              <Route path="/editAc" element={<EditAc />} />
+
+              <Route
+                path="/about/:id"
+                element={
+                  <ProtectedRoute>
+                    <About />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/createAc"
+                element={
+                  <ProtectedRoute>
+                    <CreateAc />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/editAc"
+                element={
+                  <ProtectedRoute>
+                    <EditAc />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/profile"
                 element={
