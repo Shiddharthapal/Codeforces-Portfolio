@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,9 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { useAppSelector } from "@/redux/hooks";
 
 interface UserDetails {
-  id: string;
+  userId: string;
   name: string;
   department: string;
   semester?: string;
@@ -28,9 +29,24 @@ interface UserDetails {
   createdAt: string;
 }
 
-export default function editAc({ userDetails }: { userDetails: UserDetails }) {
+export default function editAc() {
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [formData, setFormData] = useState<Partial<UserDetails>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const user = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const userdetails = await fetch(`/api/users/${user._id}`);
+      if (!userdetails.ok) {
+        console.error("Failed to fetch user details");
+        return;
+      }
+      const data = await userdetails.json();
+      setUserDetails(data);
+    };
+    fetchData();
+  }, [user._id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,11 +66,11 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
     const newErrors: Record<string, string> = {};
 
     // Validate required fields
-    if (!formData.name && !userDetails.name) {
+    if (!formData.name && !userDetails?.name) {
       newErrors.name = "Name is required";
     }
 
-    if (!formData.department && !userDetails.department) {
+    if (!formData.department && !userDetails?.department) {
       newErrors.department = "Department is required";
     }
 
@@ -70,7 +86,11 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
     }
 
     // Merge the original data with the updated fields
-    const updatedData = { ...userDetails, ...formData };
+    const updatedData = {
+      ...userDetails,
+      ...formData,
+      createdAt: userDetails?.createdAt || new Date().toISOString(),
+    };
 
     // Here you would typically send the data to your API
     console.log("Submitting updated data:", updatedData);
@@ -108,7 +128,7 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
               name="name"
               value={formData.name || ""}
               onChange={handleChange}
-              placeholder={userDetails.name}
+              placeholder={userDetails?.name || "Enter name"}
               className="placeholder:text-gray-500 placeholder:opacity-70"
               aria-invalid={!!errors.name}
             />
@@ -126,7 +146,7 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
               name="department"
               value={formData.department || ""}
               onChange={handleChange}
-              placeholder={userDetails.department}
+              placeholder={userDetails?.department || "Enter department"}
               className="placeholder:text-gray-500 placeholder:opacity-70"
               aria-invalid={!!errors.department}
             />
@@ -142,7 +162,7 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
               name="semester"
               value={formData.semester || ""}
               onChange={handleChange}
-              placeholder={userDetails.semester || ""}
+              placeholder={userDetails?.semester || "Enter semester"}
               className="placeholder:text-gray-500 placeholder:opacity-70"
             />
           </div>
@@ -155,7 +175,7 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
                 name="vjudge"
                 value={formData.vjudge || ""}
                 onChange={handleChange}
-                placeholder={userDetails.vjudge || ""}
+                placeholder={userDetails?.vjudge || "Enter VJudge link"}
                 className="placeholder:text-gray-500 placeholder:opacity-70"
               />
             </div>
@@ -167,7 +187,7 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
                 name="codeforces"
                 value={formData.codeforces || ""}
                 onChange={handleChange}
-                placeholder={userDetails.codeforces || ""}
+                placeholder={userDetails?.codeforces || "Enter Codeforces link"}
                 className="placeholder:text-gray-500 placeholder:opacity-70"
               />
             </div>
@@ -181,7 +201,7 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
                 name="clist"
                 value={formData.clist || ""}
                 onChange={handleChange}
-                placeholder={userDetails.clist || ""}
+                placeholder={userDetails?.clist || "Enter Clist link"}
                 className="placeholder:text-gray-500 placeholder:opacity-70"
               />
             </div>
@@ -193,7 +213,7 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
                 name="atcoder"
                 value={formData.atcoder || ""}
                 onChange={handleChange}
-                placeholder={userDetails.atcoder || ""}
+                placeholder={userDetails?.atcoder || "Enter AtCoder link"}
                 className="placeholder:text-gray-500 placeholder:opacity-70"
               />
             </div>
@@ -206,7 +226,7 @@ export default function editAc({ userDetails }: { userDetails: UserDetails }) {
               name="codechef"
               value={formData.codechef || ""}
               onChange={handleChange}
-              placeholder={userDetails.codechef || ""}
+              placeholder={userDetails?.codechef || "Enter CodeChef link"}
               className="placeholder:text-gray-500 placeholder:opacity-70"
             />
           </div>
