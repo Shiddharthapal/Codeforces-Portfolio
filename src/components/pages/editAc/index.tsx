@@ -9,21 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react"; // for close icon
-
-// Close button component
-const CloseButton = ({ onClick }: { onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
-  >
-    <X className="h-4 w-4" />
-    <span className="sr-only">Close</span>
-  </button>
-);
+import { navigate } from "astro/virtual-modules/transitions-router.js";
 
 export default function editAc() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [newContestant, setNewContestant] = useState({
     name: "",
@@ -146,13 +135,7 @@ export default function editAc() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div className="flex justify-center  items-center h-screen w-full">
-        <Button onClick={() => setOpen(true)} className="mb-4">
-          Edit Contestant
-        </Button>
-      </div>
       <DialogContent className="sm:max-w-[425px]">
-        <CloseButton onClick={() => setOpen(false)} />
         <DialogHeader>
           <DialogTitle>Edit Contestant</DialogTitle>
         </DialogHeader>
@@ -171,7 +154,10 @@ export default function editAc() {
               type="button"
               variant="outline"
               className="mr-2"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                navigate("/");
+              }}
               disabled={isLoading}
             >
               Cancel
