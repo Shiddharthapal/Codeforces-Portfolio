@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAppSelector } from "@/redux/hooks";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 interface UserDetails {
   userId: string;
@@ -19,6 +19,7 @@ interface UserDetails {
 
 export default function UserProfile() {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [open, setOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,10 +82,12 @@ export default function UserProfile() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold mb-6 pb-2 border-b">
-          Profile Details
-        </h1>
-
+        <div className="flex items-start justify-between mb-6">
+          <h1 className="text-2xl font-bold mb-6 pb-2 border-b">
+            Profile Details
+          </h1>
+          <X onClick={() => navigate("/")} />
+        </div>
         <div className="space-y-6">
           {/* Basic Information */}
           <div>
