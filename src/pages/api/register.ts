@@ -1,10 +1,10 @@
+import  jwt from 'jsonwebtoken';
 import type { APIRoute } from "astro";
-import { User } from "@/models/User";
+import  User  from '@/model/User';
 import connect from "@/lib/connection";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    await connect();
 
     const { name, email, password } = await request.json();
 
@@ -19,20 +19,25 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    await connect();
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return new Response(
         JSON.stringify({
-          success: false,
           message: "User with this email already exists",
         }),
-        { status: 400 }
+        { status: 400,
+          headers: {
+            "Content-Type": "application/json",
+          },
+         }
       );
     }
 
     // Create new user
-    const user = User.build({
+    const user = new User({
       name,
       email,
       password,
@@ -42,15 +47,17 @@ export const POST: APIRoute = async ({ request }) => {
     await user.save();
 
     // Generate tokens
-    const token = user.generateAuthToken();
+    const token = jwt.sign(
+      { id: user._id },
+      import.meta.env.JWT_SECRET||'your_jwt_secret',
+      { expiresIn: "24h" },
+      );
 
     return new Response(
       JSON.stringify({
-        success: true,
-        _id: user._id,
-        email: user.email,
-        name: user.name,
+        name,
         token,
+        message: "Registration successful",
       }),
       {
         status: 201,
@@ -61,28 +68,15 @@ export const POST: APIRoute = async ({ request }) => {
     );
   } catch (error) {
     console.error("Registration error:", error);
-
-    // Handle mongoose validation errors
-    if (error instanceof Error && 'errors' in error) {
-      const validationErrors = Object.values((error as any).errors).map(
-        (err: any) => err.message
-      );
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Validation failed",
-          errors: validationErrors,
-        }),
-        { status: 400 }
-      );
-    }
-
     return new Response(
       JSON.stringify({
-        success: false,
         message: "Internal server error",
       }),
-      { status: 500 }
+      { status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+       }
     );
   }
 };

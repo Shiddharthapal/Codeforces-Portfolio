@@ -8,13 +8,16 @@ import {
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "@/redux/store";
-import ProtectedRoute from "./ProtectedRoute";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 // Lazy load components for better performance
 const Home = lazy(() => import("./pages/home"));
 const About = lazy(() => import("./pages/about"));
 const Login = lazy(() => import("./pages/login"));
 const Register = lazy(() => import("./pages/register"));
+const CreateAc = lazy(() => import("./pages/createAc"));
+const EditAc = lazy(() => import("./pages/editAc"));
+const UserProfile = lazy(() => import("./pages/user"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -35,12 +38,44 @@ export default function App() {
               <Route path="/register" element={<Register />} />
 
               {/* Protected Routes */}
-              <Route path="/" element={<Home />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Home />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route
                 path="/about/:id"
                 element={
                   <ProtectedRoute>
                     <About />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/createAc"
+                element={
+                  <ProtectedRoute>
+                    <CreateAc />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/editAc"
+                element={
+                  <ProtectedRoute>
+                    <EditAc />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <UserProfile />
                   </ProtectedRoute>
                 }
               />

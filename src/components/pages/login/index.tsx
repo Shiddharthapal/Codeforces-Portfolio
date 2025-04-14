@@ -6,9 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { Eye, EyeOff } from "lucide-react";
-import { handleLogin } from "@/lib/auth";
 import type { RootState } from "@/redux/store";
-
+import {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+} from "@/redux/slices/authSlice";
 const Input = forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement>
@@ -33,12 +36,54 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await handleLogin(data, dispatch);
-      // Redirect to home page after successful login
-      navigate("/");
-    } catch (err) {
-      // Error is handled by handleLogin through Redux
-      console.error("Login error:", err);
+      // Clear any previous errors
+      dispatch(loginStart());
+
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Handle different types of errors
+        switch (response.status) {
+          case 400:
+            dispatch(loginFailure(result.message || "Invalid input"));
+            break;
+          case 401:
+            dispatch(loginFailure("Invalid email or password"));
+            break;
+          case 500:
+            dispatch(loginFailure("Server error. Please try again later."));
+            break;
+          default:
+            dispatch(loginFailure(result.message || "Login failed"));
+        }
+        return; // Don't throw error, just return
+      }
+
+      // Update Redux state on success
+      dispatch(
+        loginSuccess({
+          _id: result._id,
+          email: data.email,
+          token: result.token,
+        })
+      );
+
+      navigate("/about/");
+    } catch (error) {
+      // Handle network or parsing errors
+      const message =
+        error instanceof Error
+          ? "Connection error. Please check your internet connection."
+          : "Login failed";
+      dispatch(loginFailure(message));
     }
   };
 

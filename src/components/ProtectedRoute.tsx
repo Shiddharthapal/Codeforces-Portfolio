@@ -1,63 +1,18 @@
-import { useEffect } from "react";
+import { Navigate } from "react-router-dom";
+import { useAppSelector } from "../redux/hooks";
 import type { ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import type { RootState } from "@/redux/store";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  redirectTo?: string;
 }
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { token } = useAppSelector((state) => state.auth);
+  const storedToken = localStorage.getItem("authToken");
 
-export default function ProtectedRoute({
-  children,
-  redirectTo = "/login",
-}: ProtectedRouteProps) {
-  const location = useLocation();
-  const dispatch = useAppDispatch();
-  const { isAuthenticated, loading } = useAppSelector(
-    (state: RootState) => state.auth
-  );
-
-  console.log("isAuthenticated=>", isAuthenticated);
-
-  useEffect(() => {
-    // Verify token validity on mount and after any auth state changes
-    const isValid = await checkAuth();
-    if (!isValid && isAuthenticated) {
-      // If token is invalid but state shows authenticated, logout
-      dispatch({ type: "auth/logout" });
-    }
-  }, [dispatch, isAuthenticated]);
-
-  if (loading) {
-    // Show loading state while checking authentication
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+  if (!token && !storedToken) {
+    // Redirect to login if no token in Redux or localStorage
+    return <Navigate to="/login" replace />;
   }
 
-  if (!isAuthenticated) {
-    // Redirect to login while preserving the attempted URL
-    return <Navigate to={redirectTo} state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
-}
-function checkAuth(): boolean {
-  // Check if token is valid
-  const token = localStorage.getItem("token");
-  if (!token) {
-    return false;
-  }
-
-  // Check if token is expired
-  const decoded = JSON.parse(atob(token.split(".")[1]));
-  if (decoded.exp * 1000 < Date.now()) {
-    return false;
-  }
-
-  return true;
+  return children;
 }

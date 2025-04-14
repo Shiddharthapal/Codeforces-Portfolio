@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import AccountForm from "./form";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import CreateAc from "../createAc";
 
 import { userData } from "@/const/fakeData";
 import { Menu, Plus, Trash2, Edit, Save, Info, User } from "lucide-react";
@@ -15,6 +15,28 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { logout } from "@/redux/slices/authSlice";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+}
+
+interface UserDetails {
+  userId: string;
+  name: string;
+  email: string;
+  password: string;
+  vjudgeHandle: string;
+  cfHandle: string;
+  clistHandle: string;
+  atcoderHandle: string;
+  ccHandle: string;
+  atcoderBeginner: string;
+}
 
 interface Contestant {
   id: string;
@@ -39,6 +61,7 @@ export default function ContestTrackerHome() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [editingContestant, setEditingContestant] = useState<Contestant | null>(
     null
   );
@@ -46,10 +69,37 @@ export default function ContestTrackerHome() {
     id: "",
     name: "",
   });
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const { _id, token } = useAppSelector((state) => state.auth);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  const handleLogout = () => {
+    setUserDetails(null);
+    setIsUserMenuOpen(false);
+    dispatch(logout());
+    navigate("/");
+  };
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const response = await fetch(`/api/users/${_id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserDetails(data);
+      } else {
+        console.error("Failed to fetch user details");
+      }
+    };
+    fetchUserDetails();
+  }, [token]);
+  console.log("userdetails=>", userDetails);
+  console.log("user=>", _id);
+  const ifSameUserDetails = _id === userDetails?.userId;
 
   const handleAddContestant = () => {
     const contestant: Contestant = {
@@ -123,27 +173,19 @@ export default function ContestTrackerHome() {
               <button
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                 onClick={() => {
-                  /* Add sign in logic */
+                  handleLogout();
+                  setIsUserMenuOpen(false);
                 }}
               >
-                Sign in
+                Log out
               </button>
-              <button
+              <Link
+                to="/profile"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                onClick={() => {
-                  /* Add sign up logic */
-                }}
+                onClick={() => setIsUserMenuOpen(false)}
               >
-                Sign up
-              </button>
-              <button
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                onClick={() => {
-                  /* Add sign out logic */
-                }}
-              >
-                Sign out
-              </button>
+                Profile
+              </Link>
             </div>
           )}
         </div>
@@ -160,17 +202,33 @@ export default function ContestTrackerHome() {
         </div>
 
         {/* Action buttons */}
-        <div className="mb-4 flex justify-end">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-1">
-                <Plus className="h-4 w-4" /> Create Account
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <AccountForm />
-            </DialogContent>
-          </Dialog>
+        <div className="mb-4 flex justify-end gap-4">
+          <Link to={`/createAc`}>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-1">
+                  <Plus className="h-4 w-4" /> Create Account
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <CreateAc />
+              </DialogContent>
+            </Dialog>
+          </Link>
+          {ifSameUserDetails && (
+            <Link to={`/editAc`}>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-1">
+                    <Edit className="h-4 w-4" /> Edit Account
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <CreateAc />
+                </DialogContent>
+              </Dialog>
+            </Link>
+          )}
         </div>
 
         {/* User List */}
@@ -233,4 +291,7 @@ export default function ContestTrackerHome() {
       </div>
     </div>
   );
+}
+function dispatch(arg0: any) {
+  throw new Error("Function not implemented.");
 }

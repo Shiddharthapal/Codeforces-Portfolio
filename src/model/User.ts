@@ -4,14 +4,11 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export interface IUser extends Document {
-  name: string;
+  _id: mongoose.Types.ObjectId;
   email: string;
   password: string;
-  createdAt: Date;
-  updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
   generateAuthToken(): string;
-  generateRefreshToken(): string;
 }
 
 interface IUserModel extends Model<IUser> {
@@ -20,12 +17,6 @@ interface IUserModel extends Model<IUser> {
 
 const userSchema = new mongoose.Schema<IUser>(
   {
-    name: {
-      type: String,
-      required: [true, 'Please provide a name'],
-      minlength: [2, 'Name must be at least 2 characters long'],
-      maxlength: [50, 'Name cannot be more than 50 characters'],
-    },
     email: {
       type: String,
       required: [true, 'Please provide an email'],
@@ -68,9 +59,8 @@ userSchema.pre('save', async function (this: IUser, next: (err?: CallbackError) 
 
 // Method to compare password
 userSchema.methods.comparePassword = async function (
-  this: IUser,
-  candidatePassword: string
-): Promise<boolean> {
+  candidatePassword: string,
+) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
@@ -80,21 +70,11 @@ userSchema.methods.generateAuthToken = function (this: IUser): string {
     { id: this._id },
     process.env.JWT_SECRET || 'your-jwt-secret',
     {
-      expiresIn: '15m', // Token expires in 15 minutes
+      expiresIn: '24h', // Token expires in 15 minutes
     }
   );
 };
 
-// Generate Refresh token
-userSchema.methods.generateRefreshToken = function (this: IUser): string {
-  return jwt.sign(
-    { id: this._id },
-    process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret',
-    {
-      expiresIn: '7d', // Refresh token expires in 7 days
-    }
-  );
-};
 
 // Static method to build a new user
 userSchema.statics.build = (attrs: { name: string; email: string; password: string }): IUser => {
