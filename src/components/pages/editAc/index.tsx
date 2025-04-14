@@ -1,173 +1,223 @@
-import React, { useState } from "react";
-import { useAppSelector } from "@/redux/hooks";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+"use client";
+
+import type React from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { navigate } from "astro/virtual-modules/transitions-router.js";
+import { toast } from "@/hooks/use-toast";
 
-export default function editAc() {
-  const [open, setOpen] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [newContestant, setNewContestant] = useState({
-    name: "",
-    department: "",
-    semester: "",
-    vjudgeLink: "",
-    cfLink: "",
-    clistLink: "",
-    atcoderLink: "",
-    ccLink: "",
-  });
+interface UserDetails {
+  id: string;
+  name: string;
+  department: string;
+  semester?: string;
+  vjudge?: string;
+  codeforces?: string;
+  clist?: string;
+  atcoder?: string;
+  codechef?: string;
+  createdAt: string;
+}
 
-  const auth = useAppSelector((state) => state.auth);
-  const token = auth?.token;
+export default function editAc({ userDetails }: { userDetails: UserDetails }) {
+  const [formData, setFormData] = useState<Partial<UserDetails>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleAddContestant = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    try {
-      // Check authentication
-      if (!token) {
-        alert("Please login to add contestants");
-        return;
-      }
-
-      // Validation
-      if (!newContestant.name || !newContestant.department) {
-        alert("Name and department are required");
-        return;
-      }
-      const contestantData = {
-        name: newContestant.name.trim(),
-        department: newContestant.department.trim(),
-        semester: newContestant.semester.trim() || undefined,
-        vjudge: newContestant.vjudgeLink.trim() || undefined,
-        codeforces: newContestant.cfLink.trim() || undefined,
-        clist: newContestant.clistLink.trim() || undefined,
-        atcoder: newContestant.atcoderLink.trim() || undefined,
-        codechef: newContestant.ccLink.trim() || undefined,
-      };
-
-      const response = await fetch("/api/contestants", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `${token}`,
-        },
-        body: JSON.stringify(contestantData),
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Handle different error cases
-        switch (response.status) {
-          case 400:
-            throw new Error(data.message || "Invalid input data");
-          case 401:
-            throw new Error("Authentication failed. Please login again.");
-          case 500:
-            throw new Error("Server error. Please try again later.");
-          default:
-            throw new Error(data.message || "Failed to add contestant");
-        }
-      }
-
-      alert("Contestant added successfully!");
-      setOpen(false);
-      resetForm();
-    } catch (error) {
-      console.error("Error adding contestant:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to add contestant"
-      );
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setNewContestant({
-      name: "",
-      department: "",
-      semester: "",
-      vjudgeLink: "",
-      cfLink: "",
-      clistLink: "",
-      atcoderLink: "",
-      ccLink: "",
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate required fields
+    if (!formData.name && !userDetails.name) {
+      newErrors.name = "Name is required";
+    }
+
+    if (!formData.department && !userDetails.department) {
+      newErrors.department = "Department is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) {
+      return;
+    }
+
+    // Merge the original data with the updated fields
+    const updatedData = { ...userDetails, ...formData };
+
+    // Here you would typically send the data to your API
+    console.log("Submitting updated data:", updatedData);
+
+    // Show success message
+    toast({
+      title: "Profile updated",
+      description: "Your programmer profile has been successfully updated.",
     });
   };
 
-  const renderField = (
-    id: keyof typeof newContestant,
-    label: string,
-    required = false,
-    type = "text"
-  ) => (
-    <div className="grid grid-cols-4 items-center gap-4 mb-4">
-      <Label htmlFor={id} className="text-right">
-        {label} {required && <span className="text-red-500">*</span>}
-      </Label>
-      <Input
-        id={id}
-        type={type}
-        value={newContestant[id]}
-        onChange={(e) =>
-          setNewContestant({
-            ...newContestant,
-            [id]: e.target.value,
-          })
-        }
-        className="col-span-3 h-8"
-        required={required}
-        disabled={isLoading}
-      />
-    </div>
-  );
+  const handleCancel = () => {
+    setFormData({});
+    setErrors({});
+    toast({
+      title: "Changes discarded",
+      description: "Your changes have been discarded.",
+      variant: "failed",
+    });
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Contestant</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleAddContestant} className="space-y-4">
-          {renderField("name", "Name", true)}
-          {renderField("department", "Department", true)}
-          {renderField("semester", "Semester")}
-          {renderField("vjudgeLink", "Vjudge Link")}
-          {renderField("cfLink", "Codeforces Link")}
-          {renderField("clistLink", "Clist Link")}
-          {renderField("atcoderLink", "AtCoder Link")}
-          {renderField("ccLink", "CodeChef Link")}
-
-          <div className="flex justify-end pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              className="mr-2"
-              onClick={() => {
-                setOpen(false);
-                navigate("/");
-              }}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add Contestant"}
-            </Button>
+    <form onSubmit={handleSubmit}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Programmer Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="flex">
+              Name
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              value={formData.name || ""}
+              onChange={handleChange}
+              placeholder={userDetails.name}
+              className="placeholder:text-gray-500 placeholder:opacity-70"
+              aria-invalid={!!errors.name}
+            />
+            {errors.name && (
+              <p className="text-sm text-red-500">{errors.name}</p>
+            )}
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+
+          <div className="space-y-2">
+            <Label htmlFor="department" className="flex">
+              Department
+            </Label>
+            <Input
+              id="department"
+              name="department"
+              value={formData.department || ""}
+              onChange={handleChange}
+              placeholder={userDetails.department}
+              className="placeholder:text-gray-500 placeholder:opacity-70"
+              aria-invalid={!!errors.department}
+            />
+            {errors.department && (
+              <p className="text-sm text-red-500">{errors.department}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="semester">Semester</Label>
+            <Input
+              id="semester"
+              name="semester"
+              value={formData.semester || ""}
+              onChange={handleChange}
+              placeholder={userDetails.semester || ""}
+              className="placeholder:text-gray-500 placeholder:opacity-70"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="vjudge">VJudge Link</Label>
+              <Input
+                id="vjudge"
+                name="vjudge"
+                value={formData.vjudge || ""}
+                onChange={handleChange}
+                placeholder={userDetails.vjudge || ""}
+                className="placeholder:text-gray-500 placeholder:opacity-70"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="codeforces">Codeforces Link</Label>
+              <Input
+                id="codeforces"
+                name="codeforces"
+                value={formData.codeforces || ""}
+                onChange={handleChange}
+                placeholder={userDetails.codeforces || ""}
+                className="placeholder:text-gray-500 placeholder:opacity-70"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="clist">Clist Link</Label>
+              <Input
+                id="clist"
+                name="clist"
+                value={formData.clist || ""}
+                onChange={handleChange}
+                placeholder={userDetails.clist || ""}
+                className="placeholder:text-gray-500 placeholder:opacity-70"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="atcoder">AtCoder Link</Label>
+              <Input
+                id="atcoder"
+                name="atcoder"
+                value={formData.atcoder || ""}
+                onChange={handleChange}
+                placeholder={userDetails.atcoder || ""}
+                className="placeholder:text-gray-500 placeholder:opacity-70"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="codechef">CodeChef Link</Label>
+            <Input
+              id="codechef"
+              name="codechef"
+              value={formData.codechef || ""}
+              onChange={handleChange}
+              placeholder={userDetails.codechef || ""}
+              className="placeholder:text-gray-500 placeholder:opacity-70"
+            />
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">Save Changes</Button>
+        </CardFooter>
+      </Card>
+    </form>
   );
 }
