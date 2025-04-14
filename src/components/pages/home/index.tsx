@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CreateAc from "../createAc";
 
@@ -72,7 +72,7 @@ export default function ContestTrackerHome() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const user = useAppSelector((state) => state.auth);
+  const { _id, token } = useAppSelector((state) => state.auth);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -85,7 +85,21 @@ export default function ContestTrackerHome() {
     navigate("/");
   };
 
-  const ifSameUserDetails = user?._id === userDetails?.userId;
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const response = await fetch(`/api/users/${_id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserDetails(data);
+      } else {
+        console.error("Failed to fetch user details");
+      }
+    };
+    fetchUserDetails();
+  }, [token]);
+  console.log("userdetails=>", userDetails);
+  console.log("user=>", _id);
+  const ifSameUserDetails = _id === userDetails?.userId;
 
   const handleAddContestant = () => {
     const contestant: Contestant = {

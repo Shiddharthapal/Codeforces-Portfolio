@@ -36,7 +36,7 @@ export default function CreateAc() {
     ccLink: "",
   });
 
-  const user = useAppSelector((state) => state.auth.user);
+  const user = useAppSelector((state) => state.auth);
   const token = user?.token;
 
   const handleAddContestant = async (e: React.FormEvent) => {

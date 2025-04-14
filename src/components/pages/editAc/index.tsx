@@ -36,8 +36,8 @@ export default function editAc() {
     ccLink: "",
   });
 
-  const user = useAppSelector((state) => state.auth.user);
-  const token = user?.token;
+  const auth = useAppSelector((state) => state.auth);
+  const token = auth?.token;
 
   const handleAddContestant = async (e: React.FormEvent) => {
     e.preventDefault();
