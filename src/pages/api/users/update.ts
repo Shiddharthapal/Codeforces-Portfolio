@@ -10,19 +10,29 @@ export const POST: APIRoute = async ({ request }) => {
         }
   try {
     const data = await request.json();
+    const {
+      name,
+      department,
+      semester,
+      vjudge,
+      codeforces,
+      clist,
+      atcoder,
+      codechef
+    } = data;
     await connect();
     let token= request.headers.get("Authorization");
     const verifytoken= await verifyToken(token||"");
     const user= await UserDetails.findOne({ userId: verifytoken.userId });
 
-    user.name = data.name;
-    user.department = data.department;
-    if (data.semester !== undefined) user.semester = data.semester;
-    if (data.vjudge !== undefined) user.vjudge = String(data.vjudge);
-    if (data.codeforces !== undefined) user.codeforces = data.codeforces;
-    if (data.clist !== undefined) user.clist = data.clist;
-    if (data.atcoder !== undefined) user.atcoder = data.atcoder;
-    if (data.codechef !== undefined) user.codechef = data.codechef;
+    user.name =name;
+    user.department =department;
+    if (semester !== undefined) user.semester = semester;
+    if (vjudge !== undefined) user.vjudge = String(vjudge);
+    if (codeforces !== undefined) user.codeforces = codeforces;
+    if (clist !== undefined) user.clist =clist;
+    if (atcoder !== undefined) user.atcoder = atcoder;
+    if (codechef !== undefined) user.codechef =codechef;
 
     // Save user to database
     await user.save();
@@ -30,10 +40,22 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
 
-        message: "Update successful",
+        message: "Update successfully",
+         user: {
+          userId: user.userId,
+          name: user.name,
+          department: user.department,
+          semester: user.semester,
+          vjudge: user.vjudge,
+          codeforces: user.codeforces,
+          clist: user.clist,
+          atcoder: user.atcoder,
+          codechef: user.codechef
+        }
+
       }),
       {
-        status: 201,
+        status: 200,
         headers
       }
     );

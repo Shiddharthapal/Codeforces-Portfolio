@@ -88,18 +88,9 @@ export const POST: APIRoute = async ({ request }) => {
     console.log("user ==> ", user);
     return new Response(
       JSON.stringify({
+        success: true,
         message: isNewUser ? "User details created successfully" : "User details updated successfully",
-        user: {
-          userId: user.userId,
-          name: user.name,
-          department: user.department,
-          semester: user.semester,
-          vjudge: user.vjudge,
-          codeforces: user.codeforces,
-          clist: user.clist,
-          atcoder: user.atcoder,
-          codechef: user.codechef
-        }
+        
       }),
       { status: isNewUser ? 201 : 200, headers }
     );

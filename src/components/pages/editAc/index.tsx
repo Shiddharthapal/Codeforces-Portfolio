@@ -31,12 +31,11 @@ interface UserDetails {
 }
 
 export default function editAc() {
-  const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [formData, setFormData] = useState<Partial<UserDetails>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const user = useAppSelector((state) => state.auth);
-  const navigate = useNavigate;
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,7 +80,7 @@ export default function editAc() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     try {
       e.preventDefault();
 
@@ -105,7 +104,9 @@ export default function editAc() {
         },
         body: JSON.stringify(updatedData),
       });
+
       // Show success message
+
       toast({
         title: "Profile updated",
         description: "Your programmer profile has been successfully updated.",
@@ -129,7 +130,6 @@ export default function editAc() {
       description: "Your changes have been discarded.",
       variant: "failed",
     });
-    setIsMenuOpen(false);
   };
 
   return (
@@ -252,7 +252,14 @@ export default function editAc() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={handleCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              handleCancel();
+              navigate("/");
+            }}
+          >
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>
