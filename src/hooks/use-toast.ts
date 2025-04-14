@@ -43,8 +43,8 @@ const getToastStyles = (variant: ToastVariant = 'success'): ToastStyles => {
   }
 }
 
-const ToastMessage: React.FC<{ t: Toast } & ToastProps> = ({ t, title, description }) => {
-  const styles = getToastStyles()
+const ToastMessage: React.FC<{ t: Toast } & ToastProps> = ({ t, title, description, variant }) => {
+  const styles = getToastStyles(variant)
   
   return createElement('div', {
     className: `${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`,

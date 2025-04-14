@@ -95,8 +95,7 @@ export default function editAc() {
         createdAt: userDetails?.createdAt || new Date().toISOString(),
       };
 
-      // Here you would typically send the data to your API
-      const response = fetch("/api/users/update", {
+      const response = await fetch("/api/users/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -105,17 +104,30 @@ export default function editAc() {
         body: JSON.stringify(updatedData),
       });
 
-      // Show success message
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
 
-      toast({
-        title: "Profile updated",
-        description: "Your programmer profile has been successfully updated.",
-      });
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "Profile updated",
+          description: "Your programmer profile has been successfully updated.",
+          variant: "success",
+        });
+        navigate("/profile"); // Redirect to home after success
+      } else {
+        throw new Error(data.message || "Failed to update profile");
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
         title: "Update failed",
-        description: "There was an error updating your profile.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "There was an error updating your profile.",
         variant: "failed",
       });
     }
