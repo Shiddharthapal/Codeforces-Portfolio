@@ -8,8 +8,6 @@ export const POST: APIRoute = async ({ request }) => {
   const headers = {
     "Content-Type": "application/json"
   };
-  console.log("hi=>");
-
   try {
 
     const data = await request.json();
@@ -62,7 +60,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Find existing user
     let user = await UserDetails.findOne({ userId: verifiedUserId });
-    console.log("user ==> ", user);
+    //console.log("user ==> ", user);
     let isNewUser = false;
 
     if (!user) {

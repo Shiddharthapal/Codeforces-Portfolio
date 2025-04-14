@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useAppSelector } from "@/redux/hooks";
+import { useNavigate } from "react-router-dom";
 
 interface UserDetails {
   userId: string;
@@ -30,10 +31,12 @@ interface UserDetails {
 }
 
 export default function editAc() {
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [formData, setFormData] = useState<Partial<UserDetails>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const user = useAppSelector((state) => state.auth);
+  const navigate = useNavigate;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,37 +82,54 @@ export default function editAc() {
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
 
-    if (!validate()) {
-      return;
+      if (!validate()) {
+        return;
+      }
+
+      // Merge the original data with the updated fields
+      const updatedData = {
+        ...userDetails,
+        ...formData,
+        createdAt: userDetails?.createdAt || new Date().toISOString(),
+      };
+
+      // Here you would typically send the data to your API
+      const response = fetch("/api/users/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${user.token}`,
+        },
+        body: JSON.stringify(updatedData),
+      });
+      // Show success message
+      toast({
+        title: "Profile updated",
+        description: "Your programmer profile has been successfully updated.",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update failed",
+        description: "There was an error updating your profile.",
+        variant: "failed",
+      });
     }
-
-    // Merge the original data with the updated fields
-    const updatedData = {
-      ...userDetails,
-      ...formData,
-      createdAt: userDetails?.createdAt || new Date().toISOString(),
-    };
-
-    // Here you would typically send the data to your API
-    console.log("Submitting updated data:", updatedData);
-
-    // Show success message
-    toast({
-      title: "Profile updated",
-      description: "Your programmer profile has been successfully updated.",
-    });
   };
 
   const handleCancel = () => {
     setFormData({});
     setErrors({});
+
     toast({
       title: "Changes discarded",
       description: "Your changes have been discarded.",
       variant: "failed",
     });
+    setIsMenuOpen(false);
   };
 
   return (
