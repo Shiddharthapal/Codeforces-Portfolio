@@ -1,11 +1,10 @@
 
 import type { APIRoute } from "astro";
-import UserDetails from "@/model/UserDetails";
 import User from "@/model/User";
 import connect from "@/lib/connection";
 
 
-export const GET: APIRoute = async ({ params, request }) => {
+export const GET: APIRoute = async () => {
   const headers = {
     "Content-Type": "application/json",
   };
@@ -13,33 +12,21 @@ export const GET: APIRoute = async ({ params, request }) => {
   try {
     // Connect to database
     await connect();
-    const { id } = params;
-    if (!id) {
-      return new Response(
-        JSON.stringify({ message: "User ID is required" }), 
-        { status: 400, headers }
-      );
-    }
 
     // Fetch user details
-    const user = await User.findOne({_id: id });
-    const userDetails = await UserDetails.findOne({ userId: id });
+    const userDetails = await User.find();
     if (!userDetails) {
       return new Response(
         JSON.stringify({ message: "User details not found go for create account" }), 
         { status: 404, headers }
       );
     }
-    if (!user) {
-      return new Response(
-        JSON.stringify({ message: "User not found go for create account" }), 
-        { status: 404, headers }
-      );
-    }
+
+    //console.log("userdetails=>",userDetails);
 
     // Return user details
     return new Response(
-      JSON.stringify({ userDetails, user }),
+      JSON.stringify(userDetails),
       { status: 200, headers }
     );
 

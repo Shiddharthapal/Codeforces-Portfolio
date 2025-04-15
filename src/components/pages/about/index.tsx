@@ -2,54 +2,61 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
-interface Contestant {
-  id: string;
+interface contestantDetails {
+  userId: string;
   name: string;
-  vjudgeHandle: string;
-  cfHandle: string;
-  clistHandle: string;
+  department: string;
+  semester: string;
+  vjudge: string;
+  codeforces: string;
+  clist: string;
+  atcoder: string;
+  codechef: string;
   score: number;
   totalSolve: number;
   totalParticipation: number;
   solveCount: number;
   averageSolve: number;
-  cfRound913: string;
   atcoderBeginner: string;
+  cfRound913: string;
   cf3: string;
+}
+export interface contestant {
+  name: string;
+  email: string;
+  password: string;
+  createdAt?: Date;
 }
 
 export default function ContestantDetails() {
-  const [contestant, setContestant] = useState<Contestant | null>(null);
+  const [contestant, setContestant] = useState<contestant | null>(null);
+  const [userDetails, setUserDetails] = useState<contestantDetails | null>(
+    null
+  );
 
   // Get contestant ID from URL
   const id = window.location.pathname.split("/about/")[1];
 
-  // In a real app, fetch contestant data from API
-  // For now, using mock data
-  const mockContestants: Contestant[] = [
-    {
-      id: "221-35-1065",
-      name: "Md. Iffatul Islam Anon",
-      vjudgeHandle: "http://vjudge.net/user/iffatul_",
-      cfHandle: "http://codeforces.com/profile/iffatul",
-      clistHandle: "http://clist.by/coder/iffatul_ar",
-      score: 0,
-      totalSolve: 90,
-      totalParticipation: 0,
-      solveCount: 1451,
-      averageSolve: 0,
-      cfRound913: "A",
-      atcoderBeginner: "A",
-      cf3: "3",
-    },
-    // ... other contestants
-  ];
-
   useEffect(() => {
-    const found = mockContestants.find((c) => c.id === id);
-    if (found) {
-      setContestant(found);
-    }
+    const fetchContestantDetails = async () => {
+      try {
+        const response = await fetch(`/api/users/${id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch contestant details");
+        }
+        const data = await response.json();
+        setUserDetails(data.userDetails);
+        setContestant(data.user);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchContestantDetails();
   }, [id]);
 
   const goBack = () => {
@@ -84,7 +91,7 @@ export default function ContestantDetails() {
             <h3 className="text-lg font-medium">Profile Links</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <a
-                href={contestant.vjudgeHandle}
+                href={userDetails?.vjudge}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
@@ -92,7 +99,7 @@ export default function ContestantDetails() {
                 VJudge Profile
               </a>
               <a
-                href={contestant.cfHandle}
+                href={userDetails?.codeforces}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
@@ -100,12 +107,28 @@ export default function ContestantDetails() {
                 Codeforces Profile
               </a>
               <a
-                href={contestant.clistHandle}
+                href={userDetails?.clist}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
               >
                 Clist Profile
+              </a>
+              <a
+                href={userDetails?.atcoder}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                AtCoder Profile
+              </a>
+              <a
+                href={userDetails?.codechef}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                CodeChef Profile
               </a>
             </div>
           </div>
@@ -116,31 +139,25 @@ export default function ContestantDetails() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-500">Total Solve</div>
-                <div className="text-2xl font-semibold">
-                  {contestant.totalSolve}
-                </div>
+                <div className="text-2xl font-semibold">495</div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-500">Score</div>
-                <div className="text-2xl font-semibold">{contestant.score}</div>
+                <div className="text-2xl font-semibold">997</div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-500">Total Participation</div>
-                <div className="text-2xl font-semibold">
-                  {contestant.totalParticipation}
-                </div>
+                <div className="text-2xl font-semibold">510</div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
-                <div className="text-sm text-gray-500">Solve Count</div>
-                <div className="text-2xl font-semibold">
-                  {contestant.solveCount}
+                <div className="text-sm text-gray-500">
+                  Last Month Solve Count
                 </div>
+                <div className="text-2xl font-semibold">90</div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-500">Average Solve</div>
-                <div className="text-2xl font-semibold">
-                  {contestant.averageSolve}
-                </div>
+                <div className="text-2xl font-semibold">2</div>
               </div>
             </div>
           </div>
@@ -150,20 +167,16 @@ export default function ContestantDetails() {
             <h3 className="text-lg font-medium mb-4">Contest Performance</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gray-50 p-4 rounded-md">
-                <div className="text-sm text-gray-500">CF Round 913</div>
-                <div className="text-xl font-semibold">
-                  {contestant.cfRound913}
-                </div>
+                <div className="text-sm text-gray-500">CF Level</div>
+                <div className="text-xl font-semibold">A</div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
-                <div className="text-sm text-gray-500">Atcoder Beginner</div>
-                <div className="text-xl font-semibold">
-                  {contestant.atcoderBeginner}
-                </div>
+                <div className="text-sm text-gray-500">Atcoder Level</div>
+                <div className="text-xl font-semibold">B</div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
-                <div className="text-sm text-gray-500">CF 3</div>
-                <div className="text-xl font-semibold">{contestant.cf3}</div>
+                <div className="text-sm text-gray-500">CodeChef Level</div>
+                <div className="text-xl font-semibold">A</div>
               </div>
             </div>
           </div>

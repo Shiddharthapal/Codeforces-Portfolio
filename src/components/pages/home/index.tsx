@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CreateAc from "../createAc";
 
-import { userData } from "@/const/fakeData";
 import { Menu, Plus, Trash2, Edit, Save, Info, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,24 +38,14 @@ interface UserDetails {
 }
 
 interface Contestant {
-  id: string;
+  _id: string;
   name: string;
-  vjudgeHandle: string;
-  cfHandle: string;
-  clistHandle: string;
-  score: number;
-  totalSolve: number;
-  totalParticipation: number;
-  solveCount: number;
-  averageSolve: number;
-  cfRound913: string;
-  atcoderBeginner: string;
-  cf3: string;
+  email: string;
+  password: string;
 }
 
 export default function ContestTrackerHome() {
-  const [contestants, setContestants] = useState<Contestant[]>(userData);
-
+  const [contestants, setContestants] = useState<Contestant[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -65,10 +54,7 @@ export default function ContestTrackerHome() {
   const [editingContestant, setEditingContestant] = useState<Contestant | null>(
     null
   );
-  const [newContestant, setNewContestant] = useState<Partial<Contestant>>({
-    id: "",
-    name: "",
-  });
+
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -87,41 +73,51 @@ export default function ContestTrackerHome() {
 
   useEffect(() => {
     const fetchUserDetails = async () => {
+      const alldataResponse = await fetch("/api/users/allUser");
       const response = await fetch(`/api/users/${_id}`);
+
+      if (alldataResponse.ok) {
+        const dataOfAllUser = await alldataResponse.json();
+        //console.log("alldataResponse=>", data);
+        setContestants(dataOfAllUser);
+      } else {
+        console.error("Failed to fetch user details");
+      }
+
       if (response.ok) {
         const data = await response.json();
-        setUserDetails(data);
+        setUserDetails(data.userDetails);
       } else {
         console.error("Failed to fetch user details");
       }
     };
     fetchUserDetails();
   }, [token]);
-  console.log("userdetails=>", userDetails);
-  console.log("user=>", _id);
+
+  //console.log("constestants=>", contestants);
   const ifSameUserDetails = _id === userDetails?.userId;
 
-  const handleAddContestant = () => {
-    const contestant: Contestant = {
-      id: newContestant.id || `ID-${Math.floor(Math.random() * 10000)}`,
-      name: newContestant.name || "New Contestant",
-      vjudgeHandle: "",
-      cfHandle: "",
-      clistHandle: "",
-      score: 0,
-      totalSolve: 0,
-      totalParticipation: 0,
-      solveCount: 0,
-      averageSolve: 0,
-      cfRound913: "N/A",
-      atcoderBeginner: "N/A",
-      cf3: "N/A",
-    };
+  // const handleAddContestant = () => {
+  //   const contestant: Contestant = {
+  //     id: newContestant.id || `ID-${Math.floor(Math.random() * 10000)}`,
+  //     name: newContestant.name || "New Contestant",
+  //     vjudgeHandle: "",
+  //     cfHandle: "",
+  //     clistHandle: "",
+  //     score: 0,
+  //     totalSolve: 0,
+  //     totalParticipation: 0,
+  //     solveCount: 0,
+  //     averageSolve: 0,
+  //     cfRound913: "N/A",
+  //     atcoderBeginner: "N/A",
+  //     cf3: "N/A",
+  //   };
 
-    setContestants([...contestants, contestant]);
-    setNewContestant({});
-    setIsAddDialogOpen(false);
-  };
+  //   setContestants([...contestants, contestant]);
+  //   setNewContestant({});
+  //   setIsAddDialogOpen(false);
+  // };
 
   const handleEditContestant = (contestant: Contestant) => {
     setEditingContestant(contestant);
@@ -131,7 +127,7 @@ export default function ContestTrackerHome() {
   const saveEditedContestant = () => {
     if (editingContestant) {
       const updatedContestants = contestants.map((c) =>
-        c.id === editingContestant.id ? editingContestant : c
+        c._id === editingContestant._id ? editingContestant : c
       );
       setContestants(updatedContestants);
       setIsEditDialogOpen(false);
@@ -139,9 +135,17 @@ export default function ContestTrackerHome() {
     }
   };
 
-  const handleDeleteContestant = (id: string) => {
-    const updatedContestants = contestants.filter((c) => c.id !== id);
-    setContestants(updatedContestants);
+  const handleDeleteContestant = async (id: string) => {
+    const alldataResponse = await fetch("/api/users/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    });
+    let data = await alldataResponse.json();
+    //console.log("data ==> ", data);
+    setContestants(data);
   };
 
   return (
@@ -235,12 +239,12 @@ export default function ContestTrackerHome() {
         <div className="grid gap-4">
           {contestants.map((contestant) => (
             <div
-              key={contestant.id}
+              key={contestant._id}
               className="flex justify-between items-center p-4 bg-white rounded-lg shadow"
             >
               <div className="font-medium">{contestant.name}</div>
-              <div className="flex gap-2">
-                <Link to={`/about/${contestant.id}`}>
+              <div className="flex gap-3">
+                <Link to={`/about/${contestant._id}`}>
                   <Button
                     variant="outline"
                     size="sm"
@@ -250,6 +254,12 @@ export default function ContestTrackerHome() {
                     About
                   </Button>
                 </Link>
+                <Trash2
+                  className="text-red-500"
+                  onClick={() => {
+                    handleDeleteContestant(contestant._id);
+                  }}
+                />
               </div>
             </div>
           ))}
