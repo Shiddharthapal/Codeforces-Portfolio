@@ -24,7 +24,7 @@ interface UserDetails {
   semester?: string;
   vjudge?: string;
   codeforces?: string;
-  clist?: string;
+  leetcode?: string;
   atcoder?: string;
   codechef?: string;
   createdAt: string;
@@ -227,13 +227,13 @@ export default function editAc() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="clist">Clist Link</Label>
+              <Label htmlFor="leetcode">leetcode Link</Label>
               <Input
-                id="clist"
-                name="clist"
-                value={formData.clist || ""}
+                id="leetcode"
+                name="leetcode"
+                value={formData.leetcode || ""}
                 onChange={handleChange}
-                placeholder={userDetails?.clist || "Enter Clist link"}
+                placeholder={userDetails?.leetcode || "Enter leetcode link"}
                 className="placeholder:text-gray-500 placeholder:opacity-70"
               />
             </div>

@@ -26,7 +26,7 @@ const UserDetailsSchema = new mongoose.Schema(
     codeforces: {
       type: String,
     },
-    clist: {
+    leetcode: {
       type: String,
     },
     atcoder: {
@@ -48,7 +48,7 @@ const UserDetailsSchema = new mongoose.Schema(
 // Add pre-save middleware to ensure string conversion
 UserDetailsSchema.pre('save', function(next) {
   // Convert all profile link fields to strings
-  if (this.clist !== undefined) this.clist = String(this.clist);
+  if (this.leetcode !== undefined) this.leetcode = String(this.leetcode);
   if (this.atcoder !== undefined) this.atcoder = String(this.atcoder);
   if (this.codechef !== undefined) this.codechef = String(this.codechef);
   if (this.codeforces !== undefined) this.codeforces = String(this.codeforces);

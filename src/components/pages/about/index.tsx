@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 interface contestantDetails {
   userId: string;
   name: string;
@@ -9,7 +9,7 @@ interface contestantDetails {
   semester: string;
   vjudge: string;
   codeforces: string;
-  clist: string;
+  leetcode: string;
   atcoder: string;
   codechef: string;
   score: number;
@@ -33,6 +33,7 @@ export default function ContestantDetails() {
   const [userDetails, setUserDetails] = useState<contestantDetails | null>(
     null
   );
+  const navigate = useNavigate();
 
   // Get contestant ID from URL
   const id = window.location.pathname.split("/about/")[1];
@@ -64,7 +65,19 @@ export default function ContestantDetails() {
   };
 
   if (!contestant) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-between">
+        <div>Invalid!. Create an account</div>
+        <Button
+          className="absolute top-4 right-4"
+          onClick={() => {
+            navigate("/");
+          }}
+        >
+          Back
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -84,8 +97,16 @@ export default function ContestantDetails() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-6">Contestant Details</h2>
-
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold mb-6">Contestant Details</h2>
+            <Button
+              onClick={() => {
+                navigate("/");
+              }}
+            >
+              Back
+            </Button>
+          </div>
           {/* Profile Links */}
           <div className="grid gap-4 mb-8">
             <h3 className="text-lg font-medium">Profile Links</h3>
@@ -107,12 +128,12 @@ export default function ContestantDetails() {
                 Codeforces Profile
               </a>
               <a
-                href={userDetails?.clist}
+                href={userDetails?.leetcode}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
               >
-                Clist Profile
+                leetcode Profile
               </a>
               <a
                 href={userDetails?.atcoder}

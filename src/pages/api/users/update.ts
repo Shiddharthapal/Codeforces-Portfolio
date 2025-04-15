@@ -16,7 +16,7 @@ export const POST: APIRoute = async ({ request }) => {
       semester,
       vjudge,
       codeforces,
-      clist,
+      leetcode,
       atcoder,
       codechef
     } = data;
@@ -30,7 +30,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (semester !== undefined) user.semester = semester;
     if (vjudge !== undefined) user.vjudge = String(vjudge);
     if (codeforces !== undefined) user.codeforces = codeforces;
-    if (clist !== undefined) user.clist =clist;
+    if (leetcode !== undefined) user.leetcode =leetcode;
     if (atcoder !== undefined) user.atcoder = atcoder;
     if (codechef !== undefined) user.codechef =codechef;
 
@@ -49,7 +49,7 @@ export const POST: APIRoute = async ({ request }) => {
           semester: user.semester,
           vjudge: user.vjudge,
           codeforces: user.codeforces,
-          clist: user.clist,
+          leetcode: user.leetcode,
           atcoder: user.atcoder,
           codechef: user.codechef
         }
