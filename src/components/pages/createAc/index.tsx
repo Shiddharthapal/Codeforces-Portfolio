@@ -27,9 +27,16 @@ interface UserDetails {
   codechef?: string;
   createdAt: string;
 }
+export interface contestantDetails {
+  name: string;
+  email: string;
+  password: string;
+  createdAt?: Date;
+}
 
 export default function editAc() {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [contestant, setContestant] = useState<contestantDetails | null>(null);
   const [formData, setFormData] = useState<Partial<UserDetails>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const user = useAppSelector((state) => state.auth);
@@ -37,13 +44,13 @@ export default function editAc() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const userdetails = await fetch(`/api/users/${user._id}`);
-      if (!userdetails.ok) {
+      const contestantuser = await fetch(`/api/users/${user._id}`);
+      if (!contestantuser.ok) {
         console.error("Failed to fetch user details");
         return;
       }
-      const data = await userdetails.json();
-      setUserDetails(data.user);
+      const data = await contestantuser.json();
+      setContestant(data.user);
     };
     fetchData();
   }, [user._id]);
@@ -158,7 +165,7 @@ export default function editAc() {
               name="name"
               value={formData.name || ""}
               onChange={handleChange}
-              placeholder={userDetails?.name || "Enter name"}
+              placeholder={contestant?.name || "Enter name"}
               className="placeholder:text-gray-500 placeholder:opacity-70"
               aria-invalid={!!errors.name}
             />
