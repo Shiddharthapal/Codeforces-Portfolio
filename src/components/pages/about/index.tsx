@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
-interface Contestant {
+interface contestantDetails {
   userId: string;
   name: string;
   department: string;
@@ -21,9 +21,18 @@ interface Contestant {
   cfRound913: string;
   cf3: string;
 }
+export interface contestant {
+  name: string;
+  email: string;
+  password: string;
+  createdAt?: Date;
+}
 
 export default function ContestantDetails() {
-  const [contestant, setContestant] = useState<Contestant | null>(null);
+  const [contestant, setContestant] = useState<contestant | null>(null);
+  const [userDetails, setUserDetails] = useState<contestantDetails | null>(
+    null
+  );
 
   // Get contestant ID from URL
   const id = window.location.pathname.split("/about/")[1];
@@ -41,7 +50,8 @@ export default function ContestantDetails() {
           throw new Error("Failed to fetch contestant details");
         }
         const data = await response.json();
-        setContestant(data.userDetails);
+        setUserDetails(data.userDetails);
+        setContestant(data.user);
       } catch (error) {
         console.error(error);
       }
@@ -81,7 +91,7 @@ export default function ContestantDetails() {
             <h3 className="text-lg font-medium">Profile Links</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <a
-                href={contestant.vjudge}
+                href={userDetails?.vjudge}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
@@ -89,7 +99,7 @@ export default function ContestantDetails() {
                 VJudge Profile
               </a>
               <a
-                href={contestant.codeforces}
+                href={userDetails?.codeforces}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
@@ -97,7 +107,7 @@ export default function ContestantDetails() {
                 Codeforces Profile
               </a>
               <a
-                href={contestant.clist}
+                href={userDetails?.clist}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
@@ -105,7 +115,7 @@ export default function ContestantDetails() {
                 Clist Profile
               </a>
               <a
-                href={contestant.atcoder}
+                href={userDetails?.atcoder}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
@@ -113,7 +123,7 @@ export default function ContestantDetails() {
                 AtCoder Profile
               </a>
               <a
-                href={contestant.codechef}
+                href={userDetails?.codechef}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"

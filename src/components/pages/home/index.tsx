@@ -77,16 +77,16 @@ export default function ContestTrackerHome() {
       const response = await fetch(`/api/users/${_id}`);
 
       if (alldataResponse.ok) {
-        const data = await alldataResponse.json();
+        const dataOfAllUser = await alldataResponse.json();
         //console.log("alldataResponse=>", data);
-        setContestants(data);
+        setContestants(dataOfAllUser);
       } else {
         console.error("Failed to fetch user details");
       }
 
       if (response.ok) {
         const data = await response.json();
-        setUserDetails(data);
+        setUserDetails(data.userDetails);
       } else {
         console.error("Failed to fetch user details");
       }

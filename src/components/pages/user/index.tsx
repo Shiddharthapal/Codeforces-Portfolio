@@ -34,12 +34,13 @@ export default function UserProfile() {
 
     const fetchUserDetails = async () => {
       try {
-        const response = await axios.get(`/api/users/${_id}`, {
+        const response = await fetch(`/api/users/${_id}`, {
           headers: {
             "Content-Type": "application/json",
           },
         });
-        setUserDetails(response.data);
+        let data = await response.json();
+        setUserDetails(data.userDetails);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch user details"
