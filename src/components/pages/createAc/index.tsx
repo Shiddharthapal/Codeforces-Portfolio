@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAppSelector } from "@/redux/hooks";
 import {
   Dialog,
@@ -21,10 +21,17 @@ const CloseButton = ({ onClick }: { onClick: () => void }) => (
     <span className="sr-only">Close</span>
   </button>
 );
+interface Contestant {
+  _id: string;
+  name: string;
+  email: string;
+  password: string;
+}
 
 export default function CreateAc() {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [contestants, setContestants] = useState<Contestant[]>([]);
   const [newContestant, setNewContestant] = useState({
     name: "",
     department: "",
@@ -116,6 +123,24 @@ export default function CreateAc() {
       ccLink: "",
     });
   };
+
+  useEffect(() => {
+    const userData = async () => {
+      const userdata = await fetch(`/api/users/${user._id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await userdata.json();
+      if (userdata.ok) {
+        setContestants(data.user);
+      } else {
+        console.error("Failed to fetch user details");
+      }
+    };
+    userData();
+  }, [user]);
 
   const renderField = (
     id: keyof typeof newContestant,
