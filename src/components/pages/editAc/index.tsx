@@ -45,7 +45,7 @@ export default function editAc() {
         return;
       }
       const data = await userdetails.json();
-      setUserDetails(data);
+      setUserDetails(data.userDetails);
     };
     fetchData();
   }, [user._id]);
