@@ -54,7 +54,6 @@ export const POST: APIRoute = async ({ request }) => {
         { status: 401, headers }
       );
     }
-
     // Connect to database
     await connect();
 

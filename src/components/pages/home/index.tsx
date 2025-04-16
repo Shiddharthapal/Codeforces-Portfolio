@@ -101,28 +101,6 @@ export default function ContestTrackerHome() {
   //console.log("constestants=>", contestants);
   const ifSameUserDetails = _id === userDetails?.userId;
 
-  // const handleAddContestant = () => {
-  //   const contestant: Contestant = {
-  //     id: newContestant.id || `ID-${Math.floor(Math.random() * 10000)}`,
-  //     name: newContestant.name || "New Contestant",
-  //     vjudgeHandle: "",
-  //     cfHandle: "",
-  //     leetcodeHandle: "",
-  //     score: 0,
-  //     totalSolve: 0,
-  //     totalParticipation: 0,
-  //     solveCount: 0,
-  //     averageSolve: 0,
-  //     cfRound913: "N/A",
-  //     atcoderBeginner: "N/A",
-  //     cf3: "N/A",
-  //   };
-
-  //   setContestants([...contestants, contestant]);
-  //   setNewContestant({});
-  //   setIsAddDialogOpen(false);
-  // };
-
   const handleEditContestant = (contestant: Contestant) => {
     setEditingContestant(contestant);
     setIsEditDialogOpen(true);
