@@ -43,6 +43,11 @@ export const POST: APIRoute = async ({ request }) => {
       password,
     });
 
+    user.name = name;
+    user.email = email;
+    user.password = password;
+
+
     // Save user to database
     await user.save();
 

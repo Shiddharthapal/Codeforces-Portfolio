@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 
 interface User {
   _id: string;
+  name: string;
   email: string;
   token: string;
 }
@@ -26,6 +27,7 @@ const loadInitialState = () => {
     const userData = JSON.parse(localStorage.getItem('authUser') || '{}');
     return {
       _id: userData._id || null,
+      name: userData.name || null,
       email: userData.email || null,
       token,
       loading: false,
@@ -34,6 +36,7 @@ const loadInitialState = () => {
   }
   return {
     _id: null,
+    name: null,
     email: null,
     token: null,
     loading: false,
@@ -52,6 +55,7 @@ export const authSlice = createSlice({
       state.loading = false;
       state._id = action.payload._id;
       state.email = action.payload.email;
+      state.name = action.payload.name;
       state.token = action.payload.token;
       state.error = null;
 

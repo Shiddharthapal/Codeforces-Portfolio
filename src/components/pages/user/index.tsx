@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/redux/hooks";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { Button } from "@/components/ui/button";
 import { Loader2, X } from "lucide-react";
 
 interface UserDetails {
@@ -11,14 +11,21 @@ interface UserDetails {
   semester: string;
   vjudge: string;
   codeforces: string;
-  clist: string;
+  leetcode: string;
   atcoder: string;
   codechef: string;
   createdAt: string;
 }
+interface contestantDetails {
+  name: string;
+  email: string;
+  password: string;
+  createdAt?: Date;
+}
 
 export default function UserProfile() {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [contestant, setContestant] = useState<contestantDetails | null>(null);
   const [open, setOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +46,12 @@ export default function UserProfile() {
             "Content-Type": "application/json",
           },
         });
+        if (!response.ok) {
+          throw new Error("Failed to fetch user details");
+        }
         let data = await response.json();
         setUserDetails(data.userDetails);
+        setContestant(data.user);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch user details"
@@ -72,9 +83,19 @@ export default function UserProfile() {
 
   if (!userDetails) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-yellow-50 text-yellow-600 p-4 rounded-md">
-          No user details found, please create an account!
+      <div>
+        <Button
+          className="bg-blue-500 text-white rounded-md px-4 py-2 absolute top-4 right-4"
+          onClick={() => {
+            navigate("/");
+          }}
+        >
+          Back
+        </Button>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="bg-yellow-50 text-yellow-600 p-4 rounded-md">
+            No user details found, please create an account!
+          </div>
         </div>
       </div>
     );
@@ -99,6 +120,12 @@ export default function UserProfile() {
                   Name
                 </label>
                 <div className="text-gray-500">{userDetails.name}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold  text-gray-900">
+                  Email
+                </label>
+                <div className="text-gray-500">{contestant?.email}</div>
               </div>
               <div>
                 <label className="block text-sm font-semibold  text-gray-900">
@@ -137,10 +164,10 @@ export default function UserProfile() {
               </div>
               <div>
                 <label className="block text-sm font-semibold  text-gray-900">
-                  Clist
+                  leetcode
                 </label>
                 <div className="text-gray-500">
-                  {userDetails.clist || "Not set"}
+                  {userDetails.leetcode || "Not set"}
                 </div>
               </div>
               <div>

@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
+  name: string;
   email: string;
   password: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -17,6 +18,12 @@ interface IUserModel extends Model<IUser> {
 
 const userSchema = new mongoose.Schema<IUser>(
   {
+    name: {
+      type: String,
+      required: [true, 'Please provide a name'],
+      trim: true,
+      maxlength: [50, 'Name cannot be more than 50 characters'],
+    },
     email: {
       type: String,
       required: [true, 'Please provide an email'],

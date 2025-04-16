@@ -31,7 +31,7 @@ interface UserDetails {
   password: string;
   vjudgeHandle: string;
   cfHandle: string;
-  clistHandle: string;
+  leetcodeHandle: string;
   atcoderHandle: string;
   ccHandle: string;
   atcoderBeginner: string;
@@ -103,7 +103,7 @@ export default function ContestTrackerHome() {
   //     name: newContestant.name || "New Contestant",
   //     vjudgeHandle: "",
   //     cfHandle: "",
-  //     clistHandle: "",
+  //     leetcodeHandle: "",
   //     score: 0,
   //     totalSolve: 0,
   //     totalParticipation: 0,
@@ -146,6 +146,7 @@ export default function ContestTrackerHome() {
     let data = await alldataResponse.json();
     //console.log("data ==> ", data);
     setContestants(data);
+    navigate("/login");
   };
 
   return (
@@ -207,18 +208,20 @@ export default function ContestTrackerHome() {
 
         {/* Action buttons */}
         <div className="mb-4 flex justify-end gap-4">
-          <Link to={`/createAc`}>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-1">
-                  <Plus className="h-4 w-4" /> Create Account
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <CreateAc />
-              </DialogContent>
-            </Dialog>
-          </Link>
+          {!ifSameUserDetails && (
+            <Link to={`/createAc`}>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-1">
+                    <Plus className="h-4 w-4" /> Create Account
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <CreateAc />
+                </DialogContent>
+              </Dialog>
+            </Link>
+          )}
           {ifSameUserDetails && (
             <Link to={`/editAc`}>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>

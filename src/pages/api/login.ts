@@ -46,7 +46,7 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const { email, password } = await request.json();
+    const { email,name, password } = await request.json();
 
     // Validate input
     if (!email || !password) {
@@ -110,6 +110,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         _id: user._id,
+        name: user.name,
         token,
         message: "Login successful",
       }),

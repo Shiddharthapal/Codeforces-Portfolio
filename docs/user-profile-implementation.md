@@ -39,7 +39,7 @@ sequenceDiagram
   - Online judge handles:
     - VJudge
     - Codeforces
-    - Clist
+    - leetcode
     - AtCoder
     - CodeChef
   - Account creation date
@@ -71,7 +71,7 @@ interface UserDetails {
   semester: string;
   vjudge: string;
   codeforces: string;
-  clist: string;
+  leetcode: string;
   atcoder: string;
   codechef: string;
   createdAt: Date;
