@@ -16,9 +16,16 @@ interface UserDetails {
   codechef: string;
   createdAt: string;
 }
+interface contestantDetails {
+  name: string;
+  email: string;
+  password: string;
+  createdAt?: Date;
+}
 
 export default function UserProfile() {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [contestant, setContestant] = useState<contestantDetails | null>(null);
   const [open, setOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +46,12 @@ export default function UserProfile() {
             "Content-Type": "application/json",
           },
         });
+        if (!response.ok) {
+          throw new Error("Failed to fetch user details");
+        }
         let data = await response.json();
         setUserDetails(data.userDetails);
+        setContestant(data.user);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch user details"
@@ -109,6 +120,12 @@ export default function UserProfile() {
                   Name
                 </label>
                 <div className="text-gray-500">{userDetails.name}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold  text-gray-900">
+                  Email
+                </label>
+                <div className="text-gray-500">{contestant?.email}</div>
               </div>
               <div>
                 <label className="block text-sm font-semibold  text-gray-900">

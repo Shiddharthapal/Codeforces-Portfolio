@@ -146,6 +146,7 @@ export default function ContestTrackerHome() {
     let data = await alldataResponse.json();
     //console.log("data ==> ", data);
     setContestants(data);
+    navigate("/login");
   };
 
   return (

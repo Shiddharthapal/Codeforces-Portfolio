@@ -12,6 +12,9 @@ const UserDetailsSchema = new mongoose.Schema(
       default: '',
       required: true,
     },
+    email: {
+      type: String,
+    },
     department: {
       type: String,
       required: true,

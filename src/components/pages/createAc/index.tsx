@@ -100,7 +100,7 @@ export default function editAc() {
         createdAt: userDetails?.createdAt || new Date().toISOString(),
       };
 
-      const response = await fetch("/api/users/contestants", {
+      const response = await fetch("/api/contestants", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
