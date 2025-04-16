@@ -71,6 +71,10 @@ export default function ContestTrackerHome() {
     navigate("/");
   };
 
+  const handleProfile = () => {
+    navigate("/user");
+  };
+
   useEffect(() => {
     const fetchUserDetails = async () => {
       const alldataResponse = await fetch("/api/users/allUser");
@@ -184,13 +188,15 @@ export default function ContestTrackerHome() {
               >
                 Log out
               </button>
-              <Link
-                to="/user"
+              <button
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                onClick={() => setIsUserMenuOpen(false)}
+                onClick={() => {
+                  handleProfile();
+                  setIsUserMenuOpen(false);
+                }}
               >
                 Profile
-              </Link>
+              </button>
             </div>
           )}
         </div>

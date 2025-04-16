@@ -46,9 +46,6 @@ export default function UserProfile() {
             "Content-Type": "application/json",
           },
         });
-        if (!response.ok) {
-          throw new Error("Failed to fetch user details");
-        }
         let data = await response.json();
         setUserDetails(data.userDetails);
         setContestant(data.user);
@@ -56,7 +53,6 @@ export default function UserProfile() {
         setError(
           err instanceof Error ? err.message : "Failed to fetch user details"
         );
-        navigate("/createAc");
       } finally {
         setLoading(false);
       }
