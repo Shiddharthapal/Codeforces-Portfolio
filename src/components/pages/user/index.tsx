@@ -80,14 +80,13 @@ export default function UserProfile() {
   if (!userDetails) {
     return (
       <div>
-        <Button
-          className="bg-blue-500 text-white rounded-md px-4 py-2 absolute top-4 right-4"
+        <X
+          className="absolute top-4 right-4 md:top-6 md:right-6"
           onClick={() => {
             navigate("/");
           }}
-        >
-          Back
-        </Button>
+        />
+
         <div className="min-h-screen flex items-center justify-center">
           <div className="bg-yellow-50 text-yellow-600 p-4 rounded-md">
             No user details found, please create an account!
