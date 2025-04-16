@@ -72,7 +72,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/profile"
+                path="/user"
                 element={
                   <ProtectedRoute>
                     <UserProfile />

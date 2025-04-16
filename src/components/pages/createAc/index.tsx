@@ -153,7 +153,7 @@ export default function editAc() {
     <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>Programmer Information</CardTitle>
+          <CardTitle>Create Account</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
