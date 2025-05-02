@@ -1,13 +1,10 @@
 
-// API Base URL
-
 import type{
   User,
   BlogEntry,
   Comment,
   Contest,
   Submission,
-  Party,
   Problem,
   ProblemStatistics,
   RatingChange,

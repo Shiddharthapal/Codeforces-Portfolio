@@ -1,6 +1,7 @@
 ---
 import App from "../components/App";
 import Layout from "../layouts/Layout.astro";
+export const prerender = true;
 
 export function getStaticPaths() {
   return [
@@ -15,5 +16,5 @@ const title =
 ---
 
 <Layout title={title}>
-  <App client:only />
+  <App client:only="react" />
 </Layout>

@@ -58,9 +58,11 @@ export const POST: APIRoute = async ({ request }) => {
       { expiresIn: "24h" },
       );
 
+      let _id=user._id;
     return new Response(
       JSON.stringify({
         name,
+        _id,
         token,
         message: "Registration successful",
       }),

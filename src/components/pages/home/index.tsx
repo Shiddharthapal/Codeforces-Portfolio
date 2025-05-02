@@ -98,7 +98,8 @@ export default function ContestTrackerHome() {
     fetchUserDetails();
   }, [token]);
 
-  //console.log("constestants=>", contestants);
+  console.log("userDetails?.userId=>", userDetails?.userId);
+  console.log("Id=>", _id);
   const ifSameUserDetails = _id === userDetails?.userId;
 
   const handleEditContestant = (contestant: Contestant) => {
@@ -128,7 +129,20 @@ export default function ContestTrackerHome() {
     let data = await alldataResponse.json();
     //console.log("data ==> ", data);
     setContestants(data);
-    navigate("/login");
+    let verifiedId = await fetch(`/api/users/verfiedUser`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+    });
+    let verifiedUserId = await verifiedId.json();
+    if (verifiedUserId.verifiedTokenUserId === id) {
+      navigate("/login");
+      dispatch(logout());
+    } else {
+      navigate("/home");
+    }
   };
 
   return (
