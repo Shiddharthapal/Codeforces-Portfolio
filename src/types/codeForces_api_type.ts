@@ -66,6 +66,7 @@ export interface Submission {
   contestId: number;
   creationTimeSeconds: number;
   relativeTimeSeconds: number;
+  problem: Problem;
   programmingLanguage: string;
   verdict: 'OK' | 'FAILED' | 'WRONG_ANSWER' | string;
   testset: 'SAMPLES' | 'PRETESTS' | 'TESTS';

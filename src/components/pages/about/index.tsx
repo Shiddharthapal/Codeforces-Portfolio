@@ -13,13 +13,11 @@ interface contestantDetails {
   atcoder: string;
   codechef: string;
   score: number;
-  totalSolve: number;
+  totalSolved: number;
   totalParticipation: number;
   solveCount: number;
   averageSolve: number;
   atcoderBeginner: string;
-  cfRound913: string;
-  cf3: string;
 }
 export interface contestant {
   name: string;
@@ -28,9 +26,18 @@ export interface contestant {
   createdAt?: Date;
 }
 
+export interface contestantData {
+  lastMonthSolveCount: number;
+  averageSolve: number;
+  cfTotalSolved: number;
+  cfScore: number;
+}
 export default function ContestantDetails() {
   const [contestant, setContestant] = useState<contestant | null>(null);
   const [userDetails, setUserDetails] = useState<contestantDetails | null>(
+    null
+  );
+  const [contestantData, setContestantData] = useState<contestantData | null>(
     null
   );
   const navigate = useNavigate();
@@ -47,12 +54,52 @@ export default function ContestantDetails() {
             "Content-Type": "application/json",
           },
         });
+
         if (!response.ok) {
           throw new Error("Failed to fetch contestant details");
         }
         const data = await response.json();
+        const handle = data.userDetails?.codeforces;
+        // console.log("handle ==> ", handle);
+        if (!handle) {
+          console.error("Codeforces handle is missing");
+          return;
+        }
+
+        const Userresponse = await fetch(
+          `/api/users/codeforces?handle=${encodeURIComponent(handle)}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const responseData = await Userresponse.json();
+        console.log("responseData ==> ", responseData);
+        if (!responseData.success) {
+          console.error("Codeforces API error:", responseData.error);
+        }
+        console.log("cf solve=>", responseData.data.totalSolved);
+
         setUserDetails(data.userDetails);
         setContestant(data.user);
+        setContestantData({
+          lastMonthSolveCount: 0,
+          averageSolve: 0,
+          cfTotalSolved: responseData?.data?.totalSolved,
+          cfScore: 0,
+        });
+        setUserDetails({
+          ...data.userDetails,
+          totalSolved:
+            (data.userDetails?.totalSolved || 0) +
+            (contestantData?.cfTotalSolved || 0),
+          totalParticipation: 0,
+          solveCount: 0,
+          averageSolve: 0,
+        });
       } catch (error) {
         console.error(error);
       }
@@ -160,7 +207,9 @@ export default function ContestantDetails() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-500">Total Solve</div>
-                <div className="text-2xl font-semibold">495</div>
+                <div className="text-2xl font-semibold">
+                  {userDetails?.totalSolved}
+                </div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-500">Score</div>

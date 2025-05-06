@@ -128,7 +128,7 @@ async getContestStandings(
  * @param from 1-based index of the first submission to return
  * @param count Number of submissions to return
  */
-async getUserSubmissions(
+async userStatus(
   handle: string,
   from: number = 1,
   count: number = 10
@@ -136,12 +136,16 @@ async getUserSubmissions(
   if (!handle) throw new Error('Handle parameter is required');
 
   const url = new URL(`${this.codeforces_url}/user.status`);
+  
   url.searchParams.append('handle', handle);
   url.searchParams.append('from', from.toString());
   url.searchParams.append('count', count.toString());
 
-  const response = await fetch(url.toString());
+  // console.log("url ==> ", url);
+
+  const response = await fetch(url.href.toString());
   const data = await response.json() as APIResponse<Submission[]>;
+  // console.log("data ==> ", data);
 
   if (data.status === 'FAILED') {
     throw new Error(data.comment || 'Failed to fetch user submissions');
@@ -382,3 +386,4 @@ async getRecentActions(maxCount: number = 30): Promise<RecentAction[]> {
   return data.result;
 }
 }
+export const codeforcesAPI = new CodeforcesAPI();
