@@ -2,18 +2,87 @@ import type { APIRoute } from 'astro';
 import { codeforcesAPI } from '@/lib/codeforces_api';
 import type { Submission } from '@/types/codeForces_api_type';
 
+interface LastMonthStats {
+  totalUniqueProblems: number;
+  totalSubmissions: number;
+  successRate: number;
+  problems: Array<{
+    contestId: number;
+    index: string;
+    name: string;
+    attempts: number;
+    acceptedTime: number;
+  }>;
+}
+
 interface CodeforcesProblemResponse {
   success: boolean;
   data?: {
     handle: string;
     totalSolved: number;
-    solvedProblems: Array<{
-      contestId: number;
-      index: string;
-      name: string;
-    }>;
+    totalParcipation: number;
+    lastMonthActivity?: LastMonthStats;
+    successRate: number;
   };
   error?: string;
+}
+
+// Helper function to check if submission is from last month
+function isLastMonthSubmission(submission: Submission): boolean {
+  const thirtyDaysAgo = Date.now() / 1000 - 30 * 24 * 60 * 60;
+  return submission.creationTimeSeconds >= thirtyDaysAgo;
+}
+
+// Helper function to process last month submissions
+function processLastMonthSubmissions(submissions: Submission[]): LastMonthStats {
+  const lastMonthSubs = submissions.filter(isLastMonthSubmission);
+  const problemStats = new Map<string, {
+    contestId: number;
+    index: string;
+    name: string;
+    attempts: number;
+    acceptedTime: number | null;
+  }>();
+
+  // Process each submission
+  lastMonthSubs.forEach(sub => {
+    const key = `${sub.contestId}${sub.problem.index}`;
+    const existing = problemStats.get(key);
+
+    if (!existing) {
+      problemStats.set(key, {
+        contestId: sub.contestId,
+        index: sub.problem.index,
+        name: sub.problem.name,
+        attempts: 1,
+        acceptedTime: sub.verdict === 'OK' ? sub.creationTimeSeconds : null
+      });
+    } else {
+      existing.attempts++;
+      if (sub.verdict === 'OK' && existing.acceptedTime === null) {
+        existing.acceptedTime = sub.creationTimeSeconds;
+      }
+    }
+  });
+
+  // Convert to final format
+  const problems = Array.from(problemStats.entries())
+    .filter(([_, stats]) => stats.acceptedTime !== null)
+    .map(([_, stats]) => ({
+      contestId: stats.contestId,
+      index: stats.index,
+      name: stats.name,
+      attempts: stats.attempts,
+      acceptedTime: stats.acceptedTime!
+    }));
+
+  return {
+    totalUniqueProblems: problems.length,
+    totalSubmissions: lastMonthSubs.length,
+    successRate: lastMonthSubs.length > 0 ?
+      (problems.length / problemStats.size) * 100 : 0,
+    problems: problems
+  };
 }
 
 // Cache solution to avoid hitting rate limits
@@ -23,13 +92,13 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 export const GET: APIRoute = async ({ request }) => {
   try {
     const url = new URL(request.url);
-    console.log("url ==> ", url);
+    // console.log("url ==> ", url);
     let processedHandle = url.searchParams.get('handle');
-    console.log("handle ==> ", processedHandle);
+    // console.log("handle ==> ", processedHandle);
     const baseUrlOfCF="https://codeforces.com/profile/"
     const profilePath= processedHandle?.replace(baseUrlOfCF, "");
     const handle = profilePath;
-    console.log("handle ==> ", handle);
+    // console.log("handle ==> ", handle);
 
     // Validate handle parameter
     if (!handle) {
@@ -60,7 +129,7 @@ export const GET: APIRoute = async ({ request }) => {
     
     // Get all submissions for the user
     const submissions = await codeforcesAPI.userStatus(handle, 1, 10000);
-    console.log("submissions ==> ", submissions);
+    // console.log("submissions ==> ", submissions);
     
     // Process submissions to get unique solved problems
     const solvedProblems = new Map<string, {
@@ -69,9 +138,16 @@ export const GET: APIRoute = async ({ request }) => {
       name: string;
     }>();
 
+    const allUniqueProblems = new Map<string, {
+      contestId: number;
+      index: string;
+      name: string;
+    }>();
+
+    let uniqueSubmissions = 0;
     submissions.forEach((sub: Submission) => {
+      const key = `${sub.contestId}${sub.problem.index}`;
       if (sub.verdict === 'OK') {
-        const key = `${sub.contestId}${sub.problem.index}`;
         if (!solvedProblems.has(key)) {
           solvedProblems.set(key, {
             contestId: sub.contestId,
@@ -80,6 +156,14 @@ export const GET: APIRoute = async ({ request }) => {
           });
         }
       }
+      if (!allUniqueProblems.has(key)) {
+          uniqueSubmissions++;
+          allUniqueProblems.set(key, {
+            contestId: sub.contestId,
+            index: sub.problem.index,
+            name: sub.problem.name
+          });
+        }
     });
 
     // Prepare response
@@ -88,7 +172,10 @@ export const GET: APIRoute = async ({ request }) => {
       data: {
         handle,
         totalSolved: solvedProblems.size,
-        solvedProblems: Array.from(solvedProblems.values())
+        totalParcipation: uniqueSubmissions,
+        lastMonthActivity: processLastMonthSubmissions(submissions),
+        successRate: submissions.length > 0 ?
+      (solvedProblems.size / submissions.length) * 100 : 0,
       }
     };
 

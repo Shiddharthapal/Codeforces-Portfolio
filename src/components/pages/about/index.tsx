@@ -12,8 +12,9 @@ interface contestantDetails {
   leetcode: string;
   atcoder: string;
   codechef: string;
-  score: number;
+  sucessRate: number;
   totalSolved: number;
+  lastMonthSolveCount: number;
   totalParticipation: number;
   solveCount: number;
   averageSolve: number;
@@ -27,10 +28,11 @@ export interface contestant {
 }
 
 export interface contestantData {
-  lastMonthSolveCount: number;
+  cflastMonthSolveCount: number;
   averageSolve: number;
   cfTotalSolved: number;
-  cfScore: number;
+  cfSucessRate: number;
+  cftotalParticipation: number;
 }
 export default function ContestantDetails() {
   const [contestant, setContestant] = useState<contestant | null>(null);
@@ -78,25 +80,33 @@ export default function ContestantDetails() {
 
         const responseData = await Userresponse.json();
         console.log("responseData ==> ", responseData);
-        if (!responseData.success) {
-          console.error("Codeforces API error:", responseData.error);
-        }
-        console.log("cf solve=>", responseData.data.totalSolved);
 
         setUserDetails(data.userDetails);
         setContestant(data.user);
+
         setContestantData({
-          lastMonthSolveCount: 0,
+          cflastMonthSolveCount:
+            responseData?.data?.lastMonthActivity.totalUniqueProblems,
           averageSolve: 0,
           cfTotalSolved: responseData?.data?.totalSolved,
-          cfScore: 0,
+          cfSucessRate: parseFloat(responseData?.data?.successRate?.toFixed(2)),
+          cftotalParticipation: responseData?.data?.totalParcipation,
         });
+
         setUserDetails({
           ...data.userDetails,
           totalSolved:
             (data.userDetails?.totalSolved || 0) +
             (contestantData?.cfTotalSolved || 0),
-          totalParticipation: 0,
+          lastMonthSolveCount:
+            (data.userDetails?.lastMonthSolveCount || 0) +
+            (contestantData?.cflastMonthSolveCount || 0),
+          sucessRate:
+            (data.userDetails?.sucessRate || 0) +
+            (contestantData?.cfSucessRate || 0),
+          totalParticipation:
+            (data.userDetails?.totalParticipation || 0) +
+            (contestantData?.cftotalParticipation || 0),
           solveCount: 0,
           averageSolve: 0,
         });
@@ -212,18 +222,24 @@ export default function ContestantDetails() {
                 </div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
-                <div className="text-sm text-gray-500">Score</div>
-                <div className="text-2xl font-semibold">997</div>
+                <div className="text-sm text-gray-500">Success Rate</div>
+                <div className="text-2xl font-semibold">
+                  {userDetails?.sucessRate}
+                </div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-500">Total Participation</div>
-                <div className="text-2xl font-semibold">510</div>
+                <div className="text-2xl font-semibold">
+                  {userDetails?.totalParticipation}
+                </div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-500">
                   Last Month Solve Count
                 </div>
-                <div className="text-2xl font-semibold">90</div>
+                <div className="text-2xl font-semibold">
+                  {userDetails?.lastMonthSolveCount}
+                </div>
               </div>
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="text-sm text-gray-500">Average Solve</div>
