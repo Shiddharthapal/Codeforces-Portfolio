@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { codeforcesAPI } from '@/lib/codeforces_api';
-import type { Submission } from '@/types/codeForces_api_type';
+import type { Submission, RatingChange } from '@/types/codeForces_api_type';
 
 interface LastMonthStats {
   totalUniqueProblems: number;
@@ -24,6 +24,7 @@ interface CodeforcesProblemResponse {
     lastMonthActivity?: LastMonthStats;
     successRate: number;
   };
+  rating?: RatingChange[];
   error?: string;
 }
 
@@ -95,8 +96,8 @@ export const GET: APIRoute = async ({ request }) => {
     // console.log("url ==> ", url);
     let processedHandle = url.searchParams.get('handle');
     // console.log("handle ==> ", processedHandle);
-    const baseUrlOfCF="https://codeforces.com/profile/"
-    const profilePath= processedHandle?.replace(baseUrlOfCF, "");
+    const baseUrlOfCF = "https://codeforces.com/profile/"
+    const profilePath = processedHandle?.replace(baseUrlOfCF, "");
     const handle = profilePath;
     // console.log("handle ==> ", handle);
 
@@ -113,7 +114,6 @@ export const GET: APIRoute = async ({ request }) => {
         }
       );
     }
-     console.log("hi");
     // Check cache first
     const cached = cache.get(handle);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -126,11 +126,11 @@ export const GET: APIRoute = async ({ request }) => {
       );
     }
 
-    
+
     // Get all submissions for the user
     const submissions = await codeforcesAPI.userStatus(handle, 1, 10000);
     // console.log("submissions ==> ", submissions);
-    
+
     // Process submissions to get unique solved problems
     const solvedProblems = new Map<string, {
       contestId: number;
@@ -145,6 +145,8 @@ export const GET: APIRoute = async ({ request }) => {
     }>();
 
     let uniqueSubmissions = 0;
+    const ratingChanges = await codeforcesAPI.getUserRating(handle);
+
     submissions.forEach((sub: Submission) => {
       const key = `${sub.contestId}${sub.problem.index}`;
       if (sub.verdict === 'OK') {
@@ -157,13 +159,13 @@ export const GET: APIRoute = async ({ request }) => {
         }
       }
       if (!allUniqueProblems.has(key)) {
-          uniqueSubmissions++;
-          allUniqueProblems.set(key, {
-            contestId: sub.contestId,
-            index: sub.problem.index,
-            name: sub.problem.name
-          });
-        }
+        uniqueSubmissions++;
+        allUniqueProblems.set(key, {
+          contestId: sub.contestId,
+          index: sub.problem.index,
+          name: sub.problem.name
+        });
+      }
     });
 
     // Prepare response
@@ -175,8 +177,9 @@ export const GET: APIRoute = async ({ request }) => {
         totalParcipation: uniqueSubmissions,
         lastMonthActivity: processLastMonthSubmissions(submissions),
         successRate: submissions.length > 0 ?
-      (solvedProblems.size / submissions.length) * 100 : 0,
-      }
+          (solvedProblems.size / submissions.length) * 100 : 0,
+      },
+      rating: ratingChanges
     };
 
     // Update cache
@@ -195,7 +198,7 @@ export const GET: APIRoute = async ({ request }) => {
 
   } catch (error) {
     console.error('Error fetching Codeforces data:', error);
-    
+
     // Handle specific error cases
     if (error instanceof Error) {
       if (error.message.includes('Failed to fetch user submissions')) {
@@ -210,7 +213,7 @@ export const GET: APIRoute = async ({ request }) => {
           }
         );
       }
-      
+
       if (error.message.includes('rate limit')) {
         return new Response(
           JSON.stringify({

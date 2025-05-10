@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Graph from "./graph";
 interface contestantDetails {
   userId: string;
   name: string;
@@ -79,19 +80,6 @@ export default function ContestantDetails() {
         );
 
         const responseData = await Userresponse.json();
-        // const leetcodeResponse = await fetch(
-        //   `/api/users/leetcode/${"https://leetcode.com/u/pal29/"}`,
-        //   {
-        //     method: "GET",
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //     },
-        //   }
-        // );
-        // const leetcodeResponseData = await leetcodeResponse.json();
-        // console.log("leetcodeResponseData ==> ", leetcodeResponseData);
-
-        // console.log("responseData ==> ", responseData);
 
         setUserDetails(data.userDetails);
         setContestant(data.user);
@@ -277,6 +265,9 @@ export default function ContestantDetails() {
                 <div className="text-xl font-semibold">A</div>
               </div>
             </div>
+          </div>
+          <div className="mt-8">
+            <Graph handle={userDetails?.codeforces || ''}/>
           </div>
         </div>
       </main>
