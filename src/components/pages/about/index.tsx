@@ -36,6 +36,7 @@ export interface contestantData {
   cftotalParticipation: number;
 }
 export default function ContestantDetails() {
+ 
   const [contestant, setContestant] = useState<contestant | null>(null);
   const [userDetails, setUserDetails] = useState<contestantDetails | null>(
     null
@@ -63,6 +64,7 @@ export default function ContestantDetails() {
         }
         const data = await response.json();
         const handle = data.userDetails?.codeforces;
+
         // console.log("handle ==> ", handle);
         if (!handle) {
           console.error("Codeforces handle is missing");
@@ -81,34 +83,31 @@ export default function ContestantDetails() {
 
         const responseData = await Userresponse.json();
 
-        setUserDetails(data.userDetails);
         setContestant(data.user);
 
+      const cfTotalSolved = responseData?.data?.totalSolved || 0;
+      const cflastMonthSolveCount = responseData?.data?.lastMonthActivity?.totalUniqueProblems || 0;
+      const cfSucessRate = parseFloat(responseData?.data?.successRate?.toFixed(2)) || 0;
+      const cftotalParticipation = responseData?.data?.totalParcipation || 0;
         setContestantData({
-          cflastMonthSolveCount:
-            responseData?.data?.lastMonthActivity.totalUniqueProblems,
-          averageSolve: 0,
-          cfTotalSolved: responseData?.data?.totalSolved,
-          cfSucessRate: parseFloat(responseData?.data?.successRate?.toFixed(2)),
-          cftotalParticipation: responseData?.data?.totalParcipation,
-        });
+        cflastMonthSolveCount,
+        averageSolve: 0,
+        cfTotalSolved,
+        cfSucessRate,
+        cftotalParticipation,
+      });
 
         setUserDetails({
           ...data.userDetails,
           totalSolved:
-            (data.userDetails?.totalSolved || 0) +
-            (contestantData?.cfTotalSolved || 0),
+            (data.userDetails?.totalSolved || 0) +cfTotalSolved,
           lastMonthSolveCount:
-            (data.userDetails?.lastMonthSolveCount || 0) +
-            (contestantData?.cflastMonthSolveCount || 0),
+            (data.userDetails?.lastMonthSolveCount || 0) +cflastMonthSolveCount,
           sucessRate:
-            (data.userDetails?.sucessRate || 0) +
-            (contestantData?.cfSucessRate || 0),
+            (data.userDetails?.sucessRate || 0) +cfSucessRate
+            ,
           totalParticipation:
-            (data.userDetails?.totalParticipation || 0) +
-            (contestantData?.cftotalParticipation || 0),
-          solveCount: 0,
-          averageSolve: 0,
+            (data.userDetails?.totalParticipation || 0) +cftotalParticipation,
         });
       } catch (error) {
         console.error(error);
