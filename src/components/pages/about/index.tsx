@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useParams } from "react-router-dom";
 import Graph from "./graph";
+import Rainfall from "./rainfall";
 interface contestantDetails {
   userId: string;
   name: string;
@@ -47,7 +48,8 @@ export default function ContestantDetails() {
   const navigate = useNavigate();
 
   // Get contestant ID from URL
-  const id = window.location.pathname.split("/about/")[1];
+
+  const {id}=useParams();
 
   useEffect(() => {
     const fetchContestantDetails = async () => {
@@ -138,6 +140,7 @@ export default function ContestantDetails() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Rainfall/>
       <header className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4">
         <Button
           variant="ghost"
