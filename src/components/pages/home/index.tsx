@@ -200,7 +200,7 @@ export default function ContestTrackerHome() {
             animate={
               isAnimating
                 ? {
-                    y: [0, -10, 0],
+                    y: [10, -10, 10],
                     x: [0, 5, 0],
                     rotate: [0, 10, 0],
                   }
