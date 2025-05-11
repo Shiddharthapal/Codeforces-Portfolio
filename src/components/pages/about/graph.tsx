@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-
+import Rainfall from './rainfall';
 interface RatingChange {
   contestId: number;
   handle: string;
@@ -141,5 +141,5 @@ export default function Graph({ handle }: { handle: string }) {
     return <div className="text-red-500">Error: {error}</div>;
   }
 
-  return <svg ref={svgRef}></svg>;
+  return <><svg ref={svgRef}></svg>;</>
 }
