@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CreateAc from "../createAc";
+import { motion } from "framer-motion";
 
 import { Menu, Plus, Trash2, Edit, Save, Info, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
+import { CodeIcon } from "./code-icon-animation";
 
 interface User {
   id: string;
@@ -47,6 +49,7 @@ interface Contestant {
 export default function ContestTrackerHome() {
   const [contestants, setContestants] = useState<Contestant[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -149,16 +152,9 @@ export default function ContestTrackerHome() {
     <div className="flex flex-col min-h-screen">
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 flex justify-between items-center">
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleMenu}
-            className="text-white mr-2"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-          <h1 className="text-xl font-bold">SWE C.Tracker</h1>
+        <div className="flex items-center gap-2">
+          <CodeIcon/>
+          <h1 className="text-xl font-bold">Contest Tracker</h1>
         </div>
         <div className="relative">
           <Button
@@ -197,10 +193,33 @@ export default function ContestTrackerHome() {
       {/* Main content */}
       <div className="flex-1 p-4 bg-gray-50">
         {/* Title */}
-        <div className="bg-green-200 rounded-md p-3 mb-6 text-center">
+        <div className=" flex flex-row bg-green-200 rounded-md p-3 mb-6 justify-center gap-11">
+          <div>
+            <motion.div
+            className="absolute"
+            animate={
+              isAnimating
+                ? {
+                    y: [0, -10, 0],
+                    x: [0, 5, 0],
+                    rotate: [0, 10, 0],
+                  }
+                : { y: 0, x: 0, rotate: 0 }
+            }
+            transition={{
+              duration: 1.5,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "easeInOut",
+            }}
+            onClick={() => setIsAnimating(!isAnimating)}
+            >
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+              C
+            </div>
+            </motion.div>
+          </div>
           <h2 className="text-lg font-semibold">
-            <span className="mr-2">⚽</span>
-            Individual Contest Tracker, SWE-DIU
+            Individual Contest Tracker
           </h2>
         </div>
 
