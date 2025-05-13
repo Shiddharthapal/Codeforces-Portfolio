@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import Graph from "./graph";
-import Rainfall from "./rainfall";
 
 interface contestantDetails {
   userId: string;
@@ -133,7 +132,6 @@ export default function ContestantDetails() {
 
   return (
     <>
-      <Rainfall />
       <div className="relative min-h-screen">
         <div className="relative z-10">
           <header className="bg-gradient-to-r from-blue-500/90 to-cyan-500/90 text-white p-4">
@@ -152,7 +150,6 @@ export default function ContestantDetails() {
           <main className="container mx-auto px-4 py-8">
             
             <div className="bg-white/90 backdrop-blur rounded-lg shadow-lg p-6">
-            <Rainfall />
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold mb-6">Contestant Details</h2>
                 <Button onClick={() => navigate("/")}>Back</Button>

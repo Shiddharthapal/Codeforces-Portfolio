@@ -9,7 +9,6 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "@/redux/store";
 import { ProtectedRoute } from "./ProtectedRoute";
-import Rainfall from "./pages/about/rainfall";
 
 // Lazy load components for better performance
 const Home = lazy(() => import("./pages/home"));
