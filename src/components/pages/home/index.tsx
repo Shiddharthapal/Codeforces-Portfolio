@@ -1,9 +1,16 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,12 +19,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertCircle,
   Award,
@@ -30,70 +37,264 @@ import {
   Trash2,
   Trophy,
   User,
-} from "lucide-react"
+} from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { logout } from "@/redux/slices/authSlice";
+import { Link, useNavigate } from "react-router-dom";
 
-type Contestant = {
-  id: string
-  name: string
-  username: string
-  contests: number
-  wins: number
-  rating: number
-  avatar?: string
+// interface Contestant = {
+//   _id: string;
+//   name: string;
+//   username: string;
+//   email?: string;
+//   password?: string;
+//   contests: number;
+//   solve: number;
+//   rating: number;
+//   avatar?: string;
+// };
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  password: string;
+}
+interface UserDetails {
+  userId: string;
+  name: string;
+  email: string;
+  username: string;
+  password: string;
+  codeforces: string;
+  contests: number;
+  solve: number;
+  rating: number;
+  avatar?: string;
+}
+
+export interface contestantData {
+  cflastMonthSolveCount: number;
+  averageSolve: number;
+  cfTotalSolved: number;
+  cfSucessRate: number;
+  cftotalParticipation: number;
+}
+
+interface AuthState {
+  _id: string;
+  token: string;
+  isAuthenticated: boolean;
 }
 
 export default function ContestTracker() {
-  const [contestants, setContestants] = useState<Contestant[]>([
-    {
-      id: "1",
-      name: "Shiddhartha Pal",
-      username: "shiddhartha_pal",
-      contests: 24,
-      wins: 8,
-      rating: 1842,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: "2",
-      name: "Shiddhartha29",
-      username: "shiddhartha29",
-      contests: 18,
-      wins: 5,
-      rating: 1756,
-    },
-    {
-      id: "3",
-      name: "Alex Johnson",
-      username: "alexcode",
-      contests: 32,
-      wins: 12,
-      rating: 1920,
-    },
-    {
-      id: "4",
-      name: "Maya Patel",
-      username: "maya_codes",
-      contests: 15,
-      wins: 3,
-      rating: 1680,
-    },
-  ])
+  const [contestants, setContestants] = useState<UserDetails[]>([]);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [userDetails, setUserDetails] = useState<User | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
-  const [searchQuery, setSearchQuery] = useState("")
+  const { _id, token } = useAppSelector((state) => state.auth);
 
   const filteredContestants = contestants.filter(
     (contestant) =>
       contestant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contestant.username.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      contestant.username.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleLogout = () => {
+    setUserDetails(null);
+    setIsUserMenuOpen(false);
+    dispatch(logout());
+    navigate("/");
+  };
+
+  const handleProfile = () => {
+    navigate("/user");
+  };
 
   const deleteContestant = (id: string) => {
-    setContestants(contestants.filter((contestant) => contestant.id !== id))
-  }
+    setContestants(
+      contestants.filter((contestant) => contestant.userId !== id)
+    );
+  };
 
-  const addContestant = (contestant: Omit<Contestant, "id">) => {
-    setContestants([...contestants, { ...contestant, id: Math.random().toString(36).substring(7) }])
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    try {
+      e.preventDefault();
+
+      if (!validate()) {
+        return;
+      }
+
+      // Merge the original data with the updated fields
+      const updatedData = {
+        ...userDetails,
+        ...formData,
+        createdAt: userDetails?.createdAt || new Date().toISOString(),
+      };
+
+      const response = await fetch("/api/contestants", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${user.token}`,
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "Profile updated",
+          description: "Your programmer profile has been successfully updated.",
+          variant: "success",
+        });
+      } else {
+        throw new Error(data.message || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "There was an error updating your profile.",
+        variant: "failed",
+      });
+    }
+  };
+
+  const addContestant = (contestant: Omit<UserDetails, "userId">) => {
+    setContestants([
+      ...contestants,
+      { ...contestant, userId: Math.random().toString(36).substring(7) },
+    ]);
+  };
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const alldataResponse = await fetch("/api/users/allUser");
+      console.log("hi");
+
+      if (alldataResponse.ok) {
+        const dataOfAllUser = await alldataResponse.json();
+        console.log("dataOfAllUser ==> ", dataOfAllUser);
+
+        dataOfAllUser.forEach(async (element: User) => {
+          const response = await fetch(`/api/users/${element._id}`);
+
+          if (response.ok) {
+            const data = await response.json();
+            setContestants((prevContestants) => [
+              ...prevContestants,
+              data.userDetails,
+            ]);
+          } else {
+            console.error("Failed to fetch user details");
+          }
+        });
+        setUserDetails(dataOfAllUser);
+        console.log("h12");
+
+        contestants.forEach(async (element: UserDetails) => {
+          console.log("element --->", element);
+          try {
+            const handle = element?.codeforces;
+            console.log("🧞‍♂️handle --->", handle);
+            if (!handle) {
+              console.error("Codeforces handle is missing");
+              return;
+            }
+
+            const Userresponse = await fetch(
+              `/api/users/codeforces?handle=${encodeURIComponent(handle)}`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            const responseData = await Userresponse.json();
+            if (!responseData.success) {
+              console.error("Failed to fetch user data from Codeforces");
+              return;
+            }
+
+            const cfTotalSolved = responseData?.data?.totalSolved || 0;
+            const cfTotalContest = responseData?.data?.totalContest || 0;
+            const cfRating = responseData?.rating || 0;
+
+            setContestants((prevContestants) =>
+              prevContestants.map((contestant) =>
+                contestant.userId === element.userId
+                  ? {
+                      ...contestant,
+                      solve: (contestant.solve || 0) + cfTotalSolved,
+                      contests: (contestant.contests || 0) + cfTotalContest,
+                      rating: (contestant.rating || 0) + cfRating,
+                    }
+                  : contestant
+              )
+            );
+          } catch (error) {
+            console.error(error);
+          }
+        });
+      } else {
+        console.error("Failed to fetch all user details");
+      }
+    };
+    fetchUserDetails();
+  }, []);
+
+  // const ifSameUserDetails = _id === userDetails?.id;
+
+  // const saveEditedContestant = () => {
+  //   if (editingContestant) {
+  //     const updatedContestants = contestants.map((c) =>
+  //       c._id === editingContestant._id ? editingContestant : c
+  //     );
+  //     setContestants(updatedContestants);
+  //     setIsEditDialogOpen(false);
+  //     setEditingContestant(null);
+  //   }
+  // };
+
+  // const handleDeleteContestant = async (id: string) => {
+  //   const alldataResponse = await fetch("/api/users/delete", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({ id }),
+  //   });
+  //   let data = await alldataResponse.json();
+  //   //console.log("data ==> ", data);
+  //   setContestants(data);
+  //   let verifiedId = await fetch(`/api/users/verfiedUser`, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `${token}`,
+  //     },
+  //   });
+  //   let verifiedUserId = await verifiedId.json();
+  //   if (verifiedUserId.verifiedTokenUserId === id) {
+  //     navigate("/login");
+  //     dispatch(logout());
+  //   } else {
+  //     navigate("/home");
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
@@ -104,12 +305,18 @@ export default function ContestTracker() {
             <h1 className="text-2xl font-bold">Contest Tracker</h1>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="outline" className="text-white border-white hover:bg-white/20">
+            <Button
+              variant="outline"
+              className="text-white border-white hover:bg-white/20"
+            >
               <Calendar className="mr-2 h-4 w-4" />
               Upcoming Contests
             </Button>
             <Avatar className="h-9 w-9 border-2 border-white">
-              <AvatarImage src="/placeholder.svg?height=36&width=36" alt="User" />
+              <AvatarImage
+                src="/placeholder.svg?height=36&width=36"
+                alt="User"
+              />
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
           </div>
@@ -123,8 +330,12 @@ export default function ContestTracker() {
               <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
                 <div className="flex justify-between items-center">
                   <div>
-                    <CardTitle className="text-2xl text-cyan-900">Contestants Dashboard</CardTitle>
-                    <CardDescription>Track and manage contest participants</CardDescription>
+                    <CardTitle className="text-2xl text-cyan-900">
+                      Contestants Dashboard
+                    </CardTitle>
+                    <CardDescription>
+                      Track and manage contest participants
+                    </CardDescription>
                   </div>
                   <div className="flex gap-2">
                     <div className="relative">
@@ -148,24 +359,38 @@ export default function ContestTracker() {
                         <DialogHeader>
                           <DialogTitle>Add New Contestant</DialogTitle>
                           <DialogDescription>
-                            Enter the details of the new contestant to add them to your tracker.
+                            Enter the details of the new contestant to add them
+                            to your tracker.
                           </DialogDescription>
                         </DialogHeader>
                         <form
                           onSubmit={(e) => {
-                            e.preventDefault()
-                            const formData = new FormData(e.currentTarget)
+                            e.preventDefault();
+                            const formData = new FormData(e.currentTarget);
                             addContestant({
+                              _id,
                               name: formData.get("name") as string,
                               username: formData.get("username") as string,
-                              contests: Number.parseInt(formData.get("contests") as string) || 0,
-                              wins: Number.parseInt(formData.get("wins") as string) || 0,
-                              rating: Number.parseInt(formData.get("rating") as string) || 1500,
-                            })
-                            e.currentTarget.reset()
+                              contests:
+                                Number.parseInt(
+                                  formData.get("contests") as string
+                                ) || 0,
+                              wins:
+                                Number.parseInt(
+                                  formData.get("wins") as string
+                                ) || 0,
+                              rating:
+                                Number.parseInt(
+                                  formData.get("rating") as string
+                                ) || 1500,
+                            });
+                            e.currentTarget.reset();
                             // Close dialog
-                            const closeButton = document.querySelector('[data-state="open"] button[aria-label="Close"]')
-                            if (closeButton instanceof HTMLElement) closeButton.click()
+                            const closeButton = document.querySelector(
+                              '[data-state="open"] button[aria-label="Close"]'
+                            );
+                            if (closeButton instanceof HTMLElement)
+                              closeButton.click();
                           }}
                         >
                           <div className="grid gap-4 py-4">
@@ -173,31 +398,59 @@ export default function ContestTracker() {
                               <Label htmlFor="name" className="text-right">
                                 Name
                               </Label>
-                              <Input id="name" name="name" className="col-span-3" required />
+                              <Input
+                                id="name"
+                                name="name"
+                                className="col-span-3"
+                                required
+                              />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                               <Label htmlFor="username" className="text-right">
                                 Username
                               </Label>
-                              <Input id="username" name="username" className="col-span-3" required />
+                              <Input
+                                id="username"
+                                name="username"
+                                className="col-span-3"
+                                required
+                              />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                               <Label htmlFor="contests" className="text-right">
                                 Contests
                               </Label>
-                              <Input id="contests" name="contests" type="number" min="0" className="col-span-3" />
+                              <Input
+                                id="contests"
+                                name="contests"
+                                type="number"
+                                min="0"
+                                className="col-span-3"
+                              />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                               <Label htmlFor="wins" className="text-right">
                                 Wins
                               </Label>
-                              <Input id="wins" name="wins" type="number" min="0" className="col-span-3" />
+                              <Input
+                                id="wins"
+                                name="wins"
+                                type="number"
+                                min="0"
+                                className="col-span-3"
+                              />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                               <Label htmlFor="rating" className="text-right">
                                 Rating
                               </Label>
-                              <Input id="rating" name="rating" type="number" min="0" className="col-span-3" />
+                              <Input
+                                id="rating"
+                                name="rating"
+                                type="number"
+                                min="0"
+                                className="col-span-3"
+                              />
                             </div>
                           </div>
                           <DialogFooter>
@@ -237,97 +490,127 @@ export default function ContestTracker() {
                   <TabsContent value="list" className="m-0">
                     <ScrollArea className="h-[500px]">
                       <div className="divide-y">
-                        {filteredContestants.length > 0 ? (
-                          filteredContestants.map((contestant) => (
-                            <div
-                              key={contestant.id}
-                              className="flex items-center justify-between p-4 hover:bg-slate-50"
-                            >
-                              <div className="flex items-center gap-4">
-                                <Avatar>
-                                  <AvatarImage src={contestant.avatar || "/placeholder.svg"} alt={contestant.name} />
-                                  <AvatarFallback>{contestant.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <h3 className="font-medium">{contestant.name}</h3>
-                                  <p className="text-sm text-muted-foreground">@{contestant.username}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-6">
-                                <div className="text-center">
-                                  <p className="text-sm text-muted-foreground">Contests</p>
-                                  <p className="font-medium">{contestant.contests}</p>
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-sm text-muted-foreground">Wins</p>
-                                  <p className="font-medium">{contestant.wins}</p>
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-sm text-muted-foreground">Rating</p>
-                                  <p className="font-medium">{contestant.rating}</p>
-                                </div>
-                                <div className="">
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button variant="outline" size="icon">
-                                        <Info className="h-4 w-4" />
-                                      </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                      <DialogHeader>
-                                        <DialogTitle>{contestant.name}</DialogTitle>
-                                        <DialogDescription>Contestant details and performance</DialogDescription>
-                                      </DialogHeader>
-                                      <div className="grid gap-4 py-4">
-                                        <div className="flex justify-between items-center">
-                                          <span className="font-medium">Username:</span>
-                                          <span>@{contestant.username}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="font-medium">Contests Participated:</span>
-                                          <span>{contestant.contests}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="font-medium">Wins:</span>
-                                          <span>{contestant.wins}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="font-medium">Win Rate:</span>
-                                          <span>
-                                            {contestant.contests > 0
-                                              ? `${((contestant.wins / contestant.contests) * 100).toFixed(1)}%`
-                                              : "0%"}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="font-medium">Current Rating:</span>
-                                          <Badge
-                                            variant={
-                                              contestant.rating > 1800
-                                                ? "default"
-                                                : contestant.rating > 1600
-                                                  ? "secondary"
-                                                  : "outline"
-                                            }
-                                          >
-                                            {contestant.rating}
-                                          </Badge>
-                                        </div>
-                                      </div>
-                                    </DialogContent>
-                                  </Dialog>
-          
-                                </div>
+                        {contestants?.map((contestant: UserDetails) => (
+                          <div
+                            key={contestant.userId}
+                            className="flex items-center justify-between p-4 hover:bg-slate-50"
+                          >
+                            <div className="flex items-center gap-4">
+                              <Avatar>
+                                <AvatarImage
+                                  src={contestant.avatar || "/placeholder.svg"}
+                                  alt={contestant.name}
+                                />
+                                <AvatarFallback>
+                                  {contestant.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <h3 className="font-medium">
+                                  {contestant.name}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                  @{contestant.username}
+                                </p>
                               </div>
                             </div>
-                          ))
-                        ) : (
-                          <div className="flex flex-col items-center justify-center p-8 text-center">
-                            <AlertCircle className="h-10 w-10 text-muted-foreground mb-2" />
-                            <h3 className="font-medium text-lg">No contestants found</h3>
-                            <p className="text-muted-foreground">Try adjusting your search or add a new contestant.</p>
+                            <div className="flex items-center gap-6">
+                              <div className="text-center">
+                                <p className="text-sm text-muted-foreground">
+                                  Contests
+                                </p>
+                                <p className="font-medium">
+                                  {contestant.contests}
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm text-muted-foreground">
+                                  TotalSolve
+                                </p>
+                                <p className="font-medium">
+                                  {contestant.solve}
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm text-muted-foreground">
+                                  Rating
+                                </p>
+                                <p className="font-medium">
+                                  {contestant.rating}
+                                </p>
+                              </div>
+                              <div className="">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="icon">
+                                      <Info className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>
+                                        {contestant.name}
+                                      </DialogTitle>
+                                      <DialogDescription>
+                                        Contestant details and performance
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">
+                                          Username:
+                                        </span>
+                                        <span>@{contestant.username}</span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">
+                                          Contests Participated:
+                                        </span>
+                                        <span>{contestant.contests}</span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">
+                                          Wins:
+                                        </span>
+                                        <span>{contestant.solve}</span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">
+                                          Win Rate:
+                                        </span>
+                                        <span>
+                                          {contestant.contests > 0
+                                            ? `${(
+                                                (contestant.solve /
+                                                  contestant.contests) *
+                                                100
+                                              ).toFixed(1)}%`
+                                            : "0%"}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-medium">
+                                          Current Rating:
+                                        </span>
+                                        <Badge
+                                          variant={
+                                            contestant.rating > 1800
+                                              ? "default"
+                                              : contestant.rating > 1600
+                                              ? "secondary"
+                                              : "outline"
+                                          }
+                                        >
+                                          {contestant.rating}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </ScrollArea>
                   </TabsContent>
@@ -336,37 +619,59 @@ export default function ContestTracker() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
                       {filteredContestants.length > 0 ? (
                         filteredContestants.map((contestant) => (
-                          <Card key={contestant.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                          <Card
+                            key={contestant.userId}
+                            className="overflow-hidden hover:shadow-md transition-shadow"
+                          >
                             <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4">
                               <div className="flex justify-between">
                                 <Avatar className="h-12 w-12 border">
-                                  <AvatarImage src={contestant.avatar || "/placeholder.svg"} alt={contestant.name} />
-                                  <AvatarFallback>{contestant.name.charAt(0)}</AvatarFallback>
+                                  <AvatarImage
+                                    src={
+                                      contestant.avatar || "/placeholder.svg"
+                                    }
+                                    alt={contestant.name}
+                                  />
+                                  <AvatarFallback>
+                                    {contestant.name.charAt(0)}
+                                  </AvatarFallback>
                                 </Avatar>
                                 <Badge
                                   variant={
                                     contestant.rating > 1800
                                       ? "default"
                                       : contestant.rating > 1600
-                                        ? "secondary"
-                                        : "outline"
+                                      ? "secondary"
+                                      : "outline"
                                   }
                                 >
                                   {contestant.rating} pts
                                 </Badge>
                               </div>
-                              <CardTitle className="mt-2">{contestant.name}</CardTitle>
-                              <CardDescription>@{contestant.username}</CardDescription>
+                              <CardTitle className="mt-2">
+                                {contestant.name}
+                              </CardTitle>
+                              <CardDescription>
+                                @{contestant.username}
+                              </CardDescription>
                             </CardHeader>
                             <CardContent className="p-4">
                               <div className="grid grid-cols-2 gap-2">
                                 <div className="text-center p-2 bg-slate-50 rounded">
-                                  <p className="text-sm text-muted-foreground">Contests</p>
-                                  <p className="font-medium text-lg">{contestant.contests}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Contests
+                                  </p>
+                                  <p className="font-medium text-lg">
+                                    {contestant.contests}
+                                  </p>
                                 </div>
                                 <div className="text-center p-2 bg-slate-50 rounded">
-                                  <p className="text-sm text-muted-foreground">Wins</p>
-                                  <p className="font-medium text-lg">{contestant.wins}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Wins
+                                  </p>
+                                  <p className="font-medium text-lg">
+                                    {contestant.solve}
+                                  </p>
                                 </div>
                               </div>
                             </CardContent>
@@ -381,15 +686,21 @@ export default function ContestTracker() {
                                 <DialogContent>
                                   <DialogHeader>
                                     <DialogTitle>{contestant.name}</DialogTitle>
-                                    <DialogDescription>Contestant details and performance</DialogDescription>
+                                    <DialogDescription>
+                                      Contestant details and performance
+                                    </DialogDescription>
                                   </DialogHeader>
                                   <div className="grid gap-4 py-4">
                                     <div className="flex justify-between items-center">
-                                      <span className="font-medium">Username:</span>
+                                      <span className="font-medium">
+                                        Username:
+                                      </span>
                                       <span>@{contestant.username}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                      <span className="font-medium">Contests Participated:</span>
+                                      <span className="font-medium">
+                                        Contests Participated:
+                                      </span>
                                       <span>{contestant.contests}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
@@ -397,22 +708,30 @@ export default function ContestTracker() {
                                       <span>{contestant.wins}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                      <span className="font-medium">Win Rate:</span>
+                                      <span className="font-medium">
+                                        Win Rate:
+                                      </span>
                                       <span>
                                         {contestant.contests > 0
-                                          ? `${((contestant.wins / contestant.contests) * 100).toFixed(1)}%`
+                                          ? `${(
+                                              (contestant.wins /
+                                                contestant.contests) *
+                                              100
+                                            ).toFixed(1)}%`
                                           : "0%"}
                                       </span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                      <span className="font-medium">Current Rating:</span>
+                                      <span className="font-medium">
+                                        Current Rating:
+                                      </span>
                                       <Badge
                                         variant={
                                           contestant.rating > 1800
                                             ? "default"
                                             : contestant.rating > 1600
-                                              ? "secondary"
-                                              : "outline"
+                                            ? "secondary"
+                                            : "outline"
                                         }
                                       >
                                         {contestant.rating}
@@ -421,7 +740,13 @@ export default function ContestTracker() {
                                   </div>
                                 </DialogContent>
                               </Dialog>
-                              <Button variant="destructive" size="sm" onClick={() => deleteContestant(contestant.id)}>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() =>
+                                  deleteContestant(contestant.userId)
+                                }
+                              >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Remove
                               </Button>
@@ -431,8 +756,12 @@ export default function ContestTracker() {
                       ) : (
                         <div className="col-span-full flex flex-col items-center justify-center p-8 text-center">
                           <AlertCircle className="h-10 w-10 text-muted-foreground mb-2" />
-                          <h3 className="font-medium text-lg">No contestants found</h3>
-                          <p className="text-muted-foreground">Try adjusting your search or add a new contestant.</p>
+                          <h3 className="font-medium text-lg">
+                            No contestants found
+                          </h3>
+                          <p className="text-muted-foreground">
+                            Try adjusting your search or add a new contestant.
+                          </p>
                         </div>
                       )}
                     </div>
@@ -442,33 +771,50 @@ export default function ContestTracker() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <Card>
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-lg">Top Performers</CardTitle>
+                          <CardTitle className="text-lg">
+                            Top Performers
+                          </CardTitle>
                           <CardDescription>Based on win rate</CardDescription>
                         </CardHeader>
                         <CardContent>
                           {[...contestants]
-                            .sort((a, b) => (b.wins / b.contests || 0) - (a.wins / a.contests || 0))
+                            .sort(
+                              (a, b) =>
+                                (b.wins / b.contests || 0) -
+                                (a.wins / a.contests || 0)
+                            )
                             .slice(0, 3)
                             .map((contestant, index) => (
-                              <div key={contestant.id} className="flex items-center gap-2 mb-2">
+                              <div
+                                key={contestant._id}
+                                className="flex items-center gap-2 mb-2"
+                              >
                                 <div
                                   className={`w-6 h-6 rounded-full flex items-center justify-center ${
                                     index === 0
                                       ? "bg-yellow-100 text-yellow-700"
                                       : index === 1
-                                        ? "bg-slate-100 text-slate-700"
-                                        : "bg-amber-100 text-amber-700"
+                                      ? "bg-slate-100 text-slate-700"
+                                      : "bg-amber-100 text-amber-700"
                                   }`}
                                 >
                                   {index + 1}
                                 </div>
                                 <div className="flex-1">
-                                  <p className="font-medium">{contestant.name}</p>
+                                  <p className="font-medium">
+                                    {contestant.name}
+                                  </p>
                                   <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Win rate:</span>
+                                    <span className="text-muted-foreground">
+                                      Win rate:
+                                    </span>
                                     <span>
                                       {contestant.contests > 0
-                                        ? `${((contestant.wins / contestant.contests) * 100).toFixed(1)}%`
+                                        ? `${(
+                                            (contestant.wins /
+                                              contestant.contests) *
+                                            100
+                                          ).toFixed(1)}%`
                                         : "0%"}
                                     </span>
                                   </div>
@@ -480,37 +826,48 @@ export default function ContestTracker() {
 
                       <Card>
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-lg">Highest Rated</CardTitle>
-                          <CardDescription>Top contestants by rating</CardDescription>
+                          <CardTitle className="text-lg">
+                            Highest Rated
+                          </CardTitle>
+                          <CardDescription>
+                            Top contestants by rating
+                          </CardDescription>
                         </CardHeader>
                         <CardContent>
                           {[...contestants]
                             .sort((a, b) => b.rating - a.rating)
                             .slice(0, 3)
                             .map((contestant, index) => (
-                              <div key={contestant.id} className="flex items-center gap-2 mb-2">
+                              <div
+                                key={contestant.userId}
+                                className="flex items-center gap-2 mb-2"
+                              >
                                 <div
                                   className={`w-6 h-6 rounded-full flex items-center justify-center ${
                                     index === 0
                                       ? "bg-yellow-100 text-yellow-700"
                                       : index === 1
-                                        ? "bg-slate-100 text-slate-700"
-                                        : "bg-amber-100 text-amber-700"
+                                      ? "bg-slate-100 text-slate-700"
+                                      : "bg-amber-100 text-amber-700"
                                   }`}
                                 >
                                   {index + 1}
                                 </div>
                                 <div className="flex-1">
-                                  <p className="font-medium">{contestant.name}</p>
+                                  <p className="font-medium">
+                                    {contestant.name}
+                                  </p>
                                   <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Rating:</span>
+                                    <span className="text-muted-foreground">
+                                      Rating:
+                                    </span>
                                     <Badge
                                       variant={
                                         contestant.rating > 1800
                                           ? "default"
                                           : contestant.rating > 1600
-                                            ? "secondary"
-                                            : "outline"
+                                          ? "secondary"
+                                          : "outline"
                                       }
                                     >
                                       {contestant.rating}
@@ -525,29 +882,38 @@ export default function ContestTracker() {
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-lg">Most Active</CardTitle>
-                          <CardDescription>By number of contests</CardDescription>
+                          <CardDescription>
+                            By number of contests
+                          </CardDescription>
                         </CardHeader>
                         <CardContent>
                           {[...contestants]
                             .sort((a, b) => b.contests - a.contests)
                             .slice(0, 3)
                             .map((contestant, index) => (
-                              <div key={contestant.id} className="flex items-center gap-2 mb-2">
+                              <div
+                                key={contestant.userId}
+                                className="flex items-center gap-2 mb-2"
+                              >
                                 <div
                                   className={`w-6 h-6 rounded-full flex items-center justify-center ${
                                     index === 0
                                       ? "bg-yellow-100 text-yellow-700"
                                       : index === 1
-                                        ? "bg-slate-100 text-slate-700"
-                                        : "bg-amber-100 text-amber-700"
+                                      ? "bg-slate-100 text-slate-700"
+                                      : "bg-amber-100 text-amber-700"
                                   }`}
                                 >
                                   {index + 1}
                                 </div>
                                 <div className="flex-1">
-                                  <p className="font-medium">{contestant.name}</p>
+                                  <p className="font-medium">
+                                    {contestant.name}
+                                  </p>
                                   <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Contests:</span>
+                                    <span className="text-muted-foreground">
+                                      Contests:
+                                    </span>
                                     <span>{contestant.contests}</span>
                                   </div>
                                 </div>
@@ -566,7 +932,9 @@ export default function ContestTracker() {
             <div className="space-y-6">
               <Card className="shadow-lg border-none">
                 <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
-                  <CardTitle className="text-lg text-cyan-900">Quick Stats</CardTitle>
+                  <CardTitle className="text-lg text-cyan-900">
+                    Quick Stats
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="space-y-4">
@@ -575,8 +943,12 @@ export default function ContestTracker() {
                         <User className="h-5 w-5 text-cyan-700" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Contestants</p>
-                        <p className="font-medium text-lg">{contestants.length}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Total Contestants
+                        </p>
+                        <p className="font-medium text-lg">
+                          {contestants.length}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -584,9 +956,14 @@ export default function ContestTracker() {
                         <Award className="h-5 w-5 text-blue-700" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Contests</p>
+                        <p className="text-sm text-muted-foreground">
+                          Total Contests
+                        </p>
                         <p className="font-medium text-lg">
-                          {contestants.reduce((sum, contestant) => sum + contestant.contests, 0)}
+                          {contestants.reduce(
+                            (sum, contestant) => sum + contestant.contests,
+                            0
+                          )}
                         </p>
                       </div>
                     </div>
@@ -595,9 +972,14 @@ export default function ContestTracker() {
                         <Trophy className="h-5 w-5 text-emerald-700" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Wins</p>
+                        <p className="text-sm text-muted-foreground">
+                          Total Wins
+                        </p>
                         <p className="font-medium text-lg">
-                          {contestants.reduce((sum, contestant) => sum + contestant.wins, 0)}
+                          {contestants.reduce(
+                            (sum, contestant) => sum + contestant.wins,
+                            0
+                          )}
                         </p>
                       </div>
                     </div>
@@ -606,12 +988,16 @@ export default function ContestTracker() {
                         <BarChart3 className="h-5 w-5 text-purple-700" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Avg. Rating</p>
+                        <p className="text-sm text-muted-foreground">
+                          Avg. Rating
+                        </p>
                         <p className="font-medium text-lg">
                           {contestants.length > 0
                             ? Math.round(
-                                contestants.reduce((sum, contestant) => sum + contestant.rating, 0) /
-                                  contestants.length,
+                                contestants.reduce(
+                                  (sum, contestant) => sum + contestant.rating,
+                                  0
+                                ) / contestants.length
                               )
                             : 0}
                         </p>
@@ -623,7 +1009,9 @@ export default function ContestTracker() {
 
               <Card className="shadow-lg border-none">
                 <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
-                  <CardTitle className="text-lg text-cyan-900">Upcoming Contests</CardTitle>
+                  <CardTitle className="text-lg text-cyan-900">
+                    Upcoming Contests
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="space-y-3">
@@ -632,7 +1020,9 @@ export default function ContestTracker() {
                         <h3 className="font-medium">Spring Coding Challenge</h3>
                         <Badge>2 days</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">May 15, 2025 • 10:00 AM</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        May 15, 2025 • 10:00 AM
+                      </p>
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-sm">12 participants</p>
                         <Button variant="ghost" size="sm">
@@ -646,7 +1036,9 @@ export default function ContestTracker() {
                         <h3 className="font-medium">Algorithm Marathon</h3>
                         <Badge variant="outline">1 week</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">May 20, 2025 • 2:00 PM</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        May 20, 2025 • 2:00 PM
+                      </p>
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-sm">8 participants</p>
                         <Button variant="ghost" size="sm">
@@ -660,7 +1052,9 @@ export default function ContestTracker() {
                         <h3 className="font-medium">Summer Code Jam</h3>
                         <Badge variant="outline">2 weeks</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">May 27, 2025 • 9:00 AM</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        May 27, 2025 • 9:00 AM
+                      </p>
                       <div className="flex justify-between items-center mt-2">
                         <p className="text-sm">15 participants</p>
                         <Button variant="ghost" size="sm">
@@ -682,5 +1076,5 @@ export default function ContestTracker() {
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -18,14 +18,14 @@ import { useNavigate } from "react-router-dom";
 interface UserDetails {
   userId: string;
   name: string;
-  department: string;
-  semester?: string;
-  vjudge?: string;
-  codeforces?: string;
-  leetcode?: string;
-  atcoder?: string;
-  codechef?: string;
-  createdAt: string;
+  email: string;
+  username: string;
+  password: string;
+  codeforces: string;
+  contests: number;
+  solve: number;
+  rating: number;
+  avatar?: string;
 }
 export interface contestantDetails {
   name: string;

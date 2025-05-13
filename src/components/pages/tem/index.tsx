@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
-import { CodeIcon } from "./code-icon-animation";
 
 interface User {
   id: string;
@@ -49,7 +48,6 @@ interface Contestant {
 export default function ContestTrackerHome() {
   const [contestants, setContestants] = useState<Contestant[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isAnimating, setIsAnimating] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -104,12 +102,7 @@ export default function ContestTrackerHome() {
   console.log("userDetails?.userId=>", userDetails?.userId);
   console.log("Id=>", _id);
   const ifSameUserDetails = _id === userDetails?.userId;
-
-  const handleEditContestant = (contestant: Contestant) => {
-    setEditingContestant(contestant);
-    setIsEditDialogOpen(true);
-  };
-
+  
   const saveEditedContestant = () => {
     if (editingContestant) {
       const updatedContestants = contestants.map((c) =>
