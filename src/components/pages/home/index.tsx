@@ -74,9 +74,9 @@ interface UserDetails {
   username: string;
   password: string;
   codeforces: string;
-  contests: number;
-  solve: number;
-  rating: number;
+  contests?: number;
+  solve?: number;
+  rating?: number;
   avatar?: string;
 }
 
@@ -211,11 +211,16 @@ export default function ContestTracker() {
     }
   };
 
-  const addContestant = (formdata: Omit<FormData, "userId">) => {
-    setContestants([
-      ...formData,
-      { ...formdata, userId: Math.random().toString(36).substring(7) },
-    ]);
+  const addContestant = async (formdata: FormData) => {
+    // console.log("formdata", formdata);
+    const response = await fetch("/api/contestants", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+      body: JSON.stringify(formdata),
+    });
   };
 
   useEffect(() => {
@@ -417,14 +422,14 @@ export default function ContestTracker() {
                         <form
                           onSubmit={(e) => {
                             e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            addContestant({
-                              name: formData.get("name") as string,
-                              email: "",
-                              username: formData.get("username") as string,
-                              password: "",
-                              codeforces: formData.get("codeforces") as string,
-                            });
+                            const form = new FormData(e.currentTarget);
+                            const formData = {
+                              name: form.get("name") as string,
+                              email: form.get("email") as string,
+                              username: form.get("username") as string,
+                              codeforces: form.get("codeforces") as string,
+                            };
+                            addContestant(formData);
                             e.currentTarget.reset();
                             // Close dialog
                             const closeButton = document.querySelector(
@@ -435,6 +440,17 @@ export default function ContestTracker() {
                           }}
                         >
                           <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="email" className="text-right">
+                                Email
+                              </Label>
+                              <Input
+                                id="email"
+                                name="email"
+                                className="col-span-3"
+                                required
+                              />
+                            </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                               <Label htmlFor="name" className="text-right">
                                 Name

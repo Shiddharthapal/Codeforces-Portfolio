@@ -1,65 +1,59 @@
-import { verifyToken } from './../../utils/token';
+import { verifyToken } from "./../../utils/token";
 import type { APIRoute } from "astro";
-import  UserDetails  from "@/model/UserDetails";
+import UserDetails from "@/model/UserDetails";
 import connect from "@/lib/connection";
 import mongoose from "mongoose";
 
 export const POST: APIRoute = async ({ request }) => {
   const headers = {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   };
   try {
-
     const data = await request.json();
-    const {
-      name,
-      department,
-      semester,
-      vjudge,
-      codeforces,
-      leetcode,
-      atcoder,
-      codechef
-    } = data;
-
-    
+    const { name, email, username, codeforces } = data;
 
     // Validate required fields
-    if (!name || !department) {
+    if (!name || !email || !username || !codeforces) {
       return new Response(
         JSON.stringify({
           message: "Missing required fields",
           details: {
-            
             name: !name ? "Name is required" : null,
-            department: !department ? "Department is required" : null
-          }
+            email: !email ? "Email is required" : null,
+            username: !username ? "Username is required" : null,
+            codeforces: !codeforces ? "Codeforces handle is required" : null,
+          },
         }),
         { status: 400, headers }
       );
     }
 
     const token = request.headers.get("Authorization");
+    console.log("🧞‍♂️token --->", token);
     // Verify token
-    let verifiedUserId;
+    let verifiedUserId = null;
     try {
-      const verifyTokenData = await verifyToken(token||"");
+      const verifyTokenData = await verifyToken(token || "");
+      console.log("🧞‍♂️verifyTokenData --->", verifyTokenData);
       verifiedUserId = verifyTokenData.userId;
+      console.log("🧞‍♂️verifiedUserId --->", verifiedUserId);
     } catch (error) {
       return new Response(
         JSON.stringify({
           message: "Invalid authorization token",
-          error: error instanceof Error ? error.message : "Token verification failed"
+          error:
+            error instanceof Error
+              ? error.message
+              : "Token verification failed",
         }),
         { status: 401, headers }
       );
     }
     // Connect to database
     await connect();
-
     // Find existing user
     let user = await UserDetails.findOne({ userId: verifiedUserId });
-    //console.log("user ==> ", user);
+    console.log("user ==> ", user);
     let isNewUser = false;
 
     if (!user) {
@@ -68,19 +62,18 @@ export const POST: APIRoute = async ({ request }) => {
       user = new UserDetails({
         userId: verifiedUserId,
         name,
-        department
+        email,
+        username,
+        codeforces,
       });
     }
     console.log("user ==> ", user);
     // Update user details
     user.name = name;
-    user.department = department;
-    if (semester !== undefined) user.semester = semester;
-    if (vjudge !== undefined) user.vjudge = String(vjudge);
-    if (codeforces !== undefined) user.codeforces = codeforces;
-    if (leetcode !== undefined) user.leetcode = leetcode;
-    if (atcoder !== undefined) user.atcoder = atcoder;
-    if (codechef !== undefined) user.codechef = codechef;
+    user.email = email;
+    user.username = username;
+    user.codeforces = codeforces;
+    user.updatedAt = new Date();
 
     // Save user
     await user.save();
@@ -88,12 +81,12 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: isNewUser ? "User details created successfully" : "User details updated successfully",
-        
+        message: isNewUser
+          ? "User details created successfully"
+          : "User details updated successfully",
       }),
       { status: isNewUser ? 201 : 200, headers }
     );
-
   } catch (error) {
     console.error("Error handling user details:", error);
 
@@ -102,7 +95,7 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(
         JSON.stringify({
           message: "Validation error",
-          errors: Object.values(error.errors).map(err => err.message)
+          errors: Object.values(error.errors).map((err) => err.message),
         }),
         { status: 400, headers }
       );
@@ -112,7 +105,6 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(
         JSON.stringify({
           message: "Invalid data format",
-          
         }),
         { status: 400, headers }
       );
@@ -121,7 +113,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         message: "Failed to handle user details",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       }),
       { status: 500, headers }
     );
