@@ -26,6 +26,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  useToast,
+  type ToastProps,
+  type ToastVariant,
+} from "@/hooks/use-toast";
+import {
   AlertCircle,
   Award,
   BarChart3,
@@ -58,7 +63,10 @@ interface User {
   name: string;
   email: string;
   password: string;
+  token?: string;
+  createdAt?: string;
 }
+
 interface UserDetails {
   userId: string;
   name: string;
@@ -70,6 +78,13 @@ interface UserDetails {
   solve: number;
   rating: number;
   avatar?: string;
+}
+
+interface FormData {
+  name: string;
+  email: string;
+  username: string;
+  codeforces: string;
 }
 
 export interface contestantData {
@@ -91,6 +106,14 @@ export default function ContestTracker() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [userDetails, setUserDetails] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    email: "",
+    username: "",
+    codeforces: "",
+  });
+
+  const toast = useToast();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -119,6 +142,23 @@ export default function ContestTracker() {
     );
   };
 
+  const validate = () => {
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.username ||
+      !formData.codeforces
+    ) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "failed" as ToastVariant,
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     try {
       e.preventDefault();
@@ -131,14 +171,14 @@ export default function ContestTracker() {
       const updatedData = {
         ...userDetails,
         ...formData,
-        createdAt: userDetails?.createdAt || new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       };
 
       const response = await fetch("/api/contestants", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `${user.token}`,
+          Authorization: `${_id}`,
         },
         body: JSON.stringify(updatedData),
       });
@@ -153,7 +193,7 @@ export default function ContestTracker() {
         toast({
           title: "Profile updated",
           description: "Your programmer profile has been successfully updated.",
-          variant: "success",
+          variant: "success" as ToastVariant,
         });
       } else {
         throw new Error(data.message || "Failed to update profile");
@@ -166,94 +206,106 @@ export default function ContestTracker() {
           error instanceof Error
             ? error.message
             : "There was an error updating your profile.",
-        variant: "failed",
+        variant: "failed" as ToastVariant,
       });
     }
   };
 
-  const addContestant = (contestant: Omit<UserDetails, "userId">) => {
+  const addContestant = (formdata: Omit<FormData, "userId">) => {
     setContestants([
-      ...contestants,
-      { ...contestant, userId: Math.random().toString(36).substring(7) },
+      ...formData,
+      { ...formdata, userId: Math.random().toString(36).substring(7) },
     ]);
   };
 
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      const alldataResponse = await fetch("/api/users/allUser");
-      console.log("hi");
+    const fetchAllData = async () => {
+      try {
+        // Step 1: Fetch all users
+        const allUsersResponse = await fetch("/api/users/allUser");
+        if (!allUsersResponse.ok) {
+          throw new Error("Failed to fetch all users");
+        }
+        const allUsers = await allUsersResponse.json();
+        setUserDetails(allUsers);
 
-      if (alldataResponse.ok) {
-        const dataOfAllUser = await alldataResponse.json();
-        console.log("dataOfAllUser ==> ", dataOfAllUser);
+        // Step 2: Fetch user details for all users in parallel
+        const userDetailsPromises = allUsers.map((user: User) =>
+          fetch(`/api/users/${user._id}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => data?.userDetails)
+            .catch(() => null)
+        );
 
-        dataOfAllUser.forEach(async (element: User) => {
-          const response = await fetch(`/api/users/${element._id}`);
+        const userDetailsList = await Promise.all(userDetailsPromises);
+        const validUserDetails = userDetailsList.filter(Boolean);
+        setContestants(validUserDetails);
 
-          if (response.ok) {
-            const data = await response.json();
-            setContestants((prevContestants) => [
-              ...prevContestants,
-              data.userDetails,
-            ]);
-          } else {
-            console.error("Failed to fetch user details");
-          }
-        });
-        setUserDetails(dataOfAllUser);
-        console.log("h12");
+        // Step 3: Fetch Codeforces data for all users in parallel
+        const codeforcesPromises = validUserDetails.map(
+          async (user: UserDetails) => {
+            if (!user?.codeforces) return null;
 
-        contestants.forEach(async (element: UserDetails) => {
-          console.log("element --->", element);
-          try {
-            const handle = element?.codeforces;
-            console.log("🧞‍♂️handle --->", handle);
-            if (!handle) {
-              console.error("Codeforces handle is missing");
-              return;
+            try {
+              const response = await fetch(
+                `/api/users/codeforces?handle=${encodeURIComponent(
+                  user.codeforces
+                )}`,
+                {
+                  method: "GET",
+                  headers: { "Content-Type": "application/json" },
+                }
+              );
+
+              const data = await response.json();
+              if (!data.success) return null;
+
+              return {
+                userId: user.userId,
+                cfTotalSolved: data?.data?.totalSolved || 0,
+                cfTotalContest: data?.data?.totalContest || 0,
+                cfRating: data?.rating[data.rating.length - 1].newRating || 0,
+              };
+            } catch (error) {
+              console.error(
+                `Failed to fetch Codeforces data for ${user.codeforces}:`,
+                error
+              );
+              return null;
             }
-
-            const Userresponse = await fetch(
-              `/api/users/codeforces?handle=${encodeURIComponent(handle)}`,
-              {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-
-            const responseData = await Userresponse.json();
-            if (!responseData.success) {
-              console.error("Failed to fetch user data from Codeforces");
-              return;
-            }
-
-            const cfTotalSolved = responseData?.data?.totalSolved || 0;
-            const cfTotalContest = responseData?.data?.totalContest || 0;
-            const cfRating = responseData?.rating || 0;
-
-            setContestants((prevContestants) =>
-              prevContestants.map((contestant) =>
-                contestant.userId === element.userId
-                  ? {
-                      ...contestant,
-                      solve: (contestant.solve || 0) + cfTotalSolved,
-                      contests: (contestant.contests || 0) + cfTotalContest,
-                      rating: (contestant.rating || 0) + cfRating,
-                    }
-                  : contestant
-              )
-            );
-          } catch (error) {
-            console.error(error);
           }
-        });
-      } else {
-        console.error("Failed to fetch all user details");
+        );
+
+        const codeforcesData = (await Promise.all(codeforcesPromises)).filter(
+          Boolean
+        );
+
+        // Update all contestants in a single batch
+        setContestants((prevContestants) =>
+          prevContestants.map((contestant) => {
+            const cfData = codeforcesData.find(
+              (data) => data?.userId === contestant.userId
+            );
+            if (!cfData) return contestant;
+
+            return {
+              ...contestant,
+              solve: (contestant.solve || 0) + cfData.cfTotalSolved,
+              contests: (contestant.contests || 0) + cfData.cfTotalContest,
+              rating: (contestant.rating || 0) + cfData.cfRating,
+            };
+          })
+        );
+        console.log(
+          "rating",
+          contestants.map((contestant) => contestant.rating)
+        );
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       }
     };
-    fetchUserDetails();
+
+    fetchAllData();
   }, []);
 
   // const ifSameUserDetails = _id === userDetails?.id;
@@ -359,8 +411,7 @@ export default function ContestTracker() {
                         <DialogHeader>
                           <DialogTitle>Add New Contestant</DialogTitle>
                           <DialogDescription>
-                            Enter the details of the new contestant to add them
-                            to your tracker.
+                            Enter the details of the new contestant.
                           </DialogDescription>
                         </DialogHeader>
                         <form
@@ -368,21 +419,11 @@ export default function ContestTracker() {
                             e.preventDefault();
                             const formData = new FormData(e.currentTarget);
                             addContestant({
-                              _id,
                               name: formData.get("name") as string,
+                              email: "",
                               username: formData.get("username") as string,
-                              contests:
-                                Number.parseInt(
-                                  formData.get("contests") as string
-                                ) || 0,
-                              wins:
-                                Number.parseInt(
-                                  formData.get("wins") as string
-                                ) || 0,
-                              rating:
-                                Number.parseInt(
-                                  formData.get("rating") as string
-                                ) || 1500,
+                              password: "",
+                              codeforces: formData.get("codeforces") as string,
                             });
                             e.currentTarget.reset();
                             // Close dialog
@@ -416,40 +457,19 @@ export default function ContestTracker() {
                                 required
                               />
                             </div>
+
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="contests" className="text-right">
-                                Contests
+                              <Label
+                                htmlFor="codeforces"
+                                className="text-right"
+                              >
+                                Codeforces Link
                               </Label>
                               <Input
-                                id="contests"
-                                name="contests"
-                                type="number"
-                                min="0"
+                                id="codeforces"
+                                name="codeforces"
                                 className="col-span-3"
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="wins" className="text-right">
-                                Wins
-                              </Label>
-                              <Input
-                                id="wins"
-                                name="wins"
-                                type="number"
-                                min="0"
-                                className="col-span-3"
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="rating" className="text-right">
-                                Rating
-                              </Label>
-                              <Input
-                                id="rating"
-                                name="rating"
-                                type="number"
-                                min="0"
-                                className="col-span-3"
+                                required
                               />
                             </div>
                           </div>
@@ -704,17 +724,19 @@ export default function ContestTracker() {
                                       <span>{contestant.contests}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                      <span className="font-medium">Wins:</span>
-                                      <span>{contestant.wins}</span>
+                                      <span className="font-medium">
+                                        Solved:
+                                      </span>
+                                      <span>{contestant.solve}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                       <span className="font-medium">
-                                        Win Rate:
+                                        Success Rate:
                                       </span>
                                       <span>
                                         {contestant.contests > 0
                                           ? `${(
-                                              (contestant.wins /
+                                              (contestant.solve /
                                                 contestant.contests) *
                                               100
                                             ).toFixed(1)}%`
@@ -774,19 +796,21 @@ export default function ContestTracker() {
                           <CardTitle className="text-lg">
                             Top Performers
                           </CardTitle>
-                          <CardDescription>Based on win rate</CardDescription>
+                          <CardDescription>
+                            Based on success rate
+                          </CardDescription>
                         </CardHeader>
                         <CardContent>
                           {[...contestants]
                             .sort(
                               (a, b) =>
-                                (b.wins / b.contests || 0) -
-                                (a.wins / a.contests || 0)
+                                (b.solve / b.contests || 0) -
+                                (a.solve / a.contests || 0)
                             )
                             .slice(0, 3)
                             .map((contestant, index) => (
                               <div
-                                key={contestant._id}
+                                key={contestant.userId}
                                 className="flex items-center gap-2 mb-2"
                               >
                                 <div
@@ -806,12 +830,12 @@ export default function ContestTracker() {
                                   </p>
                                   <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">
-                                      Win rate:
+                                      Success rate:
                                     </span>
                                     <span>
                                       {contestant.contests > 0
                                         ? `${(
-                                            (contestant.wins /
+                                            (contestant.solve /
                                               contestant.contests) *
                                             100
                                           ).toFixed(1)}%`
@@ -977,7 +1001,7 @@ export default function ContestTracker() {
                         </p>
                         <p className="font-medium text-lg">
                           {contestants.reduce(
-                            (sum, contestant) => sum + contestant.wins,
+                            (sum, contestant) => sum + contestant.solve,
                             0
                           )}
                         </p>
