@@ -1,5 +1,9 @@
-import { loginStart, loginSuccess, loginFailure } from '@/redux/slices/authSlice';
-import type { AppDispatch } from '@/redux/store';
+import {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+} from "@/redux/slices/authSlice";
+import type { AppDispatch } from "@/redux/store";
 
 interface LoginCredentials {
   email: string;
@@ -12,7 +16,6 @@ interface RegisterCredentials {
   password: string;
 }
 
-
 export const handleLogin = async (
   credentials: LoginCredentials,
   dispatch: AppDispatch
@@ -20,31 +23,32 @@ export const handleLogin = async (
   try {
     //console.log("credential=>",credentials);
     dispatch(loginStart());
-    const response = await fetch('/api/login', {
-      method: 'POST',
+    const response = await fetch("/api/login", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(credentials),
     });
-   
 
-    const result= await response.json();
+    const result = await response.json();
     if (!response.ok) {
-      throw new Error(result.message || 'Login failed');
+      throw new Error(result.message || "Login failed");
     }
 
     // Update Redux state
-    dispatch(loginSuccess({
-      _id: result._id,
-      email: credentials.email,
-      name: result.name,
-      token: result.token,
-    }));
+    dispatch(
+      loginSuccess({
+        _id: result._id,
+        email: credentials.email,
+        name: result.name,
+        token: result.token,
+      })
+    );
 
     return result;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Login failed';
+    const message = error instanceof Error ? error.message : "Login failed";
     dispatch(loginFailure(message));
     throw error;
   }
@@ -57,32 +61,33 @@ export const handleRegister = async (
   try {
     dispatch(loginStart());
 
-    const response = await fetch('/api/register', {
-      method: 'POST',
+    const response = await fetch("/api/register", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(credentials),
     });
 
     const result = await response.json();
     if (!response.ok) {
-
-      throw new Error(result.message || 'Registration failed');
+      throw new Error(result.message || "Registration failed");
     }
 
-
     // Update Redux state
-    dispatch(loginSuccess({
-      _id: result._id,
-      email: credentials.email,
-      name: credentials.name,
-      token: result.token,
-    }));
+    dispatch(
+      loginSuccess({
+        _id: result._id,
+        email: credentials.email,
+        name: credentials.name,
+        token: result.token,
+      })
+    );
 
     return result;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Registration failed';
+    const message =
+      error instanceof Error ? error.message : "Registration failed";
     dispatch(loginFailure(message));
     throw error;
   }
@@ -90,21 +95,22 @@ export const handleRegister = async (
 
 export const handleLogout = (dispatch: AppDispatch) => {
   // Clear stored tokens
-  localStorage.removeItem('token');
-  localStorage.removeItem('refreshToken');
-  
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
+
   // Update Redux state
-  dispatch({ type: 'auth/logout' });
+  dispatch({ type: "auth/logout" });
 };
 
 export const checkAuth = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
+  console.log("🧞‍♂️token --->", token);
   return !!token;
 };
 
 // Add auth header setup
 export const setupAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   if (token) {
     return {
       headers: {

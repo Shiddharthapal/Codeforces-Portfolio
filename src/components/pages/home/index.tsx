@@ -46,6 +46,8 @@ import {
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
+import { checkAuth } from "@/lib/auth";
+import { createAc } from "./create";
 
 // interface Contestant = {
 //   _id: string;
@@ -116,6 +118,7 @@ export default function ContestTracker() {
   const toast = useToast();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const isAuthenticated = checkAuth();
 
   const { _id, token } = useAppSelector((state) => state.auth);
 
@@ -130,10 +133,6 @@ export default function ContestTracker() {
     setIsUserMenuOpen(false);
     dispatch(logout());
     navigate("/");
-  };
-
-  const handleProfile = () => {
-    navigate("/user");
   };
 
   const deleteContestant = (id: string) => {
@@ -159,68 +158,15 @@ export default function ContestTracker() {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    try {
-      e.preventDefault();
-
-      if (!validate()) {
-        return;
-      }
-
-      // Merge the original data with the updated fields
-      const updatedData = {
-        ...userDetails,
-        ...formData,
-        createdAt: new Date().toISOString(),
-      };
-
-      const response = await fetch("/api/contestants", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `${_id}`,
-        },
-        body: JSON.stringify(updatedData),
+  // Handle Add Contestant button click
+  const handleAddClick = () => {
+    if (!isAuthenticated) {
+      navigate("/login", {
+        state: { returnUrl: window.location.pathname },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update profile");
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast({
-          title: "Profile updated",
-          description: "Your programmer profile has been successfully updated.",
-          variant: "success" as ToastVariant,
-        });
-      } else {
-        throw new Error(data.message || "Failed to update profile");
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast({
-        title: "Update failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "There was an error updating your profile.",
-        variant: "failed" as ToastVariant,
-      });
+      return false;
     }
-  };
-
-  const addContestant = async (formdata: FormData) => {
-    // console.log("formdata", formdata);
-    const response = await fetch("/api/contestants", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
-      body: JSON.stringify(formdata),
-    });
+    return true;
   };
 
   useEffect(() => {
@@ -407,93 +353,12 @@ export default function ContestTracker() {
                     </div>
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button>
+                        <Button onClick={handleAddClick}>
                           <Plus className="mr-2 h-4 w-4" />
                           Add Contestant
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Add New Contestant</DialogTitle>
-                          <DialogDescription>
-                            Enter the details of the new contestant.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            const form = new FormData(e.currentTarget);
-                            const formData = {
-                              name: form.get("name") as string,
-                              email: form.get("email") as string,
-                              username: form.get("username") as string,
-                              codeforces: form.get("codeforces") as string,
-                            };
-                            addContestant(formData);
-                            e.currentTarget.reset();
-                            // Close dialog
-                            const closeButton = document.querySelector(
-                              '[data-state="open"] button[aria-label="Close"]'
-                            );
-                            if (closeButton instanceof HTMLElement)
-                              closeButton.click();
-                          }}
-                        >
-                          <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="email" className="text-right">
-                                Email
-                              </Label>
-                              <Input
-                                id="email"
-                                name="email"
-                                className="col-span-3"
-                                required
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="name" className="text-right">
-                                Name
-                              </Label>
-                              <Input
-                                id="name"
-                                name="name"
-                                className="col-span-3"
-                                required
-                              />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="username" className="text-right">
-                                Username
-                              </Label>
-                              <Input
-                                id="username"
-                                name="username"
-                                className="col-span-3"
-                                required
-                              />
-                            </div>
-
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label
-                                htmlFor="codeforces"
-                                className="text-right"
-                              >
-                                Codeforces Link
-                              </Label>
-                              <Input
-                                id="codeforces"
-                                name="codeforces"
-                                className="col-span-3"
-                                required
-                              />
-                            </div>
-                          </div>
-                          <DialogFooter>
-                            <Button type="submit">Add Contestant</Button>
-                          </DialogFooter>
-                        </form>
-                      </DialogContent>
+                      {isAuthenticated && token && createAc({ token })}
                     </Dialog>
                   </div>
                 </div>

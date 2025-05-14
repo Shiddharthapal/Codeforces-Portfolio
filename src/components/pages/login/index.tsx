@@ -48,6 +48,7 @@ export default function Login() {
       });
 
       const result = await response.json();
+      // console.log("🧞‍♂️result --->", result);
 
       if (!response.ok) {
         // Handle different types of errors
@@ -77,7 +78,7 @@ export default function Login() {
         })
       );
 
-      navigate("/about/");
+      navigate("/");
     } catch (error) {
       // Handle network or parsing errors
       const message =
