@@ -11,17 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -46,21 +37,9 @@ import {
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
-import { checkAuth } from "@/lib/auth";
 import { createAc } from "./create";
 import { about } from "./about";
 
-// interface Contestant = {
-//   _id: string;
-//   name: string;
-//   username: string;
-//   email?: string;
-//   password?: string;
-//   contests: number;
-//   solve: number;
-//   rating: number;
-//   avatar?: string;
-// };
 interface User {
   _id: string;
   name: string;
@@ -105,10 +84,27 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
+interface UpcomingContest {
+  id: number;
+  name: string;
+  type: string;
+  durationSeconds: number;
+  durationFormatted: string;
+  startTimeSeconds: number;
+  startTimeFormatted: string;
+  relativeTimeToStart: number;
+  timeToStartFormatted: string;
+  phase: string;
+  websiteUrl?: string;
+}
+
 export default function ContestTracker() {
   const [contestants, setContestants] = useState<UserDetails[]>([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [upcomingContests, setUpcomingContests] = useState<UpcomingContest[]>(
+    []
+  );
   const [userDetails, setUserDetails] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState<FormData>({
@@ -242,6 +238,11 @@ export default function ContestTracker() {
             };
           })
         );
+
+        let verifiedId = await fetch(`/api/users/upComingContest`);
+        let verifiedUserId = await verifiedId.json();
+        // console.log("🧞‍♂️verifiedUserId --->", verifiedUserId.contests);
+        setUpcomingContests(verifiedUserId.contests);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -791,63 +792,28 @@ export default function ContestTracker() {
                     Upcoming Contests
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div className="border rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium">Spring Coding Challenge</h3>
-                        <Badge>2 days</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        May 15, 2025 • 10:00 AM
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-sm">12 participants</p>
-                        <Button variant="ghost" size="sm">
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="border rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium">Algorithm Marathon</h3>
-                        <Badge variant="outline">1 week</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        May 20, 2025 • 2:00 PM
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-sm">8 participants</p>
-                        <Button variant="ghost" size="sm">
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
+                {upcomingContests?.map((contest: UpcomingContest) => (
+                  <CardContent key={contest.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="border rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-medium">{contest.name}</h3>
+                          <Badge>{contest.timeToStartFormatted}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {contest.startTimeFormatted} •{" "}
+                          {contest.durationFormatted}
+                        </p>
+                        <div className="flex justify-between items-center mt-2">
+                          <p className="text-sm">participants</p>
+                          <Button variant="ghost" size="sm">
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="border rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium">Summer Code Jam</h3>
-                        <Badge variant="outline">2 weeks</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        May 27, 2025 • 9:00 AM
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-sm">15 participants</p>
-                        <Button variant="ghost" size="sm">
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="bg-slate-50 rounded-b-lg">
-                  <Button variant="outline" className="w-full">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add New Contest
-                  </Button>
-                </CardFooter>
+                  </CardContent>
+                ))}
               </Card>
             </div>
           </div>
@@ -855,7 +821,4 @@ export default function ContestTracker() {
       </main>
     </div>
   );
-}
-function useAuth(): { isAuthenticated: any; checkAuth: any } {
-  throw new Error("Function not implemented.");
 }
