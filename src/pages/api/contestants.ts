@@ -10,6 +10,7 @@ export const POST: APIRoute = async ({ request }) => {
   };
   try {
     const data = await request.json();
+    console.log("🧞‍♂️data --->", data);
     const { name, email, username, codeforces } = data;
 
     // Validate required fields
@@ -61,19 +62,14 @@ export const POST: APIRoute = async ({ request }) => {
       isNewUser = true;
       user = new UserDetails({
         userId: verifiedUserId,
-        name,
         email,
+        name,
         username,
         codeforces,
       });
     }
-    console.log("user ==> ", user);
+    console.log("user1 ==> ", user);
     // Update user details
-    user.name = name;
-    user.email = email;
-    user.username = username;
-    user.codeforces = codeforces;
-    user.updatedAt = new Date();
 
     // Save user
     await user.save();

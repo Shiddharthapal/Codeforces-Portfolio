@@ -98,8 +98,8 @@ export interface contestantData {
 }
 
 interface AuthState {
-  _id: string;
-  token: string;
+  _id: string | undefined;
+  token: string | undefined;
   isAuthenticated: boolean;
 }
 
@@ -118,7 +118,6 @@ export default function ContestTracker() {
   const toast = useToast();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const isAuthenticated = checkAuth();
 
   const { _id, token } = useAppSelector((state) => state.auth);
 
@@ -159,15 +158,6 @@ export default function ContestTracker() {
   };
 
   // Handle Add Contestant button click
-  const handleAddClick = () => {
-    if (!isAuthenticated) {
-      navigate("/login", {
-        state: { returnUrl: window.location.pathname },
-      });
-      return false;
-    }
-    return true;
-  };
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -259,6 +249,15 @@ export default function ContestTracker() {
     fetchAllData();
   }, []);
 
+  const handleAddClick = () => {
+    if (!token) {
+      navigate("/login", {
+        state: { returnUrl: window.location.pathname },
+      });
+      return false;
+    }
+    return true;
+  };
   // const ifSameUserDetails = _id === userDetails?.id;
 
   // const saveEditedContestant = () => {
@@ -358,7 +357,7 @@ export default function ContestTracker() {
                           Add Contestant
                         </Button>
                       </DialogTrigger>
-                      {isAuthenticated && token && createAc({ token })}
+                      {token && createAc({ token })}
                     </Dialog>
                   </div>
                 </div>
@@ -982,4 +981,7 @@ export default function ContestTracker() {
       </main>
     </div>
   );
+}
+function useAuth(): { isAuthenticated: any; checkAuth: any } {
+  throw new Error("Function not implemented.");
 }
