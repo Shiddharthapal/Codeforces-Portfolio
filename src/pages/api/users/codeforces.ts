@@ -90,6 +90,7 @@ export const GET: APIRoute = async ({ request }) => {
 
     submissions.forEach((sub: Submission) => {
       const key = `${sub.contestId}${sub.problem.index}`;
+      const tempKey = `${sub.contestId}`;
       if (sub.verdict === "OK") {
         if (!solvedProblems.has(key)) {
           solvedProblems.set(key, {
@@ -99,9 +100,9 @@ export const GET: APIRoute = async ({ request }) => {
           });
         }
       }
-      if (!allUniqueContest.has(key)) {
+      if (!allUniqueContest.has(tempKey)) {
         contest++;
-        allUniqueContest.set(key, {
+        allUniqueContest.set(tempKey, {
           contestId: sub.contestId,
           index: sub.problem.index,
           name: sub.problem.name,

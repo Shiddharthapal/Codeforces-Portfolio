@@ -491,9 +491,9 @@ export default function ContestTracker() {
                                 </Avatar>
                                 <Badge
                                   variant={
-                                    contestant.rating > 1800
+                                    (contestant.rating ?? 0) > 1800
                                       ? "default"
-                                      : contestant.rating > 1600
+                                      : (contestant.rating ?? 0) > 1600
                                       ? "secondary"
                                       : "outline"
                                   }
@@ -536,75 +536,8 @@ export default function ContestTracker() {
                                     Details
                                   </Button>
                                 </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>{contestant.name}</DialogTitle>
-                                    <DialogDescription>
-                                      Contestant details and performance
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="grid gap-4 py-4">
-                                    <div className="flex justify-between items-center">
-                                      <span className="font-medium">
-                                        Username:
-                                      </span>
-                                      <span>@{contestant.username}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="font-medium">
-                                        Contests Participated:
-                                      </span>
-                                      <span>{contestant.contests}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="font-medium">
-                                        Solved:
-                                      </span>
-                                      <span>{contestant.solve}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="font-medium">
-                                        Success Rate:
-                                      </span>
-                                      <span>
-                                        {contestant.contests > 0
-                                          ? `${(
-                                              (contestant.solve /
-                                                contestant.contests) *
-                                              100
-                                            ).toFixed(1)}%`
-                                          : "0%"}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="font-medium">
-                                        Current Rating:
-                                      </span>
-                                      <Badge
-                                        variant={
-                                          contestant.rating > 1800
-                                            ? "default"
-                                            : contestant.rating > 1600
-                                            ? "secondary"
-                                            : "outline"
-                                        }
-                                      >
-                                        {contestant.rating}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                </DialogContent>
+                                {about({ contestant })}
                               </Dialog>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() =>
-                                  deleteContestant(contestant.userId)
-                                }
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Remove
-                              </Button>
                             </CardFooter>
                           </Card>
                         ))
@@ -637,8 +570,8 @@ export default function ContestTracker() {
                           {[...contestants]
                             .sort(
                               (a, b) =>
-                                (b.solve / b.contests || 0) -
-                                (a.solve / a.contests || 0)
+                                ((b.solve ?? 0) / (b.contests ?? 0) || 0) -
+                                ((a.solve ?? 0) / (a.contests ?? 0) || 0)
                             )
                             .slice(0, 3)
                             .map((contestant, index) => (
@@ -665,15 +598,7 @@ export default function ContestTracker() {
                                     <span className="text-muted-foreground">
                                       Success rate:
                                     </span>
-                                    <span>
-                                      {contestant.contests > 0
-                                        ? `${(
-                                            (contestant.solve /
-                                              contestant.contests) *
-                                            100
-                                          ).toFixed(1)}%`
-                                        : "0%"}
-                                    </span>
+                                    <span>{contestant.successRate}</span>
                                   </div>
                                 </div>
                               </div>
@@ -720,9 +645,9 @@ export default function ContestTracker() {
                                     </span>
                                     <Badge
                                       variant={
-                                        contestant.rating > 1800
+                                        (contestant.rating ?? 0) > 1800
                                           ? "default"
-                                          : contestant.rating > 1600
+                                          : (contestant.rating ?? 0) > 1600
                                           ? "secondary"
                                           : "outline"
                                       }

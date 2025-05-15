@@ -1,14 +1,9 @@
 import {
-  Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 interface UserDetails {
   userId: string;
@@ -47,7 +42,7 @@ export function about({ contestant }: { contestant: UserDetails }) {
         </div>
         <div className="flex justify-between items-center">
           <span className="font-medium">Sucess Rate:</span>
-          <span>{contestant.successRate}</span>
+          <span>{contestant.successRate}%</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="font-medium">Current Rating:</span>
