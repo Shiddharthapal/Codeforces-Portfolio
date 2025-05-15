@@ -6,6 +6,10 @@ const UserDetailsSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    department: {
+      type: String,
+      required: false, // Making it optional
+    },
     email: {
       type: String,
       required: true,

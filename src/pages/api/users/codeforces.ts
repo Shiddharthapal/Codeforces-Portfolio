@@ -2,25 +2,13 @@ import type { APIRoute } from "astro";
 import { codeforcesAPI } from "@/lib/codeforces_api";
 import type { Submission, RatingChange } from "@/types/codeForces_api_type";
 
-interface LastMonthStats {
-  totalUniqueProblems: number;
-  totalSubmissions: number;
-  successRate: number;
-  problems: Array<{
-    contestId: number;
-    index: string;
-    name: string;
-    attempts: number;
-    acceptedTime: number;
-  }>;
-}
-
 interface CodeforcesProblemResponse {
   success: boolean;
   data?: {
     handle: string;
     totalSolved: number;
     totalContest: number;
+    successRate: number;
   };
   rating?: RatingChange[];
   error?: string;
@@ -33,63 +21,6 @@ function isLastMonthSubmission(submission: Submission): boolean {
 }
 
 // Helper function to process last month submissions
-function processLastMonthSubmissions(
-  submissions: Submission[]
-): LastMonthStats {
-  const lastMonthSubs = submissions.filter(isLastMonthSubmission);
-  const problemStats = new Map<
-    string,
-    {
-      contestId: number;
-      index: string;
-      name: string;
-      attempts: number;
-      acceptedTime: number | null;
-    }
-  >();
-
-  // Process each submission
-  lastMonthSubs.forEach((sub) => {
-    const key = `${sub.contestId}${sub.problem.index}`;
-    const existing = problemStats.get(key);
-
-    if (!existing) {
-      problemStats.set(key, {
-        contestId: sub.contestId,
-        index: sub.problem.index,
-        name: sub.problem.name,
-        attempts: 1,
-        acceptedTime: sub.verdict === "OK" ? sub.creationTimeSeconds : null,
-      });
-    } else {
-      existing.attempts++;
-      if (sub.verdict === "OK" && existing.acceptedTime === null) {
-        existing.acceptedTime = sub.creationTimeSeconds;
-      }
-    }
-  });
-
-  // Convert to final format
-  const problems = Array.from(problemStats.entries())
-    .filter(([_, stats]) => stats.acceptedTime !== null)
-    .map(([_, stats]) => ({
-      contestId: stats.contestId,
-      index: stats.index,
-      name: stats.name,
-      attempts: stats.attempts,
-      acceptedTime: stats.acceptedTime!,
-    }));
-
-  return {
-    totalUniqueProblems: problems.length,
-    totalSubmissions: lastMonthSubs.length,
-    successRate:
-      lastMonthSubs.length > 0
-        ? (problems.length / problemStats.size) * 100
-        : 0,
-    problems: problems,
-  };
-}
 
 // Cache solution to avoid hitting rate limits
 const cache = new Map<
@@ -185,6 +116,12 @@ export const GET: APIRoute = async ({ request }) => {
         handle,
         totalSolved: solvedProblems.size,
         totalContest: contest,
+        successRate:
+          submissions.length > 0
+            ? Number(
+                ((solvedProblems.size / submissions.length) * 100).toFixed(1)
+              )
+            : 0,
       },
       rating: ratingChanges,
     };

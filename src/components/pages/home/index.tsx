@@ -48,6 +48,7 @@ import { logout } from "@/redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { checkAuth } from "@/lib/auth";
 import { createAc } from "./create";
+import { about } from "./about";
 
 // interface Contestant = {
 //   _id: string;
@@ -79,6 +80,7 @@ interface UserDetails {
   contests?: number;
   solve?: number;
   rating?: number;
+  successRate?: number;
   avatar?: string;
 }
 
@@ -106,6 +108,7 @@ interface AuthState {
 export default function ContestTracker() {
   const [contestants, setContestants] = useState<UserDetails[]>([]);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [userDetails, setUserDetails] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState<FormData>({
@@ -206,6 +209,7 @@ export default function ContestTracker() {
                 cfTotalSolved: data?.data?.totalSolved || 0,
                 cfTotalContest: data?.data?.totalContest || 0,
                 cfRating: data?.rating[data.rating.length - 1].newRating || 0,
+                cfSuccessRate: data?.data?.successRate || 0,
               };
             } catch (error) {
               console.error(
@@ -234,6 +238,7 @@ export default function ContestTracker() {
               solve: (contestant.solve || 0) + cfData.cfTotalSolved,
               contests: (contestant.contests || 0) + cfData.cfTotalContest,
               rating: (contestant.rating || 0) + cfData.cfRating,
+              successRate: (contestant.successRate || 0) + cfData.cfSuccessRate,
             };
           })
         );
@@ -350,9 +355,16 @@ export default function ContestTracker() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
                     </div>
-                    <Dialog>
+                    <Dialog
+                      open={isAddDialogOpen}
+                      onOpenChange={setIsAddDialogOpen}
+                    >
                       <DialogTrigger asChild>
-                        <Button onClick={handleAddClick}>
+                        <Button
+                          onClick={() => {
+                            handleAddClick();
+                          }}
+                        >
                           <Plus className="mr-2 h-4 w-4" />
                           Add Contestant
                         </Button>
@@ -446,66 +458,7 @@ export default function ContestTracker() {
                                       <Info className="h-4 w-4" />
                                     </Button>
                                   </DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>
-                                        {contestant.name}
-                                      </DialogTitle>
-                                      <DialogDescription>
-                                        Contestant details and performance
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4 py-4">
-                                      <div className="flex justify-between items-center">
-                                        <span className="font-medium">
-                                          Username:
-                                        </span>
-                                        <span>@{contestant.username}</span>
-                                      </div>
-                                      <div className="flex justify-between items-center">
-                                        <span className="font-medium">
-                                          Contests Participated:
-                                        </span>
-                                        <span>{contestant.contests}</span>
-                                      </div>
-                                      <div className="flex justify-between items-center">
-                                        <span className="font-medium">
-                                          Wins:
-                                        </span>
-                                        <span>{contestant.solve}</span>
-                                      </div>
-                                      <div className="flex justify-between items-center">
-                                        <span className="font-medium">
-                                          Win Rate:
-                                        </span>
-                                        <span>
-                                          {contestant.contests > 0
-                                            ? `${(
-                                                (contestant.solve /
-                                                  contestant.contests) *
-                                                100
-                                              ).toFixed(1)}%`
-                                            : "0%"}
-                                        </span>
-                                      </div>
-                                      <div className="flex justify-between items-center">
-                                        <span className="font-medium">
-                                          Current Rating:
-                                        </span>
-                                        <Badge
-                                          variant={
-                                            contestant.rating > 1800
-                                              ? "default"
-                                              : contestant.rating > 1600
-                                              ? "secondary"
-                                              : "outline"
-                                          }
-                                        >
-                                          {contestant.rating}
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  </DialogContent>
+                                  {about({ contestant })}
                                 </Dialog>
                               </div>
                             </div>
