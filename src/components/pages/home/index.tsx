@@ -242,10 +242,6 @@ export default function ContestTracker() {
             };
           })
         );
-        console.log(
-          "rating",
-          contestants.map((contestant) => contestant.rating)
-        );
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -617,7 +613,7 @@ export default function ContestTracker() {
                         </CardHeader>
                         <CardContent>
                           {[...contestants]
-                            .sort((a, b) => b.rating - a.rating)
+                            .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
                             .slice(0, 3)
                             .map((contestant, index) => (
                               <div

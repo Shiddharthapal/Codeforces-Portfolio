@@ -11,7 +11,6 @@ interface LoginCredentials {
 }
 
 interface RegisterCredentials {
-  name: string;
   email: string;
   password: string;
 }
@@ -41,7 +40,6 @@ export const handleLogin = async (
       loginSuccess({
         _id: result._id,
         email: credentials.email,
-        name: result.name,
         token: result.token,
       })
     );
@@ -79,7 +77,6 @@ export const handleRegister = async (
       loginSuccess({
         _id: result._id,
         email: credentials.email,
-        name: credentials.name,
         token: result.token,
       })
     );

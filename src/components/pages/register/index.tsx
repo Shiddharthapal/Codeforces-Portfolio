@@ -18,7 +18,6 @@ const Input = forwardRef<
 });
 
 interface RegisterFormData {
-  name: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -48,7 +47,6 @@ export default function Register() {
     try {
       const response = await handleRegister(
         {
-          name: data.name,
           email: data.email,
           password: data.password,
         },
@@ -71,24 +69,6 @@ export default function Register() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                {...register("name", {
-                  required: "Full name is required",
-                  minLength: {
-                    value: 2,
-                    message: "Name must be at least 2 characters",
-                  },
-                })}
-              />
-              {errors.name && (
-                <p className="text-sm text-red-500">{errors.name.message}</p>
-              )}
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
