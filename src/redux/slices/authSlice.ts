@@ -1,9 +1,8 @@
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
 
 interface User {
   _id: string;
-  name: string;
   email: string;
   token: string;
 }
@@ -22,12 +21,11 @@ const initialState: AuthState = {
   error: null,
 };
 const loadInitialState = () => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
   if (token) {
-    const userData = JSON.parse(localStorage.getItem('authUser') || '{}');
+    const userData = JSON.parse(localStorage.getItem("authUser") || "{}");
     return {
       _id: userData._id || null,
-      name: userData.name || null,
       email: userData.email || null,
       token,
       loading: false,
@@ -36,7 +34,6 @@ const loadInitialState = () => {
   }
   return {
     _id: null,
-    name: null,
     email: null,
     token: null,
     loading: false,
@@ -44,7 +41,7 @@ const loadInitialState = () => {
   };
 };
 export const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState: loadInitialState(),
   reducers: {
     loginStart: (state) => {
@@ -55,15 +52,17 @@ export const authSlice = createSlice({
       state.loading = false;
       state._id = action.payload._id;
       state.email = action.payload.email;
-      state.name = action.payload.name;
       state.token = action.payload.token;
       state.error = null;
 
-      localStorage.setItem('authToken', action.payload.token);
-      localStorage.setItem('authUser', JSON.stringify({
-        _id: action.payload._id,
-        email: action.payload.email
-      }));
+      localStorage.setItem("authToken", action.payload.token);
+      localStorage.setItem(
+        "authUser",
+        JSON.stringify({
+          _id: action.payload._id,
+          email: action.payload.email,
+        })
+      );
     },
     loginFailure: (state, action) => {
       state.loading = false;
@@ -74,11 +73,11 @@ export const authSlice = createSlice({
       state.email = null;
       state.token = null;
       state.error = null;
-      
+
       // CLEAR PERSISTED DATA
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authUser');
-    }
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("authUser");
+    },
   },
 });
 

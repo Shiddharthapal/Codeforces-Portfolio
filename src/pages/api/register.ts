@@ -1,15 +1,14 @@
-import  jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import type { APIRoute } from "astro";
-import  User  from '@/model/User';
+import User from "@/model/User";
 import connect from "@/lib/connection";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-
-    const { name, email, password } = await request.json();
+    const { email, password } = await request.json();
 
     // Validate input
-    if (!name || !email || !password) {
+    if (!email || !password) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -28,25 +27,23 @@ export const POST: APIRoute = async ({ request }) => {
         JSON.stringify({
           message: "User with this email already exists",
         }),
-        { status: 400,
+        {
+          status: 400,
           headers: {
             "Content-Type": "application/json",
           },
-         }
+        }
       );
     }
 
     // Create new user
     const user = new User({
-      name,
       email,
       password,
     });
 
-    user.name = name;
     user.email = email;
     user.password = password;
-
 
     // Save user to database
     await user.save();
@@ -54,13 +51,14 @@ export const POST: APIRoute = async ({ request }) => {
     // Generate tokens
     const token = jwt.sign(
       { id: user._id },
-      import.meta.env.JWT_SECRET||'your_jwt_secret',
-      { expiresIn: "24h" },
-      );
+      import.meta.env.JWT_SECRET || "your_jwt_secret",
+      { expiresIn: "24h" }
+    );
 
+    let _id = user._id;
     return new Response(
       JSON.stringify({
-        name,
+        _id,
         token,
         message: "Registration successful",
       }),
@@ -77,11 +75,12 @@ export const POST: APIRoute = async ({ request }) => {
       JSON.stringify({
         message: "Internal server error",
       }),
-      { status: 500,
+      {
+        status: 500,
         headers: {
           "Content-Type": "application/json",
         },
-       }
+      }
     );
   }
 };

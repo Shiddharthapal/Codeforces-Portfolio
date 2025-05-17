@@ -1,1 +1,0 @@
-Error handling user details: Error: UserDetails validation failed: leetcode: Cast to Number failed for value "qwrfqw3t2qt" (type string) at path "leetcode", atcoder: Cast to Number failed for value "2r31r" (type string) at path "atcoder", codechef: Cast to Number failed for value "wqetqw3q32" (type string) at path "codechef"

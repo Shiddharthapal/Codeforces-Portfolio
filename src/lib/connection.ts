@@ -19,8 +19,6 @@ const connect = async () => {
     }
 
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
     };
 
