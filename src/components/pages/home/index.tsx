@@ -76,6 +76,7 @@ export interface contestantData {
   cfTotalSolved: number;
   cfSucessRate: number;
   cftotalParticipation: number;
+  cfavatar?: string;
 }
 
 interface AuthState {
@@ -206,6 +207,7 @@ export default function ContestTracker() {
                 cfTotalContest: data?.data?.totalContest || 0,
                 cfRating: data?.rating[data.rating.length - 1].newRating || 0,
                 cfSuccessRate: data?.data?.successRate || 0,
+                // cfavatar: data?.data?.avatar || "",
               };
             } catch (error) {
               console.error(
@@ -235,6 +237,7 @@ export default function ContestTracker() {
               contests: (contestant.contests || 0) + cfData.cfTotalContest,
               rating: (contestant.rating || 0) + cfData.cfRating,
               successRate: (contestant.successRate || 0) + cfData.cfSuccessRate,
+              // avatar: cfData.cfavatar,
             };
           })
         );

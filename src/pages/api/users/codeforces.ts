@@ -9,6 +9,7 @@ interface CodeforcesProblemResponse {
     totalSolved: number;
     totalContest: number;
     successRate: number;
+    avatar?: string;
   };
   rating?: RatingChange[];
   error?: string;
@@ -66,6 +67,9 @@ export const GET: APIRoute = async ({ request }) => {
     const submissions = await codeforcesAPI.userStatus(handle, 1, 10000);
     // console.log("submissions ==> ", submissions);
 
+    //get user info for avatar
+    // const userInfo = await codeforcesAPI.getUserInfo(handle);
+    // const avatar = userInfo[0].titlePhoto || userInfo[0].avatar || "";
     // Process submissions to get unique solved problems
     const solvedProblems = new Map<
       string,
@@ -123,6 +127,7 @@ export const GET: APIRoute = async ({ request }) => {
                 ((solvedProblems.size / submissions.length) * 100).toFixed(1)
               )
             : 0,
+        // avatar: avatar,
       },
       rating: ratingChanges,
     };
