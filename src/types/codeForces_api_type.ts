@@ -46,12 +46,12 @@ export interface Comment {
 export interface Contest {
   id: number;
   name: string;
-  type: 'CF' | 'IOI' | 'ICPC';
-  phase: 'BEFORE' | 'CODING' | 'SYSTEM_TEST' | 'FINISHED';
+  type: "CF" | "IOI" | "ICPC";
+  phase: "BEFORE" | "CODING" | "SYSTEM_TEST" | "FINISHED";
   frozen: boolean;
   durationSeconds: number;
   startTimeSeconds: number;
-  websiteUrl?: string;
+  websiteUrl: string;
   description?: string;
   difficulty?: number;
   kind?: string;
@@ -68,8 +68,8 @@ export interface Submission {
   relativeTimeSeconds: number;
   problem: Problem;
   programmingLanguage: string;
-  verdict: 'OK' | 'FAILED' | 'WRONG_ANSWER' | string;
-  testset: 'SAMPLES' | 'PRETESTS' | 'TESTS';
+  verdict: "OK" | "FAILED" | "WRONG_ANSWER" | string;
+  testset: "SAMPLES" | "PRETESTS" | "TESTS";
   passedTestCount: number;
   timeConsumedMillis: number;
   memoryConsumedBytes: number;
@@ -79,7 +79,12 @@ export interface Submission {
 export interface Party {
   contestId?: number;
   members: User[];
-  participantType: 'CONTESTANT' | 'PRACTICE' | 'VIRTUAL' | 'MANAGER' | 'OUT_OF_COMPETITION';
+  participantType:
+    | "CONTESTANT"
+    | "PRACTICE"
+    | "VIRTUAL"
+    | "MANAGER"
+    | "OUT_OF_COMPETITION";
   teamId?: number;
   teamName?: string;
   ghost: boolean;
@@ -117,7 +122,15 @@ export interface Hack {
   creationTimeSeconds: number;
   hacker: Party;
   defender: Party;
-  verdict: 'HACK_SUCCESSFUL' | 'HACK_UNSUCCESSFUL' | 'INVALID_INPUT' | 'GENERATOR_INCOMPILABLE' | 'GENERATOR_CRASHED' | 'IGNORED' | 'TESTING' | 'OTHER';
+  verdict:
+    | "HACK_SUCCESSFUL"
+    | "HACK_UNSUCCESSFUL"
+    | "INVALID_INPUT"
+    | "GENERATOR_INCOMPILABLE"
+    | "GENERATOR_CRASHED"
+    | "IGNORED"
+    | "TESTING"
+    | "OTHER";
   problem: Problem;
   test: string;
   judgeProtocol?: {
@@ -140,7 +153,7 @@ export interface ContestStandingsResponse {
     problemResults: {
       points: number;
       rejectedAttemptCount: number;
-      type: 'PRELIMINARY' | 'FINAL';
+      type: "PRELIMINARY" | "FINAL";
       bestSubmissionTimeSeconds?: number;
     }[];
   }[];

@@ -52,7 +52,7 @@ interface UpcomingContest {
   relativeTimeToStart: number;
   timeToStartFormatted: string;
   phase: string;
-  websiteUrl?: string;
+  websiteUrl: string | undefined;
 }
 
 export const GET: APIRoute = async () => {
@@ -89,7 +89,7 @@ export const GET: APIRoute = async () => {
           relativeTimeToStart,
           timeToStartFormatted: formatDuration(relativeTimeToStart),
           phase: contest.phase,
-          websiteUrl: contest.websiteUrl,
+          websiteUrl: "https://codeforces.com/",
         };
       })
       .sort((a, b) => a.startTimeSeconds - b.startTimeSeconds);
