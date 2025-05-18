@@ -325,31 +325,39 @@ export default function ContestTracker() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-white border-white hover:bg-white/20 hover:text-white"
+                  className="text-white border-white hover:bg-white/20 hover:text-white focus-visible:ring-white"
                 >
                   <Calendar className="mr-2 h-4 w-4" />
                   Upcoming Contests
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80" align="end">
-                <DropdownMenuLabel className="flex items-center justify-between">
+              <DropdownMenuContent
+                className="w-80 bg-white shadow-lg rounded-md border-none"
+                align="end"
+                sideOffset={5}
+              >
+                <DropdownMenuLabel className="flex items-center justify-between p-3">
                   <span>Upcoming Contests</span>
                   <Badge variant="outline" className="font-normal">
                     {upcomingContests.length} contests
                   </Badge>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+                <DropdownMenuGroup className="max-h-[300px] overflow-y-auto px-1">
                   {upcomingContests.map((contest) => (
                     <DropdownMenuItem
                       key={contest.id}
-                      className="p-0 focus:bg-transparent"
+                      className="rounded-md focus:bg-accent hover:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent"
                     >
-                      <div className="w-full p-2 hover:bg-accent rounded-md cursor-pointer">
-                        <div className="flex justify-between items-start">
-                          <h3 className="font-medium">{contest.name}</h3>
-                          <Badge>{contest.timeToStartFormatted}</Badge>
+                      <div className="w-full p-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <h3 className="font-medium line-clamp-2">
+                            {contest.name}
+                          </h3>
+                          <Badge className="shrink-0">
+                            {contest.timeToStartFormatted}
+                          </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           {contest.startTimeFormatted}
@@ -359,7 +367,7 @@ export default function ContestTracker() {
                   ))}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="p-0 focus:bg-transparent">
+                <DropdownMenuItem className="focus:bg-accent hover:bg-accent focus:text-accent-foreground rounded-md">
                   <Button variant="ghost" size="sm" className="w-full">
                     <Plus className="mr-2 h-4 w-4" />
                     Add New Contest
@@ -741,7 +749,7 @@ export default function ContestTracker() {
                         </CardHeader>
                         <CardContent>
                           {[...contestants]
-                            .sort((a, b) => b.contests - a.contests)
+
                             .slice(0, 3)
                             .map((contestant, index) => (
                               <div
@@ -767,7 +775,7 @@ export default function ContestTracker() {
                                     <span className="text-muted-foreground">
                                       Contests:
                                     </span>
-                                    <span>{contestant.contests}</span>
+                                    <span>{contestant.contests || 0}</span>
                                   </div>
                                 </div>
                               </div>
@@ -814,7 +822,8 @@ export default function ContestTracker() {
                         </p>
                         <p className="font-medium text-lg">
                           {contestants.reduce(
-                            (sum, contestant) => sum + contestant.contests,
+                            (sum, contestant) =>
+                              sum + (contestant.contests || 0),
                             0
                           )}
                         </p>
@@ -830,7 +839,7 @@ export default function ContestTracker() {
                         </p>
                         <p className="font-medium text-lg">
                           {contestants.reduce(
-                            (sum, contestant) => sum + contestant.solve,
+                            (sum, contestant) => sum + (contestant.solve || 0),
                             0
                           )}
                         </p>
@@ -848,7 +857,8 @@ export default function ContestTracker() {
                           {contestants.length > 0
                             ? Math.round(
                                 contestants.reduce(
-                                  (sum, contestant) => sum + contestant.rating,
+                                  (sum, contestant) =>
+                                    sum + (contestant.rating || 0),
                                   0
                                 ) / contestants.length
                               )
