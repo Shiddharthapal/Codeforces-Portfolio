@@ -12,6 +12,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +35,7 @@ import {
   Award,
   BarChart3,
   Calendar,
+  ChevronDown,
   ChevronRight,
   Info,
   Plus,
@@ -33,13 +43,14 @@ import {
   Trash2,
   Trophy,
   User,
+  X,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { createAc } from "./create";
 import { about } from "./about";
-import UpComingContest from "./upCommingContest";
+import { UpcomingContest } from "./upCommingContest";
 
 interface User {
   _id: string;
@@ -79,6 +90,19 @@ export interface contestantData {
   cftotalParticipation: number;
   cfavatar?: string;
 }
+interface UpcomingContest {
+  id: number;
+  name: string;
+  type: string;
+  durationSeconds: number;
+  durationFormatted: string;
+  startTimeSeconds: number;
+  startTimeFormatted: string;
+  relativeTimeToStart: number;
+  timeToStartFormatted: string;
+  phase: string;
+  websiteUrl?: string;
+}
 
 interface AuthState {
   _id: string | undefined;
@@ -98,6 +122,9 @@ export default function ContestTracker() {
     username: "",
     codeforces: "",
   });
+  const [upcomingContests, setUpcomingContests] = useState<UpcomingContest[]>(
+    []
+  );
 
   const toast = useToast();
   const dispatch = useAppDispatch();
@@ -225,6 +252,9 @@ export default function ContestTracker() {
             };
           })
         );
+        let verifiedId = await fetch(`/api/users/upComingContest`);
+        let verifiedUserId = await verifiedId.json();
+        setUpcomingContests(verifiedUserId.contests);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -291,20 +321,82 @@ export default function ContestTracker() {
             <h1 className="text-2xl font-bold">Contest Tracker</h1>
           </div>
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              className="text-white border-white hover:bg-white/20"
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="text-white border-white hover:bg-white/20 hover:text-white"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Upcoming Contests
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80" align="end">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  <span>Upcoming Contests</span>
+                  <Badge variant="outline" className="font-normal">
+                    {upcomingContests.length} contests
+                  </Badge>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+                  {upcomingContests.map((contest) => (
+                    <DropdownMenuItem
+                      key={contest.id}
+                      className="p-0 focus:bg-transparent"
+                    >
+                      <div className="w-full p-2 hover:bg-accent rounded-md cursor-pointer">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-medium">{contest.name}</h3>
+                          <Badge>{contest.timeToStartFormatted}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {contest.startTimeFormatted}
+                        </p>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="p-0 focus:bg-transparent">
+                  <Button variant="ghost" size="sm" className="w-full">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add New Contest
+                  </Button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Avatar
+              className="h-9 w-9 border-2 border-white"
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             >
-              <Calendar className="mr-2 h-4 w-4" />
-              Upcoming Contests
-            </Button>
-            <Avatar className="h-9 w-9 border-2 border-white">
               <AvatarImage
                 src="/placeholder.svg?height=36&width=36"
                 alt="User"
               />
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
+            {isUserMenuOpen && (
+              <div className="flex flex-row justify-between items-center  absolute  mt-2 sm:w-28 md:w-48 bg-cyan-100 rounded-md shadow-lg py-1">
+                <button
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-[50%] text-left"
+                  onClick={() => {
+                    handleLogout();
+                    setIsUserMenuOpen(false);
+                  }}
+                >
+                  Log out
+                </button>
+                <X
+                  className="block text-gray-700 size-4 hover:text-red-600 w-[50%]  "
+                  onClick={() => {
+                    navigate("/");
+                    setIsUserMenuOpen(false);
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -774,7 +866,30 @@ export default function ContestTracker() {
                     Upcoming Contests
                   </CardTitle>
                 </CardHeader>
-                <UpComingContest />
+                {upcomingContests?.map((contest: UpcomingContest) => (
+                  <CardContent key={contest.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="border rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-medium">{contest.name}</h3>
+                          <Badge>{contest.timeToStartFormatted}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {contest.startTimeFormatted} •{" "}
+                          {contest.durationFormatted}
+                        </p>
+                        <Link to={contest.websiteUrl ?? "#"}>
+                          <div className="flex justify-between items-center mt-2">
+                            <p className="text-sm">participants</p>
+                            <Button variant="ghost" size="sm">
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                ))}
               </Card>
             </div>
           </div>
