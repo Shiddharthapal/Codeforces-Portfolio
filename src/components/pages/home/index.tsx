@@ -50,7 +50,6 @@ import { logout } from "@/redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { createAc } from "./create";
 import { about } from "./about";
-import { UpcomingContest } from "./upCommingContest";
 
 interface User {
   _id: string;
@@ -112,6 +111,7 @@ interface AuthState {
 
 export default function ContestTracker() {
   const [contestants, setContestants] = useState<UserDetails[]>([]);
+  const [open, setOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [userDetails, setUserDetails] = useState<User | null>(null);
@@ -321,11 +321,11 @@ export default function ContestTracker() {
             <h1 className="text-2xl font-bold">Contest Tracker</h1>
           </div>
           <div className="flex items-center gap-4">
-            <DropdownMenu>
+            <DropdownMenu open={open} onOpenChange={setOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="text-white border-white hover:bg-white/20 hover:text-white focus-visible:ring-white"
+                  className="border-white bg-white/20 hover:text-gray-800 focus-visible:ring-white"
                 >
                   <Calendar className="mr-2 h-4 w-4" />
                   Upcoming Contests
@@ -345,7 +345,7 @@ export default function ContestTracker() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup className="max-h-[300px] overflow-y-auto px-1">
-                  {upcomingContests.map((contest) => (
+                  {upcomingContests?.map((contest) => (
                     <DropdownMenuItem
                       key={contest.id}
                       className="rounded-md focus:bg-accent hover:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent"
@@ -367,12 +367,15 @@ export default function ContestTracker() {
                   ))}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="focus:bg-accent hover:bg-accent focus:text-accent-foreground rounded-md">
-                  <Button variant="ghost" size="sm" className="w-full">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add New Contest
+                <div className="p-2">
+                  <Button
+                    variant="outline"
+                    className="w-full text-sm"
+                    onClick={() => setOpen(false)}
+                  >
+                    View All Contests
                   </Button>
-                </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
             <Avatar
