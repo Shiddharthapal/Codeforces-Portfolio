@@ -25,6 +25,7 @@ import {
   AlertCircle,
   Award,
   BarChart3,
+  LineChart,
   Calendar,
   ChevronDown,
   ChevronRight,
@@ -277,6 +278,20 @@ export default function ContestTracker() {
     };
   }, [open]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isUserMenuOpen && !target.closest(".dropdown-container")) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
+
   // const ifSameUserDetails = _id === userDetails?.id;
 
   // const saveEditedContestant = () => {
@@ -325,7 +340,7 @@ export default function ContestTracker() {
             <Trophy className="h-6 w-6" />
             <h1 className="text-2xl font-bold">Contest Tracker</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 md:gap-16">
             <div className="dropdown-container relative">
               <Button
                 variant="outline"
@@ -379,36 +394,44 @@ export default function ContestTracker() {
                 </div>
               )}
             </div>
-            <Avatar
-              className="h-9 w-9 border-2 border-white"
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            >
-              <AvatarImage
-                src="/placeholder.svg?height=36&width=36"
-                alt="User"
-              />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-            {isUserMenuOpen && (
-              <div className="flex flex-row justify-between items-center  absolute  mt-2 sm:w-28 md:w-48 bg-cyan-100 rounded-md shadow-lg py-1">
-                <button
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-[50%] text-left"
-                  onClick={() => {
-                    handleLogout();
-                    setIsUserMenuOpen(false);
-                  }}
-                >
-                  Log out
-                </button>
-                <X
-                  className="block text-gray-700 size-4 hover:text-red-600 w-[50%]  "
-                  onClick={() => {
-                    navigate("/");
-                    setIsUserMenuOpen(false);
-                  }}
+            <div className="relative">
+              <Avatar
+                className="h-9 w-9 border-2 border-white cursor-pointer transition-all duration-200 hover:scale-110 hover:border-cyan-300 hover:shadow-md hover:shadow-cyan-300/30"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              >
+                <AvatarImage
+                  src="/placeholder.svg?height=36&width=36"
+                  alt="User"
                 />
-              </div>
-            )}
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+              {isUserMenuOpen && (
+                <div className=" absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
+                  {token && (
+                    <button
+                      className=" px-4 py-2 text-sm text-gray-700 hover:bg-red-300 w-full text-mid"
+                      onClick={() => {
+                        handleLogout();
+                        setIsUserMenuOpen(false);
+                      }}
+                    >
+                      Log out
+                    </button>
+                  )}
+                  {!token && (
+                    <button
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                      onClick={() => {
+                        handleLogout();
+                        setIsUserMenuOpen(false);
+                      }}
+                    >
+                      Log out
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -459,7 +482,7 @@ export default function ContestTracker() {
               </CardHeader>
               <CardContent className="p-0">
                 <Tabs defaultValue="list" className="w-full">
-                  <div className="border-b px-6">
+                  <div className=" flex flex-row border-b px-6">
                     <TabsList className="w-full justify-start h-12 bg-transparent">
                       <TabsTrigger
                         value="list"
@@ -480,6 +503,13 @@ export default function ContestTracker() {
                         Statistics
                       </TabsTrigger>
                     </TabsList>
+                    <div className="flex items-center whitespace-nowrap font-medium text-sm">
+                      <User className="h-4 w-4 text-cyan-700" />
+                      Contestants:{" "}
+                      <span className="ml-1 font-bold">
+                        {contestants.length}
+                      </span>
+                    </div>
                   </div>
 
                   <TabsContent value="list" className="m-0">
@@ -520,7 +550,7 @@ export default function ContestTracker() {
                               </div>
                               <div className="text-center">
                                 <p className="text-sm text-muted-foreground">
-                                  TotalSolve
+                                  Total Solve
                                 </p>
                                 <p className="font-medium">
                                   {contestant.solve}
@@ -798,24 +828,11 @@ export default function ContestTracker() {
               <Card className="shadow-lg border-none">
                 <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
                   <CardTitle className="text-lg text-cyan-900">
-                    Quick Stats
+                    My Details
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-cyan-100 p-2 rounded-full">
-                        <User className="h-5 w-5 text-cyan-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Total Contestants
-                        </p>
-                        <p className="font-medium text-lg">
-                          {contestants.length}
-                        </p>
-                      </div>
-                    </div>
                     <div className="flex items-center gap-3">
                       <div className="bg-blue-100 p-2 rounded-full">
                         <Award className="h-5 w-5 text-blue-700" />
@@ -839,7 +856,7 @@ export default function ContestTracker() {
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">
-                          Total Wins
+                          Total Solve
                         </p>
                         <p className="font-medium text-lg">
                           {contestants.reduce(
@@ -852,6 +869,22 @@ export default function ContestTracker() {
                     <div className="flex items-center gap-3">
                       <div className="bg-purple-100 p-2 rounded-full">
                         <BarChart3 className="h-5 w-5 text-purple-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Current Rating
+                        </p>
+                        <p className="font-medium text-lg">
+                          {contestants.reduce(
+                            (sum, contestant) => sum + (contestant.rating || 0),
+                            0
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-purple-100 p-2 rounded-full">
+                        <LineChart className="h-5 w-5 text-purple-700" />
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">
