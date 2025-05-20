@@ -12,15 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuGroup,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -272,6 +263,20 @@ export default function ContestTracker() {
     }
     return true;
   };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (open && !target.closest(".dropdown-container")) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
   // const ifSameUserDetails = _id === userDetails?.id;
 
   // const saveEditedContestant = () => {
@@ -321,63 +326,59 @@ export default function ContestTracker() {
             <h1 className="text-2xl font-bold">Contest Tracker</h1>
           </div>
           <div className="flex items-center gap-4">
-            <DropdownMenu open={open} onOpenChange={setOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="border-white bg-white/20 hover:text-gray-800 focus-visible:ring-white"
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Upcoming Contests
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-80 bg-white shadow-lg rounded-md border-none"
-                align="end"
-                sideOffset={5}
+            <div className="dropdown-container relative">
+              <Button
+                variant="outline"
+                className="border-white bg-white/20 hover:text-gray-800 focus-visible:ring-white"
+                onClick={() => setOpen(!open)}
               >
-                <DropdownMenuLabel className="flex items-center justify-between p-3">
-                  <span>Upcoming Contests</span>
-                  <Badge variant="outline" className="font-normal">
-                    {upcomingContests.length} contests
-                  </Badge>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup className="max-h-[300px] overflow-y-auto px-1">
-                  {upcomingContests?.map((contest) => (
-                    <DropdownMenuItem
-                      key={contest.id}
-                      className="rounded-md focus:bg-accent hover:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent"
-                    >
-                      <div className="w-full p-2">
-                        <div className="flex justify-between items-start gap-2">
-                          <h3 className="font-medium line-clamp-2">
-                            {contest.name}
-                          </h3>
-                          <Badge className="shrink-0">
-                            {contest.timeToStartFormatted}
-                          </Badge>
+                <Calendar className="mr-2 h-4 w-4" />
+                Upcoming Contests
+                <ChevronDown className="ml-2 h-4 w-4" />
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 px-1.5 py-0.5 min-w-[20px] h-5 flex items-center justify-center rounded-full text-xs"
+                >
+                  {upcomingContests.length}
+                </Badge>
+              </Button>
+
+              {open && (
+                <div className="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-md border-none z-50">
+                  <div className="flex items-center justify-between p-3">
+                    <span className="text-gray-900 font-medium">
+                      Upcoming Contests
+                    </span>
+                    <Badge variant="outline" className="font-normal">
+                      {upcomingContests.length} contests
+                    </Badge>
+                  </div>
+                  <div className="border-t" />
+                  <div className="max-h-[300px] overflow-y-auto px-1">
+                    {upcomingContests.map((contest) => (
+                      <div
+                        key={contest.id}
+                        className="rounded-md p-2 hover:bg-accent cursor-pointer"
+                      >
+                        <div className="w-full">
+                          <div className="flex justify-between items-start gap-2">
+                            <h3 className="text-gray-900 font-medium line-clamp-2">
+                              {contest.name}
+                            </h3>
+                            <Badge className="shrink-0">
+                              {contest.timeToStartFormatted}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {contest.startTimeFormatted}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {contest.startTimeFormatted}
-                        </p>
                       </div>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <div className="p-2">
-                  <Button
-                    variant="outline"
-                    className="w-full text-sm"
-                    onClick={() => setOpen(false)}
-                  >
-                    View All Contests
-                  </Button>
+                    ))}
+                  </div>
                 </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              )}
+            </div>
             <Avatar
               className="h-9 w-9 border-2 border-white"
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
