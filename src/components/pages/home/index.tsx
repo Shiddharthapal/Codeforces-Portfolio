@@ -25,7 +25,9 @@ import {
   AlertCircle,
   Award,
   BarChart3,
+  LineChart,
   Calendar,
+  ChevronDown,
   ChevronRight,
   Info,
   Plus,
@@ -33,13 +35,13 @@ import {
   Trash2,
   Trophy,
   User,
+  X,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { createAc } from "./create";
 import { about } from "./about";
-import UpComingContest from "./upCommingContest";
 
 interface User {
   _id: string;
@@ -79,6 +81,19 @@ export interface contestantData {
   cftotalParticipation: number;
   cfavatar?: string;
 }
+interface UpcomingContest {
+  id: number;
+  name: string;
+  type: string;
+  durationSeconds: number;
+  durationFormatted: string;
+  startTimeSeconds: number;
+  startTimeFormatted: string;
+  relativeTimeToStart: number;
+  timeToStartFormatted: string;
+  phase: string;
+  websiteUrl?: string;
+}
 
 interface AuthState {
   _id: string | undefined;
@@ -88,6 +103,7 @@ interface AuthState {
 
 export default function ContestTracker() {
   const [contestants, setContestants] = useState<UserDetails[]>([]);
+  const [open, setOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [userDetails, setUserDetails] = useState<User | null>(null);
@@ -98,6 +114,9 @@ export default function ContestTracker() {
     username: "",
     codeforces: "",
   });
+  const [upcomingContests, setUpcomingContests] = useState<UpcomingContest[]>(
+    []
+  );
 
   const toast = useToast();
   const dispatch = useAppDispatch();
@@ -225,6 +244,9 @@ export default function ContestTracker() {
             };
           })
         );
+        let verifiedId = await fetch(`/api/users/upComingContest`);
+        let verifiedUserId = await verifiedId.json();
+        setUpcomingContests(verifiedUserId.contests);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -242,6 +264,34 @@ export default function ContestTracker() {
     }
     return true;
   };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (open && !target.closest(".dropdown-container")) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isUserMenuOpen && !target.closest(".dropdown-container")) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
+
   // const ifSameUserDetails = _id === userDetails?.id;
 
   // const saveEditedContestant = () => {
@@ -290,21 +340,98 @@ export default function ContestTracker() {
             <Trophy className="h-6 w-6" />
             <h1 className="text-2xl font-bold">Contest Tracker</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              className="text-white border-white hover:bg-white/20"
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              Upcoming Contests
-            </Button>
-            <Avatar className="h-9 w-9 border-2 border-white">
-              <AvatarImage
-                src="/placeholder.svg?height=36&width=36"
-                alt="User"
-              />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
+          <div className="flex items-center gap-4 md:gap-16">
+            <div className="dropdown-container relative">
+              <Button
+                variant="outline"
+                className="border-white bg-white/20 hover:text-gray-800 focus-visible:ring-white"
+                onClick={() => setOpen(!open)}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Upcoming Contests
+                <ChevronDown className="ml-2 h-4 w-4" />
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 px-1.5 py-0.5 min-w-[20px] h-5 flex items-center justify-center rounded-full text-xs"
+                >
+                  {upcomingContests.length}
+                </Badge>
+              </Button>
+
+              {open && (
+                <div className="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-md border-none z-50">
+                  <div className="flex items-center justify-between p-3">
+                    <span className="text-gray-900 font-medium">
+                      Upcoming Contests
+                    </span>
+                    <Badge variant="outline" className="font-normal">
+                      {upcomingContests.length} contests
+                    </Badge>
+                  </div>
+                  <div className="border-t" />
+                  <div className="max-h-[300px] overflow-y-auto px-1">
+                    {upcomingContests.map((contest) => (
+                      <div
+                        key={contest.id}
+                        className="rounded-md p-2 hover:bg-accent cursor-pointer"
+                      >
+                        <div className="w-full">
+                          <div className="flex justify-between items-start gap-2">
+                            <h3 className="text-gray-900 font-medium line-clamp-2">
+                              {contest.name}
+                            </h3>
+                            <Badge className="shrink-0">
+                              {contest.timeToStartFormatted}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {contest.startTimeFormatted}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="relative">
+              <Avatar
+                className="h-9 w-9 border-2 border-white cursor-pointer transition-all duration-200 hover:scale-110 hover:border-cyan-300 hover:shadow-md hover:shadow-cyan-300/30"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              >
+                <AvatarImage
+                  src="/placeholder.svg?height=36&width=36"
+                  alt="User"
+                />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+              {isUserMenuOpen && (
+                <div className=" absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
+                  {token && (
+                    <button
+                      className=" px-4 py-2 text-sm text-gray-700 hover:bg-red-300 w-full text-mid"
+                      onClick={() => {
+                        handleLogout();
+                        setIsUserMenuOpen(false);
+                      }}
+                    >
+                      Log out
+                    </button>
+                  )}
+                  {!token && (
+                    <button
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                      onClick={() => {
+                        handleLogout();
+                        setIsUserMenuOpen(false);
+                      }}
+                    >
+                      Log out
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -355,7 +482,7 @@ export default function ContestTracker() {
               </CardHeader>
               <CardContent className="p-0">
                 <Tabs defaultValue="list" className="w-full">
-                  <div className="border-b px-6">
+                  <div className=" flex flex-row border-b px-6">
                     <TabsList className="w-full justify-start h-12 bg-transparent">
                       <TabsTrigger
                         value="list"
@@ -376,6 +503,13 @@ export default function ContestTracker() {
                         Statistics
                       </TabsTrigger>
                     </TabsList>
+                    <div className="flex items-center whitespace-nowrap font-medium text-sm">
+                      <User className="h-4 w-4 text-cyan-700" />
+                      Contestants:{" "}
+                      <span className="ml-1 font-bold">
+                        {contestants.length}
+                      </span>
+                    </div>
                   </div>
 
                   <TabsContent value="list" className="m-0">
@@ -416,7 +550,7 @@ export default function ContestTracker() {
                               </div>
                               <div className="text-center">
                                 <p className="text-sm text-muted-foreground">
-                                  TotalSolve
+                                  Total Solve
                                 </p>
                                 <p className="font-medium">
                                   {contestant.solve}
@@ -649,7 +783,7 @@ export default function ContestTracker() {
                         </CardHeader>
                         <CardContent>
                           {[...contestants]
-                            .sort((a, b) => b.contests - a.contests)
+
                             .slice(0, 3)
                             .map((contestant, index) => (
                               <div
@@ -675,7 +809,7 @@ export default function ContestTracker() {
                                     <span className="text-muted-foreground">
                                       Contests:
                                     </span>
-                                    <span>{contestant.contests}</span>
+                                    <span>{contestant.contests || 0}</span>
                                   </div>
                                 </div>
                               </div>
@@ -694,24 +828,11 @@ export default function ContestTracker() {
               <Card className="shadow-lg border-none">
                 <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
                   <CardTitle className="text-lg text-cyan-900">
-                    Quick Stats
+                    My Details
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-cyan-100 p-2 rounded-full">
-                        <User className="h-5 w-5 text-cyan-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Total Contestants
-                        </p>
-                        <p className="font-medium text-lg">
-                          {contestants.length}
-                        </p>
-                      </div>
-                    </div>
                     <div className="flex items-center gap-3">
                       <div className="bg-blue-100 p-2 rounded-full">
                         <Award className="h-5 w-5 text-blue-700" />
@@ -722,7 +843,8 @@ export default function ContestTracker() {
                         </p>
                         <p className="font-medium text-lg">
                           {contestants.reduce(
-                            (sum, contestant) => sum + contestant.contests,
+                            (sum, contestant) =>
+                              sum + (contestant.contests || 0),
                             0
                           )}
                         </p>
@@ -734,11 +856,11 @@ export default function ContestTracker() {
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">
-                          Total Wins
+                          Total Solve
                         </p>
                         <p className="font-medium text-lg">
                           {contestants.reduce(
-                            (sum, contestant) => sum + contestant.solve,
+                            (sum, contestant) => sum + (contestant.solve || 0),
                             0
                           )}
                         </p>
@@ -750,13 +872,30 @@ export default function ContestTracker() {
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">
+                          Current Rating
+                        </p>
+                        <p className="font-medium text-lg">
+                          {contestants.reduce(
+                            (sum, contestant) => sum + (contestant.rating || 0),
+                            0
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-purple-100 p-2 rounded-full">
+                        <LineChart className="h-5 w-5 text-purple-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
                           Avg. Rating
                         </p>
                         <p className="font-medium text-lg">
                           {contestants.length > 0
                             ? Math.round(
                                 contestants.reduce(
-                                  (sum, contestant) => sum + contestant.rating,
+                                  (sum, contestant) =>
+                                    sum + (contestant.rating || 0),
                                   0
                                 ) / contestants.length
                               )
@@ -774,7 +913,30 @@ export default function ContestTracker() {
                     Upcoming Contests
                   </CardTitle>
                 </CardHeader>
-                <UpComingContest />
+                {upcomingContests?.map((contest: UpcomingContest) => (
+                  <CardContent key={contest.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="border rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-medium">{contest.name}</h3>
+                          <Badge>{contest.timeToStartFormatted}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {contest.startTimeFormatted} •{" "}
+                          {contest.durationFormatted}
+                        </p>
+                        <Link to={contest.websiteUrl ?? "#"}>
+                          <div className="flex justify-between items-center mt-2">
+                            <p className="text-sm">participants</p>
+                            <Button variant="ghost" size="sm">
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                ))}
               </Card>
             </div>
           </div>
