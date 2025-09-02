@@ -42,6 +42,7 @@ import { logout } from "@/redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { createAc } from "./create";
 import { about } from "./about";
+import Graph from "./graph";
 
 interface User {
   _id: string;
@@ -106,7 +107,7 @@ export default function ContestTracker() {
   const [open, setOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [userDetails, setUserDetails] = useState<User | null>(null);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -171,7 +172,6 @@ export default function ContestTracker() {
           throw new Error("Failed to fetch all users");
         }
         const allUsers = await allUsersResponse.json();
-        setUserDetails(allUsers);
 
         // Step 2: Fetch user details for all users in parallel
         const userDetailsPromises = allUsers.map((user: User) =>
@@ -180,6 +180,16 @@ export default function ContestTracker() {
             .then((data) => data?.userDetails)
             .catch(() => null)
         );
+
+        //Step 4: Fetch the user data who have the profile
+        const speceficUser = allUsers.map((user: User) => {
+          if (user._id === _id) return _id;
+        });
+        console.log("🧞‍♂️  speceficUser --->", speceficUser);
+        let speceficUserResponse = await fetch(`/api/users/${speceficUser}`);
+        const speceficUserDetails = await speceficUserResponse.json();
+        console.log("🧞‍♂️  speceficUserDetails --->", speceficUserDetails);
+        setUserDetails(speceficUserDetails?.userDetails);
 
         const userDetailsList = await Promise.all(userDetailsPromises);
         const validUserDetails = userDetailsList.filter(Boolean);
@@ -201,6 +211,9 @@ export default function ContestTracker() {
                 }
               );
 
+              if (!response) {
+                throw new Error("Invalid data");
+              }
               const data = await response.json();
               if (!data.success) return null;
 
@@ -354,7 +367,7 @@ export default function ContestTracker() {
                   variant="destructive"
                   className="absolute -top-2 -right-2 px-1.5 py-0.5 min-w-[20px] h-5 flex items-center justify-center rounded-full text-xs"
                 >
-                  {upcomingContests.length}
+                  {upcomingContests?.length}
                 </Badge>
               </Button>
 
@@ -365,27 +378,27 @@ export default function ContestTracker() {
                       Upcoming Contests
                     </span>
                     <Badge variant="outline" className="font-normal">
-                      {upcomingContests.length} contests
+                      {upcomingContests?.length} contests
                     </Badge>
                   </div>
                   <div className="border-t" />
                   <div className="max-h-[300px] overflow-y-auto px-1">
-                    {upcomingContests.map((contest) => (
+                    {upcomingContests?.map((contest) => (
                       <div
-                        key={contest.id}
+                        key={contest?.id}
                         className="rounded-md p-2 hover:bg-accent cursor-pointer"
                       >
                         <div className="w-full">
                           <div className="flex justify-between items-start gap-2">
                             <h3 className="text-gray-900 font-medium line-clamp-2">
-                              {contest.name}
+                              {contest?.name}
                             </h3>
                             <Badge className="shrink-0">
-                              {contest.timeToStartFormatted}
+                              {contest?.timeToStartFormatted}
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {contest.startTimeFormatted}
+                            {contest?.startTimeFormatted}
                           </p>
                         </div>
                       </div>
@@ -821,6 +834,9 @@ export default function ContestTracker() {
                 </Tabs>
               </CardContent>
             </Card>
+            <div>
+              <Graph handle={userDetails?.codeforces || ""} />
+            </div>
           </div>
 
           <div className="md:w-1/4">
