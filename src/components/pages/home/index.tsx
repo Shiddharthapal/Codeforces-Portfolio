@@ -206,10 +206,10 @@ export default function ContestTracker() {
         const speceficUser = allUsers.map((user: User) => {
           if (user._id === _id) return _id;
         });
-        console.log("🧞‍♂️  speceficUser --->", speceficUser);
+        // console.log("🧞‍♂️  speceficUser --->", speceficUser);
         let speceficUserResponse = await fetch(`/api/users/${speceficUser}`);
         const speceficUserDetails = await speceficUserResponse.json();
-        console.log("🧞‍♂️  speceficUserDetails --->", speceficUserDetails);
+        // console.log("🧞‍♂️  speceficUserDetails --->", speceficUserDetails);
         setUserDetails(speceficUserDetails?.userDetails);
 
         const userDetailsList = await Promise.all(userDetailsPromises);
@@ -470,7 +470,7 @@ export default function ContestTracker() {
 
       <main className="container mx-auto py-8 px-4">
         <div className="flex flex-col md:flex-row gap-8">
-          <div className="md:w-3/4">
+          <div className="md:w-3/4 max-h-[500px] ">
             <Card className="shadow-lg border-none">
               <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
                 <div className="flex justify-between items-center">
@@ -545,7 +545,7 @@ export default function ContestTracker() {
                   </div>
 
                   <TabsContent value="list" className="m-0">
-                    <ScrollArea className="h-[500px]">
+                    <ScrollArea className="max-h-[500px]">
                       <div className="divide-y">
                         {contestants?.map((contestant: UserDetails) => (
                           <div
