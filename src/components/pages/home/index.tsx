@@ -848,7 +848,17 @@ export default function ContestTracker() {
               </CardContent>
             </Card>
             <div>
-              <Graph handle={userDetails?.codeforces || ""} />
+              <Card className="shadow-lg my-10 border-none">
+                <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
+                  <div className=" text-2xl font-semibold text-cyan-900">
+                    Contest Graph
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {" "}
+                  <Graph handle={userDetails?.codeforces || ""} />
+                </CardContent>
+              </Card>
             </div>
           </div>
 
