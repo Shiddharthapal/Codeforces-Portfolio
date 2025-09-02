@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,11 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  useToast,
-  type ToastProps,
-  type ToastVariant,
-} from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertCircle,
   Award,
@@ -32,10 +28,8 @@ import {
   Info,
   Plus,
   Search,
-  Trash2,
   Trophy,
   User,
-  X,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
@@ -96,12 +90,6 @@ interface UpcomingContest {
   websiteUrl?: string;
 }
 
-interface AuthState {
-  _id: string | undefined;
-  token: string | undefined;
-  isAuthenticated: boolean;
-}
-
 export default function ContestTracker() {
   const [contestants, setContestants] = useState<UserDetails[]>([]);
   const [open, setOpen] = useState(false);
@@ -109,17 +97,10 @@ export default function ContestTracker() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    email: "",
-    username: "",
-    codeforces: "",
-  });
   const [upcomingContests, setUpcomingContests] = useState<UpcomingContest[]>(
     []
   );
 
-  const toast = useToast();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -136,12 +117,6 @@ export default function ContestTracker() {
     setIsUserMenuOpen(false);
     dispatch(logout());
     navigate("/");
-  };
-
-  const deleteContestant = (id: string) => {
-    setContestants(
-      contestants.filter((contestant) => contestant.userId !== id)
-    );
   };
 
   const getPatientInitials = (patientName: string) => {
@@ -165,129 +140,151 @@ export default function ContestTracker() {
     }
   };
 
-  const validate = () => {
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.username ||
-      !formData.codeforces
-    ) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "failed" as ToastVariant,
+  const fetchUserDetailsWithConcurrency = async (
+    users: User[],
+    concurrency = 12
+  ) => {
+    const results = [];
+
+    for (let i = 0; i < users.length; i += concurrency) {
+      const batch = users.slice(i, i + concurrency);
+      const batchPromises = batch.map(async (user) => {
+        try {
+          const res = await fetch(`/api/users/${user._id}`);
+          if (!res.ok) return null;
+          const data = await res.json();
+          return data?.userDetails || null;
+        } catch (error) {
+          console.error(`Failed to fetch user ${user._id}:`, error);
+          return null;
+        }
       });
-      return false;
+
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
     }
-    return true;
+
+    return results;
+  };
+
+  const fetchCodeforcesDataWithConcurrency = async (
+    userDetails: UserDetails[],
+    concurrency = 8
+  ) => {
+    const usersWithCodeforces = userDetails.filter((user) => user?.codeforces);
+    if (usersWithCodeforces.length === 0) return [];
+
+    const results = [];
+
+    for (let i = 0; i < usersWithCodeforces.length; i += concurrency) {
+      const batch = usersWithCodeforces.slice(i, i + concurrency);
+      const batchPromises = batch.map(async (user) => {
+        try {
+          const response = await fetch(
+            `/api/users/codeforces?handle=${encodeURIComponent(
+              user.codeforces
+            )}`,
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+
+          if (!response.ok) return null;
+
+          const data = await response.json();
+          if (!data.success) return null;
+
+          return {
+            userId: user.userId,
+            cfTotalSolved: data?.data?.totalSolved || 0,
+            cfTotalContest: data?.data?.totalContest || 0,
+            cfRating: data?.rating?.[data.rating.length - 1]?.newRating || 0,
+            cfSuccessRate: data?.data?.successRate || 0,
+          };
+        } catch (error) {
+          console.error(
+            `Failed to fetch Codeforces data for ${user.codeforces}:`,
+            error
+          );
+          return null;
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults.filter(Boolean));
+    }
+
+    return results;
   };
 
   // Handle Add Contestant button click
-
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         // Step 1: Fetch all users
-        const allUsersResponse = await fetch("/api/users/allUser");
+        const [allUsersResponse, upcommingContestsResponse] = await Promise.all(
+          [fetch("/api/users/allUser"), fetch(`/api/users/upComingContest`)]
+        );
         if (!allUsersResponse.ok) {
           throw new Error("Failed to fetch all users");
         }
-        const allUsers = await allUsersResponse.json();
+        const [allUsers, upcommingContests] = await Promise.all([
+          allUsersResponse.json(),
+          upcommingContestsResponse.json(),
+        ]);
 
-        // Step 2: Fetch user details for all users in parallel
-        const userDetailsPromises = allUsers.map((user: User) =>
-          fetch(`/api/users/${user._id}`)
-            .then((res) => (res.ok ? res.json() : null))
-            .then((data) => data?.userDetails)
-            .catch(() => null)
-        );
+        //set upcommming contests
+        setUpcomingContests(upcommingContests?.contests);
 
-        //Step 4: Fetch the user data who have the profile
-        const speceficUser = allUsers.map((user: User) => {
-          if (user._id === _id) return _id;
-        });
-        // console.log("🧞‍♂️  speceficUser --->", speceficUser);
-        let speceficUserResponse = await fetch(`/api/users/${speceficUser}`);
+        // Fetch user details with concurrency control
+        const userDetails = await fetchUserDetailsWithConcurrency(allUsers, 12);
+        const validUserDetails = userDetails.filter(Boolean);
+
+        setContestants(validUserDetails);
+
+        // Fetch the user data who have the profile
+        let speceficUserResponse = await fetch(`/api/users/${_id}`);
         const speceficUserDetails = await speceficUserResponse.json();
         // console.log("🧞‍♂️  speceficUserDetails --->", speceficUserDetails);
         setUserDetails(speceficUserDetails?.userDetails);
 
-        const userDetailsList = await Promise.all(userDetailsPromises);
-        const validUserDetails = userDetailsList.filter(Boolean);
-        setContestants(validUserDetails);
+        // Fetch Codeforces data with concurrency control
+        const codeforcesDataPromise =
+          fetchCodeforcesDataWithConcurrency(validUserDetails);
 
-        // Step 3: Fetch Codeforces data for all users in parallel
-        const codeforcesPromises = validUserDetails.map(
-          async (user: UserDetails) => {
-            if (!user?.codeforces) return null;
+        //wait for operations
+        const codeforcesData = await Promise.all([codeforcesDataPromise]);
+        console.log("🧞‍♂️  codeforcesData --->", codeforcesData);
 
-            try {
-              const response = await fetch(
-                `/api/users/codeforces?handle=${encodeURIComponent(
-                  user.codeforces
-                )}`,
-                {
-                  method: "GET",
-                  headers: { "Content-Type": "application/json" },
-                }
+        // Update contestants with Codeforces data in a single batch
+        if (codeforcesData.length > 0 && Array.isArray(codeforcesData[0])) {
+          setContestants((prevContestants) =>
+            prevContestants.map((contestant) => {
+              const cfData = codeforcesData[0].find(
+                (data) => data && data?.userId === contestant.userId
               );
-
-              if (!response) {
-                throw new Error("Invalid data");
-              }
-              const data = await response.json();
-              if (!data.success) return null;
+              if (!cfData) return contestant;
 
               return {
-                userId: user.userId,
-                cfTotalSolved: data?.data?.totalSolved || 0,
-                cfTotalContest: data?.data?.totalContest || 0,
-                cfRating: data?.rating[data.rating.length - 1].newRating || 0,
-                cfSuccessRate: data?.data?.successRate || 0,
-                // cfavatar: data?.data?.avatar || "",
+                ...contestant,
+                solve: (contestant.solve || 0) + (cfData?.cfTotalSolved ?? 0),
+                contests:
+                  (contestant.contests || 0) + (cfData?.cfTotalContest ?? 0),
+                rating: (contestant.rating || 0) + (cfData?.cfRating ?? 0),
+                successRate:
+                  (contestant.successRate || 0) + (cfData?.cfSuccessRate ?? 0),
               };
-            } catch (error) {
-              console.error(
-                `Failed to fetch Codeforces data for ${user.codeforces}:`,
-                error
-              );
-              return null;
-            }
-          }
-        );
-
-        const codeforcesData = (await Promise.all(codeforcesPromises)).filter(
-          Boolean
-        );
-
-        // Update all contestants in a single batch
-        setContestants((prevContestants) =>
-          prevContestants.map((contestant) => {
-            const cfData = codeforcesData.find(
-              (data) => data?.userId === contestant.userId
-            );
-            if (!cfData) return contestant;
-
-            return {
-              ...contestant,
-              solve: (contestant.solve || 0) + cfData.cfTotalSolved,
-              contests: (contestant.contests || 0) + cfData.cfTotalContest,
-              rating: (contestant.rating || 0) + cfData.cfRating,
-              successRate: (contestant.successRate || 0) + cfData.cfSuccessRate,
-              // avatar: cfData.cfavatar,
-            };
-          })
-        );
-        let verifiedId = await fetch(`/api/users/upComingContest`);
-        let verifiedUserId = await verifiedId.json();
-        setUpcomingContests(verifiedUserId.contests);
+            })
+          );
+        }
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
     };
 
     fetchAllData();
-  }, []);
+  }, [_id]);
 
   const handleAddClick = () => {
     if (!token) {
