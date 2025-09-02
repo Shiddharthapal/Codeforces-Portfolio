@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
+
 interface RatingChange {
   contestId: number;
   handle: string;
@@ -13,6 +14,7 @@ export default function Graph({ handle }: { handle: string }) {
   console.log("🧞‍♂️  handle --->", handle);
   const svgRef = useRef<SVGSVGElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<RatingChange[] | null>(null); // Store data in state
 
   // Format timestamp to month/year
   const formatDate = (timestamp: number) => {
@@ -24,15 +26,20 @@ export default function Graph({ handle }: { handle: string }) {
 
   // Create graph with data
   const createGraph = (data: RatingChange[]) => {
-    if (!svgRef.current) return;
+    console.log("Creating graph with data:", data);
+
+    if (!svgRef.current || !data || data.length === 0) {
+      console.log("No data or SVG ref not available");
+      return;
+    }
 
     // Clear previous SVG content
     d3.select(svgRef.current).selectAll("*").remove();
 
     // Set up dimensions
     const width = 1200;
-    const height = 400; // Increased height for better visibility
-    const margin = { top: 20, right: 30, bottom: 50, left: 60 }; // Increased margins for labels
+    const height = 400;
+    const margin = { top: 20, right: 30, bottom: 50, left: 60 };
     const innerWidth = width - margin.left - margin.right - 10;
     const innerHeight = height - margin.top - margin.bottom - 10;
 
@@ -47,27 +54,36 @@ export default function Graph({ handle }: { handle: string }) {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Create scales
-    const xScale = d3
-      .scaleTime()
-      .domain(
-        d3.extent(data, (d) => new Date(d.ratingUpdateTimeSeconds * 1000)) as [
-          Date,
-          Date
-        ]
-      )
-      .range([0, innerWidth]);
+    // Create scales with null checks and proper domains
+    const timeExtent = d3.extent(
+      data,
+      (d) => new Date(d.ratingUpdateTimeSeconds * 1000)
+    );
+    if (!timeExtent[0] || !timeExtent[1]) {
+      console.error("Invalid time extent:", timeExtent);
+      return;
+    }
+
+    const xScale = d3.scaleTime().domain(timeExtent).range([0, innerWidth]);
+
+    const minRating = d3.min(data, (d) => d.newRating) || 0;
+    const maxRating = d3.max(data, (d) => d.newRating) || 3000;
 
     const yScale = d3
       .scaleLinear()
-      .domain([d3.max(data, (d) => d.rank)! * 1.1, 1]) // Reverse domain for rank, add 10% padding
+      .domain([Math.max(0, minRating * 0.9), maxRating * 1.1])
       .range([innerHeight, 0]);
 
-    // Create line generator
-    const line = d3
+    console.log("Scale domains:", {
+      x: timeExtent,
+      y: [minRating, maxRating],
+    });
+
+    // Create line generator for rating progression
+    const ratingLine = d3
       .line<RatingChange>()
       .x((d) => xScale(new Date(d.ratingUpdateTimeSeconds * 1000)))
-      .y((d) => yScale(d.rank))
+      .y((d) => yScale(d.newRating))
       .curve(d3.curveMonotoneX);
 
     // Add X axis
@@ -100,35 +116,47 @@ export default function Graph({ handle }: { handle: string }) {
       .attr("y", -margin.left + 20 - 7)
       .attr("x", -innerHeight / 2)
       .style("text-anchor", "middle")
-      .text("Rank");
+      .text("Rating");
 
-    // Add path
+    // Add path for rating progression
     g.append("path")
       .datum(data)
       .attr("fill", "none")
-      .attr("stroke", "steelblue")
+      .attr("stroke", "#2ecc71")
       .attr("stroke-width", 2)
-      .attr("d", line);
+      .attr("d", ratingLine);
 
-    // Add dots
+    // Add dots for rating changes
     g.selectAll(".dot")
       .data(data)
       .enter()
       .append("circle")
       .attr("class", "dot")
       .attr("cx", (d) => xScale(new Date(d.ratingUpdateTimeSeconds * 1000)))
-      .attr("cy", (d) => yScale(d.rank))
-      .attr("r", 5)
-      .attr("fill", "steelblue")
-      .append("title") // Add tooltip
+      .attr("cy", (d) => yScale(d.newRating))
+      .attr("r", 4)
+      .attr("fill", "#2ecc71")
+      .append("title")
       .text(
-        (d) => `Rank: ${d.rank}\nDate: ${formatDate(d.ratingUpdateTimeSeconds)}`
+        (d) =>
+          `Rating: ${d.newRating}\nChange: ${
+            d.newRating - d.oldRating > 0 ? "+" : ""
+          }${d.newRating - d.oldRating}\nDate: ${formatDate(
+            d.ratingUpdateTimeSeconds
+          )}`
       );
   };
 
+  // Fetch data effect
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (!handle) {
+          throw new Error("Handle is required");
+        }
+
+        setError(null); // Clear previous errors
+
         const response = await fetch(
           `/api/users/codeforces?handle=${encodeURIComponent(handle)}`
         );
@@ -140,12 +168,12 @@ export default function Graph({ handle }: { handle: string }) {
         }
 
         if (responseData?.rating && Array.isArray(responseData.rating)) {
-          // Sort data by timestamp
+          // Sort data by timestamp and store in state
           const sortedData = responseData.rating.sort(
             (a: RatingChange, b: RatingChange) =>
               a.ratingUpdateTimeSeconds - b.ratingUpdateTimeSeconds
           );
-          createGraph(sortedData);
+          setData(sortedData); // Store data in state instead of calling createGraph directly
         } else {
           setError("No rating data available");
         }
@@ -157,13 +185,33 @@ export default function Graph({ handle }: { handle: string }) {
     fetchData();
   }, [handle]);
 
+  // Separate effect to create graph when data and SVG ref are ready
+  useEffect(() => {
+    if (data && svgRef.current) {
+      // Small delay to ensure SVG is fully mounted
+      const timer = setTimeout(() => {
+        createGraph(data);
+      }, 10);
+
+      return () => clearTimeout(timer);
+    }
+  }, [data]); // This runs whenever data changes
+
   if (error) {
     return <div className="text-red-500">Error: {error}</div>;
   }
 
+  if (!data) {
+    return <div className="text-gray-500">Loading...</div>;
+  }
+
   return (
-    <>
-      <svg ref={svgRef}></svg>;
-    </>
+    <div className="w-full h-[500px] overflow-x-auto">
+      <svg
+        ref={svgRef}
+        className="w-full h-full"
+        style={{ minWidth: "800px" }}
+      ></svg>
+    </div>
   );
 }
