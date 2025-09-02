@@ -144,6 +144,27 @@ export default function ContestTracker() {
     );
   };
 
+  const getPatientInitials = (patientName: string) => {
+    if (!patientName) return "AB";
+
+    const cleanName = patientName.trim();
+
+    if (!cleanName) return "AB";
+
+    // Split the cleaned name and get first 2 words
+    const words = cleanName.split(" ").filter((word) => word.length > 0);
+
+    if (words.length >= 2) {
+      // Get first letter of first 2 words
+      return (words[0][0] + words[1][0]).toUpperCase();
+    } else if (words.length === 1) {
+      // If only one word, get first 2 letters
+      return words[0].substring(0, 2).toUpperCase();
+    } else {
+      return "AB";
+    }
+  };
+
   const validate = () => {
     if (
       !formData.name ||
@@ -412,11 +433,9 @@ export default function ContestTracker() {
                 className="h-9 w-9 border-2 border-white cursor-pointer transition-all duration-200 hover:scale-110 hover:border-cyan-300 hover:shadow-md hover:shadow-cyan-300/30"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               >
-                <AvatarImage
-                  src="/placeholder.svg?height=36&width=36"
-                  alt="User"
-                />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarFallback className="text-black">
+                  {getPatientInitials(userDetails?.name)}
+                </AvatarFallback>
               </Avatar>
               {isUserMenuOpen && (
                 <div className=" absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
@@ -535,12 +554,8 @@ export default function ContestTracker() {
                           >
                             <div className="flex items-center gap-4">
                               <Avatar>
-                                <AvatarImage
-                                  src={contestant.avatar || "/placeholder.svg"}
-                                  alt={contestant.name}
-                                />
                                 <AvatarFallback>
-                                  {contestant.name.charAt(0)}
+                                  {getPatientInitials(contestant.name)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
@@ -548,7 +563,9 @@ export default function ContestTracker() {
                                   {contestant.name}
                                 </h3>
                                 <p className="text-sm text-muted-foreground">
-                                  @{contestant.username}
+                                  @
+                                  {contestant.username ||
+                                    contestant.name.toLocaleLowerCase()}
                                 </p>
                               </div>
                             </div>
@@ -605,14 +622,8 @@ export default function ContestTracker() {
                             <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4">
                               <div className="flex justify-between">
                                 <Avatar className="h-12 w-12 border">
-                                  <AvatarImage
-                                    src={
-                                      contestant.avatar || "/placeholder.svg"
-                                    }
-                                    alt={contestant.name}
-                                  />
                                   <AvatarFallback>
-                                    {contestant.name.charAt(0)}
+                                    {getPatientInitials(contestant?.name)}
                                   </AvatarFallback>
                                 </Avatar>
                                 <Badge
@@ -631,7 +642,9 @@ export default function ContestTracker() {
                                 {contestant.name}
                               </CardTitle>
                               <CardDescription>
-                                @{contestant.username}
+                                @
+                                {contestant.username ||
+                                  contestant.name.toLocaleLowerCase()}
                               </CardDescription>
                             </CardHeader>
                             <CardContent className="p-4">
