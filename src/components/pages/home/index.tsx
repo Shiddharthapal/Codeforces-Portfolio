@@ -96,10 +96,11 @@ export default function ContestTracker() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [upcomingContests, setUpcomingContests] = useState<UpcomingContest[]>(
     []
   );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredItems, setFilteredItems] = useState(contestants);
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -111,6 +112,25 @@ export default function ContestTracker() {
       contestant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contestant.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleSearch = () => {
+    let filtered = contestants;
+
+    // Filter by name only
+    if (searchQuery.trim()) {
+      filtered = filtered.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setContestants(filtered || null);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   const handleLogout = () => {
     setUserDetails(null);
@@ -295,6 +315,11 @@ export default function ContestTracker() {
     }
     return true;
   };
+
+  //refresh the page
+  const handleRefresh = () => {
+    window.location.reload();
+  };
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -367,7 +392,10 @@ export default function ContestTracker() {
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
       <header className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
+          <div
+            onClick={() => handleRefresh()}
+            className="flex items-center gap-2 cursor-pointer"
+          >
             <Trophy className="h-6 w-6" />
             <h1 className="text-2xl font-bold">Contest Tracker</h1>
           </div>
@@ -471,7 +499,7 @@ export default function ContestTracker() {
             <Card className="shadow-lg border-none">
               <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
                 <div className="flex justify-between items-center">
-                  <div>
+                  <div onClick={() => handleRefresh()}>
                     <CardTitle className="text-2xl text-cyan-900">
                       Contestants Dashboard
                     </CardTitle>
@@ -483,13 +511,20 @@ export default function ContestTracker() {
                     <div className="relative">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
-                        type="search"
-                        placeholder="Search contestants..."
-                        className="pl-8 w-[200px] md:w-[300px]"
+                        placeholder="Search by name..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        className="pl-10"
                       />
                     </div>
+                    <Button
+                      onClick={handleSearch}
+                      className="px-6 hover:bg-black"
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      Search
+                    </Button>
                     <Dialog
                       open={isAddDialogOpen}
                       onOpenChange={setIsAddDialogOpen}
@@ -541,244 +576,90 @@ export default function ContestTracker() {
                     </div>
                   </div>
 
-                  <TabsContent value="list" className="m-0">
-                    <ScrollArea className="max-h-[500px]">
-                      <div className="divide-y">
-                        {contestants?.map((contestant: UserDetails) => (
-                          <div
-                            key={contestant.userId}
-                            className="flex items-center justify-between p-4 hover:bg-slate-50"
-                          >
-                            <div className="flex items-center gap-4">
-                              <Avatar>
-                                <AvatarFallback>
-                                  {getPatientInitials(contestant.name)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <h3 className="font-medium">
-                                  {contestant.name}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">
-                                  @
-                                  {contestant.username ||
-                                    contestant.name.toLocaleLowerCase()}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-6">
-                              <div className="text-center">
-                                <p className="text-sm text-muted-foreground">
-                                  Contests
-                                </p>
-                                <p className="font-medium">
-                                  {contestant.contests}
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-sm text-muted-foreground">
-                                  Total Solve
-                                </p>
-                                <p className="font-medium">
-                                  {contestant.solve}
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-sm text-muted-foreground">
-                                  Rating
-                                </p>
-                                <p className="font-medium">
-                                  {contestant.rating}
-                                </p>
-                              </div>
-                              <div className="">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button variant="outline" size="icon">
-                                      <Info className="h-4 w-4" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  {about({ contestant })}
-                                </Dialog>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-
-                  <TabsContent value="grid" className="m-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
-                      {filteredContestants.length > 0 ? (
-                        filteredContestants.map((contestant) => (
-                          <Card
-                            key={contestant.userId}
-                            className="overflow-hidden hover:shadow-md transition-shadow"
-                          >
-                            <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4">
-                              <div className="flex justify-between">
-                                <Avatar className="h-12 w-12 border">
-                                  <AvatarFallback>
-                                    {getPatientInitials(contestant?.name)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <Badge
-                                  variant={
-                                    (contestant.rating ?? 0) > 1800
-                                      ? "default"
-                                      : (contestant.rating ?? 0) > 1600
-                                      ? "secondary"
-                                      : "outline"
-                                  }
-                                >
-                                  {contestant.rating} pts
-                                </Badge>
-                              </div>
-                              <CardTitle className="mt-2">
-                                {contestant.name}
-                              </CardTitle>
-                              <CardDescription>
-                                @
-                                {contestant.username ||
-                                  contestant.name.toLocaleLowerCase()}
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-4">
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="text-center p-2 bg-slate-50 rounded">
-                                  <p className="text-sm text-muted-foreground">
-                                    Contests
-                                  </p>
-                                  <p className="font-medium text-lg">
-                                    {contestant.contests}
-                                  </p>
-                                </div>
-                                <div className="text-center p-2 bg-slate-50 rounded">
-                                  <p className="text-sm text-muted-foreground">
-                                    Wins
-                                  </p>
-                                  <p className="font-medium text-lg">
-                                    {contestant.solve}
-                                  </p>
-                                </div>
-                              </div>
-                            </CardContent>
-                            <CardFooter className="flex justify-between p-4 bg-slate-50">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="outline" size="sm">
-                                    <Info className="mr-2 h-4 w-4" />
-                                    Details
-                                  </Button>
-                                </DialogTrigger>
-                                {about({ contestant })}
-                              </Dialog>
-                            </CardFooter>
-                          </Card>
-                        ))
-                      ) : (
-                        <div className="col-span-full flex flex-col items-center justify-center p-8 text-center">
-                          <AlertCircle className="h-10 w-10 text-muted-foreground mb-2" />
-                          <h3 className="font-medium text-lg">
-                            No contestants found
-                          </h3>
-                          <p className="text-muted-foreground">
-                            Try adjusting your search or add a new contestant.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="stats" className="m-0 p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg">
-                            Top Performers
-                          </CardTitle>
-                          <CardDescription>
-                            Based on success rate
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          {[...contestants]
-                            .sort(
-                              (a, b) =>
-                                ((b.solve ?? 0) / (b.contests ?? 0) || 0) -
-                                ((a.solve ?? 0) / (a.contests ?? 0) || 0)
-                            )
-                            .slice(0, 3)
-                            .map((contestant, index) => (
+                  {contestants && contestants.length > 0 ? (
+                    <div>
+                      <TabsContent value="list" className="m-0">
+                        <ScrollArea className="max-h-[500px]">
+                          <div className="divide-y">
+                            {contestants?.map((contestant: UserDetails) => (
                               <div
                                 key={contestant.userId}
-                                className="flex items-center gap-2 mb-2"
+                                className="flex items-center justify-between p-4 hover:bg-slate-50"
                               >
-                                <div
-                                  className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                    index === 0
-                                      ? "bg-yellow-100 text-yellow-700"
-                                      : index === 1
-                                      ? "bg-slate-100 text-slate-700"
-                                      : "bg-amber-100 text-amber-700"
-                                  }`}
-                                >
-                                  {index + 1}
+                                <div className="flex items-center gap-4">
+                                  <Avatar>
+                                    <AvatarFallback>
+                                      {getPatientInitials(contestant.name)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <h3 className="font-medium">
+                                      {contestant.name}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                      @
+                                      {contestant.username ||
+                                        contestant.name.toLocaleLowerCase()}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div className="flex-1">
-                                  <p className="font-medium">
-                                    {contestant.name}
-                                  </p>
-                                  <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">
-                                      Success rate:
-                                    </span>
-                                    <span>{contestant.successRate}</span>
+                                <div className="flex items-center gap-6">
+                                  <div className="text-center">
+                                    <p className="text-sm text-muted-foreground">
+                                      Contests
+                                    </p>
+                                    <p className="font-medium">
+                                      {contestant.contests}
+                                    </p>
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-sm text-muted-foreground">
+                                      Total Solve
+                                    </p>
+                                    <p className="font-medium">
+                                      {contestant.solve}
+                                    </p>
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-sm text-muted-foreground">
+                                      Rating
+                                    </p>
+                                    <p className="font-medium">
+                                      {contestant.rating}
+                                    </p>
+                                  </div>
+                                  <div className="">
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button variant="outline" size="icon">
+                                          <Info className="h-4 w-4" />
+                                        </Button>
+                                      </DialogTrigger>
+                                      {about({ contestant })}
+                                    </Dialog>
                                   </div>
                                 </div>
                               </div>
                             ))}
-                        </CardContent>
-                      </Card>
+                          </div>
+                        </ScrollArea>
+                      </TabsContent>
 
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg">
-                            Highest Rated
-                          </CardTitle>
-                          <CardDescription>
-                            Top contestants by rating
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          {[...contestants]
-                            .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-                            .slice(0, 3)
-                            .map((contestant, index) => (
-                              <div
+                      <TabsContent value="grid" className="m-0">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
+                          {filteredContestants.length > 0 ? (
+                            filteredContestants.map((contestant) => (
+                              <Card
                                 key={contestant.userId}
-                                className="flex items-center gap-2 mb-2"
+                                className="overflow-hidden hover:shadow-md transition-shadow"
                               >
-                                <div
-                                  className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                    index === 0
-                                      ? "bg-yellow-100 text-yellow-700"
-                                      : index === 1
-                                      ? "bg-slate-100 text-slate-700"
-                                      : "bg-amber-100 text-amber-700"
-                                  }`}
-                                >
-                                  {index + 1}
-                                </div>
-                                <div className="flex-1">
-                                  <p className="font-medium">
-                                    {contestant.name}
-                                  </p>
-                                  <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">
-                                      Rating:
-                                    </span>
+                                <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4">
+                                  <div className="flex justify-between">
+                                    <Avatar className="h-12 w-12 border">
+                                      <AvatarFallback>
+                                        {getPatientInitials(contestant?.name)}
+                                      </AvatarFallback>
+                                    </Avatar>
                                     <Badge
                                       variant={
                                         (contestant.rating ?? 0) > 1800
@@ -788,59 +669,234 @@ export default function ContestTracker() {
                                           : "outline"
                                       }
                                     >
-                                      {contestant.rating}
+                                      {contestant.rating} pts
                                     </Badge>
                                   </div>
-                                </div>
-                              </div>
-                            ))}
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg">Most Active</CardTitle>
-                          <CardDescription>
-                            By number of contests
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          {[...contestants]
-
-                            .slice(0, 3)
-                            .map((contestant, index) => (
-                              <div
-                                key={contestant.userId}
-                                className="flex items-center gap-2 mb-2"
-                              >
-                                <div
-                                  className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                    index === 0
-                                      ? "bg-yellow-100 text-yellow-700"
-                                      : index === 1
-                                      ? "bg-slate-100 text-slate-700"
-                                      : "bg-amber-100 text-amber-700"
-                                  }`}
-                                >
-                                  {index + 1}
-                                </div>
-                                <div className="flex-1">
-                                  <p className="font-medium">
+                                  <CardTitle className="mt-2">
                                     {contestant.name}
-                                  </p>
-                                  <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">
-                                      Contests:
-                                    </span>
-                                    <span>{contestant.contests || 0}</span>
+                                  </CardTitle>
+                                  <CardDescription>
+                                    @
+                                    {contestant.username ||
+                                      contestant.name.toLocaleLowerCase()}
+                                  </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-4">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="text-center p-2 bg-slate-50 rounded">
+                                      <p className="text-sm text-muted-foreground">
+                                        Contests
+                                      </p>
+                                      <p className="font-medium text-lg">
+                                        {contestant.contests}
+                                      </p>
+                                    </div>
+                                    <div className="text-center p-2 bg-slate-50 rounded">
+                                      <p className="text-sm text-muted-foreground">
+                                        Wins
+                                      </p>
+                                      <p className="font-medium text-lg">
+                                        {contestant.solve}
+                                      </p>
+                                    </div>
                                   </div>
-                                </div>
-                              </div>
-                            ))}
-                        </CardContent>
-                      </Card>
+                                </CardContent>
+                                <CardFooter className="flex justify-between p-4 bg-slate-50">
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button variant="outline" size="sm">
+                                        <Info className="mr-2 h-4 w-4" />
+                                        Details
+                                      </Button>
+                                    </DialogTrigger>
+                                    {about({ contestant })}
+                                  </Dialog>
+                                </CardFooter>
+                              </Card>
+                            ))
+                          ) : (
+                            <div className="col-span-full flex flex-col items-center justify-center p-8 text-center">
+                              <AlertCircle className="h-10 w-10 text-muted-foreground mb-2" />
+                              <h3 className="font-medium text-lg">
+                                No contestants found
+                              </h3>
+                              <p className="text-muted-foreground">
+                                Try adjusting your search or add a new
+                                contestant.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="stats" className="m-0 p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-lg">
+                                Top Performers
+                              </CardTitle>
+                              <CardDescription>
+                                Based on success rate
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              {[...contestants]
+                                .sort(
+                                  (a, b) =>
+                                    ((b.solve ?? 0) / (b.contests ?? 0) || 0) -
+                                    ((a.solve ?? 0) / (a.contests ?? 0) || 0)
+                                )
+                                .slice(0, 3)
+                                .map((contestant, index) => (
+                                  <div
+                                    key={contestant.userId}
+                                    className="flex items-center gap-2 mb-2"
+                                  >
+                                    <div
+                                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                        index === 0
+                                          ? "bg-yellow-100 text-yellow-700"
+                                          : index === 1
+                                          ? "bg-slate-100 text-slate-700"
+                                          : "bg-amber-100 text-amber-700"
+                                      }`}
+                                    >
+                                      {index + 1}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-medium">
+                                        {contestant.name}
+                                      </p>
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">
+                                          Success rate:
+                                        </span>
+                                        <span>{contestant.successRate}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                            </CardContent>
+                          </Card>
+
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-lg">
+                                Highest Rated
+                              </CardTitle>
+                              <CardDescription>
+                                Top contestants by rating
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              {[...contestants]
+                                .sort(
+                                  (a, b) => (b.rating ?? 0) - (a.rating ?? 0)
+                                )
+                                .slice(0, 3)
+                                .map((contestant, index) => (
+                                  <div
+                                    key={contestant.userId}
+                                    className="flex items-center gap-2 mb-2"
+                                  >
+                                    <div
+                                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                        index === 0
+                                          ? "bg-yellow-100 text-yellow-700"
+                                          : index === 1
+                                          ? "bg-slate-100 text-slate-700"
+                                          : "bg-amber-100 text-amber-700"
+                                      }`}
+                                    >
+                                      {index + 1}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-medium">
+                                        {contestant.name}
+                                      </p>
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">
+                                          Rating:
+                                        </span>
+                                        <Badge
+                                          variant={
+                                            (contestant.rating ?? 0) > 1800
+                                              ? "default"
+                                              : (contestant.rating ?? 0) > 1600
+                                              ? "secondary"
+                                              : "outline"
+                                          }
+                                        >
+                                          {contestant.rating}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                            </CardContent>
+                          </Card>
+
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-lg">
+                                Most Active
+                              </CardTitle>
+                              <CardDescription>
+                                By number of contests
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              {[...contestants]
+
+                                .slice(0, 3)
+                                .map((contestant, index) => (
+                                  <div
+                                    key={contestant.userId}
+                                    className="flex items-center gap-2 mb-2"
+                                  >
+                                    <div
+                                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                        index === 0
+                                          ? "bg-yellow-100 text-yellow-700"
+                                          : index === 1
+                                          ? "bg-slate-100 text-slate-700"
+                                          : "bg-amber-100 text-amber-700"
+                                      }`}
+                                    >
+                                      {index + 1}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-medium">
+                                        {contestant.name}
+                                      </p>
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">
+                                          Contests:
+                                        </span>
+                                        <span>{contestant.contests || 0}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </TabsContent>
                     </div>
-                  </TabsContent>
+                  ) : (
+                    <Card className="p-12 rounded-t-none">
+                      <div className="space-y-2 flex flex-col items-center">
+                        <User className="h-12 w-12 text-muted-foreground mx-auto" />
+                        <h3 className="text-lg  font-medium mx-auto">
+                          No user found
+                        </h3>
+                        <p className="text-muted-foreground mx-auto">
+                          Try searching with a different name
+                        </p>
+                      </div>
+                    </Card>
+                  )}
                 </Tabs>
               </CardContent>
             </Card>

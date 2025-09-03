@@ -30,7 +30,9 @@ export function about({ contestant }: { contestant: UserDetails }) {
       <div className="grid gap-4 py-4">
         <div className="flex justify-between items-center">
           <span className="font-medium">Username:</span>
-          <span>@{contestant.username}</span>
+          <span>
+            @{contestant.username || contestant.name.toLocaleLowerCase()}
+          </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="font-medium">Contests Participated:</span>
