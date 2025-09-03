@@ -37,6 +37,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createAc } from "./create";
 import { about } from "./about";
 import Graph from "./graph";
+import { ProfilePage } from "./profile";
 
 interface User {
   _id: string;
@@ -137,6 +138,10 @@ export default function ContestTracker() {
     setIsUserMenuOpen(false);
     dispatch(logout());
     navigate("/");
+  };
+
+  const handleProfile = () => {
+    <ProfilePage />;
   };
 
   const getPatientInitials = (patientName: string) => {
@@ -463,17 +468,28 @@ export default function ContestTracker() {
                 </AvatarFallback>
               </Avatar>
               {isUserMenuOpen && (
-                <div className=" absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
+                <div className=" absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg  z-10">
                   {token && (
-                    <button
-                      className=" px-4 py-2 text-sm text-gray-700 hover:bg-red-300 w-full text-mid"
-                      onClick={() => {
-                        handleLogout();
-                        setIsUserMenuOpen(false);
-                      }}
-                    >
-                      Log out
-                    </button>
+                    <div className="flex flex-col items-center">
+                      <button
+                        className=" px-4 py-2 text-sm text-gray-700 hover:bg-red-300 hover:rounded-t-md w-full text-mid"
+                        onClick={() => {
+                          handleLogout();
+                          setIsUserMenuOpen(false);
+                        }}
+                      >
+                        Logout
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleProfile();
+                          setIsUserMenuOpen(false);
+                        }}
+                        className=" px-4 py-2 text-sm text-gray-700 hover:bg-blue-300 hover:rounded-b-md w-full text-mid"
+                      >
+                        Profile
+                      </button>
+                    </div>
                   )}
                   {!token && (
                     <button
@@ -483,7 +499,7 @@ export default function ContestTracker() {
                         setIsUserMenuOpen(false);
                       }}
                     >
-                      Log out
+                      Login
                     </button>
                   )}
                 </div>
