@@ -19,7 +19,7 @@ interface Profile {
   picture?: string;
 }
 
-export function ProfilePage() {
+export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

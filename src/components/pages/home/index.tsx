@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
 import {
   AlertCircle,
   Award,
@@ -29,6 +28,7 @@ import {
   Plus,
   Search,
   Trophy,
+  LogOut,
   User,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -37,8 +37,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createAc } from "./create";
 import { about } from "./about";
 import Graph from "./graph";
-import { ProfilePage } from "./profile";
-
+import Profile from "../profile";
 interface User {
   _id: string;
   name: string;
@@ -101,7 +100,8 @@ export default function ContestTracker() {
     []
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredItems, setFilteredItems] = useState(contestants);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -134,6 +134,7 @@ export default function ContestTracker() {
   };
 
   const handleLogout = () => {
+    console.log("Log out");
     setUserDetails(null);
     setIsUserMenuOpen(false);
     dispatch(logout());
@@ -141,7 +142,9 @@ export default function ContestTracker() {
   };
 
   const handleProfile = () => {
-    <ProfilePage />;
+    console.log("hi");
+    setIsUserMenuOpen(false);
+    navigate("/profile"); // Navigate to profile page
   };
 
   const getPatientInitials = (patientName: string) => {
@@ -458,49 +461,66 @@ export default function ContestTracker() {
                 </div>
               )}
             </div>
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <Avatar
                 className="h-9 w-9 border-2 border-white cursor-pointer transition-all duration-200 hover:scale-110 hover:border-cyan-300 hover:shadow-md hover:shadow-cyan-300/30"
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsUserMenuOpen(!isUserMenuOpen);
+                }}
               >
                 <AvatarFallback className="text-black">
                   {getPatientInitials(userDetails?.name)}
                 </AvatarFallback>
               </Avatar>
+
               {isUserMenuOpen && (
-                <div className=" absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg  z-10">
-                  {token && (
-                    <div className="flex flex-col items-center">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                  {token ? (
+                    <div className="py-1">
+                      {/* Add Option */}
                       <button
-                        className=" px-4 py-2 text-sm text-gray-700 hover:bg-red-300 hover:rounded-t-md w-full text-mid"
-                        onClick={() => {
-                          handleLogout();
-                          setIsUserMenuOpen(false);
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 focus:bg-gray-50 focus:outline-none"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddClick();
                         }}
+                        role="menuitem"
                       >
-                        Logout
+                        <Plus className="h-4 w-4 mr-3 text-gray-400" />
+                        Add
                       </button>
+
+                      {/* Profile Option */}
                       <button
-                        onClick={() => {
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 focus:bg-gray-50 focus:outline-none"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           handleProfile();
-                          setIsUserMenuOpen(false);
                         }}
-                        className=" px-4 py-2 text-sm text-gray-700 hover:bg-blue-300 hover:rounded-b-md w-full text-mid"
+                        role="menuitem"
                       >
+                        <User className="h-4 w-4 mr-3 text-gray-400" />
                         Profile
                       </button>
+
+                      {/* Logout Option */}
+                      <button
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150 focus:bg-red-50 focus:outline-none"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLogout();
+                        }}
+                        role="menuitem"
+                      >
+                        <LogOut className="h-4 w-4 mr-3 text-red-400" />
+                        Logout
+                      </button>
                     </div>
-                  )}
-                  {!token && (
-                    <button
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                      onClick={() => {
-                        handleLogout();
-                        setIsUserMenuOpen(false);
-                      }}
-                    >
-                      Login
-                    </button>
+                  ) : (
+                    <div className="py-2 px-4 text-sm text-gray-500">
+                      Please log in
+                    </div>
                   )}
                 </div>
               )}
