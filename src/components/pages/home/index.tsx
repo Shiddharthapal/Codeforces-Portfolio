@@ -135,16 +135,20 @@ export default function ContestTracker() {
 
   const handleLogout = () => {
     console.log("Log out");
-    setUserDetails(null);
-    setIsUserMenuOpen(false);
-    dispatch(logout());
-    navigate("/");
+    setTimeout(() => {
+      setUserDetails(null);
+      setIsUserMenuOpen(false);
+      dispatch(logout());
+      navigate("/");
+    }, 0);
   };
 
   const handleProfile = () => {
     console.log("hi");
-    setIsUserMenuOpen(false);
-    navigate("/profile"); // Navigate to profile page
+    setTimeout(() => {
+      setIsUserMenuOpen(false);
+      navigate("/profile"); // Navigate to profile page
+    }, 0);
   };
 
   const getPatientInitials = (patientName: string) => {
@@ -475,14 +479,13 @@ export default function ContestTracker() {
               </Avatar>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 dropdown-container">
                   {token ? (
                     <div className="py-1">
                       {/* Add Option */}
                       <button
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 focus:bg-gray-50 focus:outline-none"
                         onClick={(e) => {
-                          e.stopPropagation();
                           handleAddClick();
                         }}
                         role="menuitem"
@@ -495,6 +498,7 @@ export default function ContestTracker() {
                       <button
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 focus:bg-gray-50 focus:outline-none"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleProfile();
                         }}
@@ -508,6 +512,7 @@ export default function ContestTracker() {
                       <button
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150 focus:bg-red-50 focus:outline-none"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleLogout();
                         }}
