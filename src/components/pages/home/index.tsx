@@ -566,22 +566,18 @@ export default function ContestTracker() {
                       <Search className="h-4 w-4 mr-2" />
                       Search
                     </Button>
-                    <Dialog
-                      open={isAddDialogOpen}
-                      onOpenChange={setIsAddDialogOpen}
+
+                    <Button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleProfile();
+                      }}
+                      role="menuitem"
                     >
-                      <DialogTrigger asChild>
-                        <Button
-                          onClick={() => {
-                            handleAddClick();
-                          }}
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add Contestant
-                        </Button>
-                      </DialogTrigger>
-                      {token && createAc({ token })}
-                    </Dialog>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Account
+                    </Button>
                   </div>
                 </div>
               </CardHeader>

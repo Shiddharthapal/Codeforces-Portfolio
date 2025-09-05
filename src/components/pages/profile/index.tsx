@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Edit, User, Mail, Code } from "lucide-react";
+import { Edit, User, Mail, Code, GraduationCap, School2 } from "lucide-react";
 
 interface Profile {
   email: string;
   name: string;
+  universityName: string;
+  department: string;
   username: string;
   codeforces: string;
   picture?: string;
@@ -94,6 +96,16 @@ export default function ProfilePage() {
             <span className="text-sm">{profile.username}</span>
           </div>
 
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+            <School2 className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{profile.universityName}</span>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{profile.department}</span>
+          </div>
+
           {profile.codeforces && (
             <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
               <Code className="h-4 w-4 text-muted-foreground" />
@@ -135,6 +147,8 @@ function ProfileForm({
     email: initialData?.email || "",
     name: initialData?.name || "",
     username: initialData?.username || "",
+    universityName: initialData?.universityName || "",
+    department: initialData?.department || "",
     codeforces: initialData?.codeforces || "",
     picture: initialData?.picture || "",
   });
@@ -214,18 +228,6 @@ function ProfileForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
@@ -243,6 +245,29 @@ function ProfileForm({
               value={formData.username}
               onChange={(e) => handleInputChange("username", e.target.value)}
               placeholder="Choose a username"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="universityName">University Name</Label>
+            <Input
+              id="universityName"
+              value={formData.universityName}
+              onChange={(e) =>
+                handleInputChange("universityName", e.target.value)
+              }
+              placeholder="Enter your university name"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="department">University Name</Label>
+            <Input
+              id="department"
+              value={formData.department}
+              onChange={(e) => handleInputChange("department", e.target.value)}
+              placeholder="Enter your department name"
               required
             />
           </div>
