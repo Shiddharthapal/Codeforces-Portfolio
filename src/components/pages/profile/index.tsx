@@ -17,6 +17,8 @@ import {
   GraduationCap,
   School2,
   ArrowLeft,
+  CheckCircle,
+  X,
 } from "lucide-react";
 import { useAppSelector } from "@/redux/hooks";
 import { navigate } from "astro:transitions/client";
@@ -44,10 +46,28 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile>(demoProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
+    show: false,
+    message: "",
+    type: "success",
+  });
 
   const { _id, token } = useAppSelector((state) => state.auth);
   console.log("🧞‍♂️  token profile --->", token);
   console.log("🧞‍♂️  _id profile --->", _id);
+  //for notification
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification((prev) => ({ ...prev, show: false }));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.show]);
 
   useEffect(() => {
     const fetchdata = async () => {
@@ -67,10 +87,34 @@ export default function ProfilePage() {
     fetchdata();
   }, [_id]);
 
-  const handleCreateProfile = (newProfile: Profile) => {
-    localStorage.setItem("userProfile", JSON.stringify(newProfile));
-    setProfile(newProfile);
+  const handleCreateProfile = async (newProfile: Profile) => {
+    let response = await fetch("./api/userApi/profileCreate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ newProfile, _id }),
+    });
+    if (!response.ok) {
+      console.log("Profile not created");
+      setNotification({
+        show: true,
+        message: "Profile not updated successfully!",
+        type: "error",
+      });
+    }
+    let responseData = await response.json();
+    setProfile(responseData.profiledetails);
+    setNotification({
+      show: true,
+      message: "Profile updated successfully!",
+      type: "success",
+    });
     setIsEditing(false);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, show: false }));
   };
 
   const handleBack = () => {
@@ -109,6 +153,24 @@ export default function ProfilePage() {
   if (!profile || isEditing) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-md">
+        {notification.show && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-2">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg flex items-center gap-3 min-w-[300px]">
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+              <span className="text-green-800 font-medium flex-1">
+                {notification.message}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={closeNotification}
+                className="h-6 w-6 p-0 text-green-600 hover:text-green-800 hover:bg-green-100"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -348,7 +410,7 @@ function ProfileForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="department">University Name</Label>
+            <Label htmlFor="department">Department Name</Label>
             <Input
               id="department"
               value={formData.department}
@@ -380,7 +442,7 @@ function ProfileForm({
               </Button>
             )}
             <Button type="submit" className="flex-1">
-              {initialData ? "Update Profile" : "Create Profile"}
+              {initialData ? "Update Profile" : "Updated"}
             </Button>
           </div>
         </form>

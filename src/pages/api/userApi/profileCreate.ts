@@ -10,17 +10,18 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const profileData = await request.json();
+    console.log("🧞‍♂️  profileData --->", profileData);
 
     // Validate required fields
-    const { _id, department, universityName, name, username, codeforces } =
-      profileData;
+    const { _id, newProfile } = profileData;
+    const { department, universityName, name, username, codeforces } =
+      newProfile;
 
-    if (!_id || !department || !universityName || !name) {
+    if (!department || !universityName || !name) {
       return new Response(
         JSON.stringify({
           message: "Missing required fields",
           required: [
-            "_id",
             "department",
             "universityName",
             "email",
