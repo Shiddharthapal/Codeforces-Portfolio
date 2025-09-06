@@ -34,10 +34,8 @@ import {
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
-import { createAc } from "./create";
 import { about } from "./about";
 import Graph from "./graph";
-import Profile from "../profile";
 interface User {
   _id: string;
   name: string;
@@ -107,6 +105,8 @@ export default function ContestTracker() {
   const navigate = useNavigate();
 
   const { _id, token } = useAppSelector((state) => state.auth);
+  console.log("🧞‍♂️  _id --->", _id);
+  console.log("🧞‍♂️  token --->", token);
 
   const filteredContestants = contestants.filter(
     (contestant) =>
@@ -182,7 +182,7 @@ export default function ContestTracker() {
       const batch = users.slice(i, i + concurrency);
       const batchPromises = batch.map(async (user) => {
         try {
-          const res = await fetch(`/api/users/${user._id}`);
+          const res = await fetch(`/api/userApi/${user._id}`);
           if (!res.ok) return null;
           const data = await res.json();
           return data?.userDetails || null;
@@ -213,7 +213,7 @@ export default function ContestTracker() {
       const batchPromises = batch.map(async (user) => {
         try {
           const response = await fetch(
-            `/api/users/codeforces?handle=${encodeURIComponent(
+            `/api/userApi/codeforces?handle=${encodeURIComponent(
               user.codeforces
             )}`,
             {
@@ -256,7 +256,7 @@ export default function ContestTracker() {
       try {
         // Step 1: Fetch all users
         const [allUsersResponse, upcommingContestsResponse] = await Promise.all(
-          [fetch("/api/users/allUser"), fetch(`/api/users/upComingContest`)]
+          [fetch("/api/userApi/allUser"), fetch(`/api/userApi/upComingContest`)]
         );
         if (!allUsersResponse.ok) {
           throw new Error("Failed to fetch all users");
@@ -276,10 +276,12 @@ export default function ContestTracker() {
         setContestants(validUserDetails);
 
         // Fetch the user data who have the profile
-        let speceficUserResponse = await fetch(`/api/users/${_id}`);
-        const speceficUserDetails = await speceficUserResponse.json();
-        // console.log("🧞‍♂️  speceficUserDetails --->", speceficUserDetails);
-        setUserDetails(speceficUserDetails?.userDetails);
+        if (_id) {
+          let speceficUserResponse = await fetch(`/api/userApi/${_id}`);
+          const speceficUserDetails = await speceficUserResponse.json();
+          // console.log("🧞‍♂️  speceficUserDetails --->", speceficUserDetails);
+          setUserDetails(speceficUserDetails?.userDetails);
+        }
 
         // Fetch Codeforces data with concurrency control
         const codeforcesDataPromise =
@@ -482,18 +484,6 @@ export default function ContestTracker() {
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 dropdown-container">
                   {token ? (
                     <div className="py-1">
-                      {/* Add Option */}
-                      <button
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 focus:bg-gray-50 focus:outline-none"
-                        onClick={(e) => {
-                          handleAddClick();
-                        }}
-                        role="menuitem"
-                      >
-                        <Plus className="h-4 w-4 mr-3 text-gray-400" />
-                        Add
-                      </button>
-
                       {/* Profile Option */}
                       <button
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 focus:bg-gray-50 focus:outline-none"

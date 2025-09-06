@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Edit, User, Mail, Code, GraduationCap, School2 } from "lucide-react";
+import { useAppSelector } from "@/redux/hooks";
 
 interface Profile {
   email: string;
@@ -20,20 +21,41 @@ interface Profile {
   codeforces: string;
   picture?: string;
 }
+const demoProfile: Profile = {
+  email: "Not Provided",
+  name: "Not Provided",
+  universityName: "Not Provided",
+  department: "Not Provided",
+  username: "Not Provided",
+  codeforces: "Not Provided",
+  picture: "Not Provided",
+};
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile>(demoProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const user = useAppSelector((state) => state.auth);
+  console.log("🧞‍♂️  user --->", user);
+  const { _id, token } = user;
+
   useEffect(() => {
-    // Check if profile exists in localStorage
-    const savedProfile = localStorage.getItem("userProfile");
-    if (savedProfile) {
-      setProfile(JSON.parse(savedProfile));
-    }
-    setIsLoading(false);
-  }, []);
+    const fetchdata = async () => {
+      try {
+        let speceficUserResponse = await fetch(`/api/userApi/${_id}`);
+        if (!speceficUserResponse.ok) {
+          throw new Error("Failed to fetch all users");
+        }
+        let userdata = await speceficUserResponse.json();
+        setProfile(userdata?.userDetails);
+        console.log("🧞‍♂️  userdata --->", userdata);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      }
+    };
+    fetchdata();
+  }, [_id]);
 
   const handleCreateProfile = (newProfile: Profile) => {
     localStorage.setItem("userProfile", JSON.stringify(newProfile));

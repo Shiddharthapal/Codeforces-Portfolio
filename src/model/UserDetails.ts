@@ -4,15 +4,12 @@ const UserDetailsSchema = new mongoose.Schema(
   {
     userId: {
       type: String,
-      required: true,
     },
     department: {
       type: String,
-      required: false, // Making it optional
     },
     email: {
       type: String,
-      required: true,
       unique: true,
     },
     name: {
@@ -24,7 +21,6 @@ const UserDetailsSchema = new mongoose.Schema(
     username: {
       type: String,
       default: "",
-      required: true,
     },
 
     codeforces: {
