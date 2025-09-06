@@ -9,8 +9,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Edit, User, Mail, Code, GraduationCap, School2 } from "lucide-react";
+import {
+  Edit,
+  User,
+  Mail,
+  Code,
+  GraduationCap,
+  School2,
+  ArrowLeft,
+} from "lucide-react";
 import { useAppSelector } from "@/redux/hooks";
+import { navigate } from "astro:transitions/client";
 
 interface Profile {
   email: string;
@@ -34,11 +43,11 @@ const demoProfile: Profile = {
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile>(demoProfile);
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const user = useAppSelector((state) => state.auth);
-  console.log("🧞‍♂️  user --->", user);
-  const { _id, token } = user;
+  const { _id, token } = useAppSelector((state) => state.auth);
+  console.log("🧞‍♂️  token profile --->", token);
+  console.log("🧞‍♂️  _id profile --->", _id);
 
   useEffect(() => {
     const fetchdata = async () => {
@@ -48,7 +57,8 @@ export default function ProfilePage() {
           throw new Error("Failed to fetch all users");
         }
         let userdata = await speceficUserResponse.json();
-        setProfile(userdata?.userDetails);
+        console.log("🧞‍♂️  userdata --->", userdata.userDetails);
+        setProfile({ ...userdata?.userDetails, email: userdata.user.email });
         console.log("🧞‍♂️  userdata --->", userdata);
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -63,6 +73,31 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
+  const handleBack = () => {
+    navigate("/"); // specify the route to go back to
+  };
+
+  const getInitials = (patientName: string) => {
+    if (!patientName) return "AB";
+
+    const cleanName = patientName.trim();
+
+    if (!cleanName) return "AB";
+
+    // Split the cleaned name and get first 2 words
+    const words = cleanName.split(" ").filter((word) => word.length > 0);
+
+    if (words.length >= 2) {
+      // Get first letter of first 2 words
+      return (words[0][0] + words[1][0]).toUpperCase();
+    } else if (words.length === 1) {
+      // If only one word, get first 2 letters
+      return words[0].substring(0, 2).toUpperCase();
+    } else {
+      return "AB";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -74,6 +109,17 @@ export default function ProfilePage() {
   if (!profile || isEditing) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-md">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBack}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </div>
         <ProfileForm
           onSubmit={handleCreateProfile}
           initialData={profile}
@@ -85,12 +131,23 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-md">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+      </div>
       <Card>
         <CardHeader className="text-center pb-4">
           <div className="flex justify-center mb-4">
             <Avatar className="h-24 w-24">
               <AvatarImage
-                src={profile.picture || "/placeholder.svg"}
+                src={profile.picture || getInitials(profile.name)}
                 alt={profile.name}
               />
               <AvatarFallback className="text-2xl">
@@ -102,37 +159,39 @@ export default function ProfilePage() {
               </AvatarFallback>
             </Avatar>
           </div>
-          <CardTitle className="text-2xl">{profile.name}</CardTitle>
+          <CardTitle className="text-2xl">{profile?.name}</CardTitle>
           <Badge variant="secondary" className="w-fit mx-auto">
-            @{profile.username}
+            @{profile?.username || profile?.name.toLocaleLowerCase()}
           </Badge>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
             <Mail className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{profile.email}</span>
+            <span className="text-sm">{profile?.email}</span>
           </div>
 
           <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
             <User className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{profile.username}</span>
+            <span className="text-sm">
+              {profile?.username || profile?.name.toLocaleLowerCase()}
+            </span>
           </div>
 
           <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
             <School2 className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{profile.universityName}</span>
+            <span className="text-sm">{profile.universityName || " "}</span>
           </div>
 
           <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{profile.department}</span>
+            <span className="text-sm">{profile?.department}</span>
           </div>
 
           {profile.codeforces && (
             <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
               <Code className="h-4 w-4 text-muted-foreground" />
               <a
-                href={profile.codeforces}
+                href={profile?.codeforces}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-primary hover:underline"
@@ -265,7 +324,12 @@ function ProfileForm({
             <Input
               id="username"
               value={formData.username}
-              onChange={(e) => handleInputChange("username", e.target.value)}
+              onChange={(e) => {
+                const valueWithoutSpaces = e.target.value
+                  .replace(/\s/g, "")
+                  .toLowerCase();
+                handleInputChange("username", valueWithoutSpaces);
+              }}
               placeholder="Choose a username"
               required
             />

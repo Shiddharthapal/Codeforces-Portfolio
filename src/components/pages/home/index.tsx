@@ -144,7 +144,6 @@ export default function ContestTracker() {
   };
 
   const handleProfile = () => {
-    console.log("hi");
     setTimeout(() => {
       setIsUserMenuOpen(false);
       navigate("/profile"); // Navigate to profile page

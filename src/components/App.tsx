@@ -66,7 +66,7 @@ const routeConfig = [
 ];
 
 // Route renderer component
-const RouteRenderer = ({ route }) => {
+const RouteRenderer = ({ route }: any) => {
   const Component = route.element;
 
   if (route.protected) {
