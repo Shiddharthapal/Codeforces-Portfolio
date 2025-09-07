@@ -92,7 +92,6 @@ export default function ContestTracker() {
   const [contestants, setContestants] = useState<UserDetails[]>([]);
   const [open, setOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [upcomingContests, setUpcomingContests] = useState<UpcomingContest[]>(
     []

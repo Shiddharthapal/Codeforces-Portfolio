@@ -158,7 +158,7 @@ export default function Graph({ handle }: { handle: string }) {
         setError(null); // Clear previous errors
 
         const response = await fetch(
-          `/api/users/codeforces?handle=${encodeURIComponent(handle)}`
+          `/api/userApi/codeforces?handle=${encodeURIComponent(handle)}`
         );
         const responseData = await response.json();
         console.log("🧞‍♂️  responseData --->", responseData);
