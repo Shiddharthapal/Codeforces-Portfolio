@@ -10,7 +10,6 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const profileData = await request.json();
-    console.log("🧞‍♂️  profileData --->", profileData);
 
     // Validate required fields
     const { _id, newProfile } = profileData;

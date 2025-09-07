@@ -59,13 +59,6 @@ interface UserDetails {
   avatar?: string;
 }
 
-interface FormData {
-  name: string;
-  email: string;
-  username: string;
-  codeforces: string;
-}
-
 export interface contestantData {
   cflastMonthSolveCount: number;
   averageSolve: number;
@@ -97,15 +90,14 @@ export default function ContestTracker() {
     []
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const { _id, token } = useAppSelector((state) => state.auth);
-  console.log("🧞‍♂️  _id --->", _id);
-  console.log("🧞‍♂️  token --->", token);
+  // console.log("🧞‍♂️  _id --->", _id);
+  // console.log("🧞‍♂️  token --->", token);
 
   const filteredContestants = contestants.filter(
     (contestant) =>
@@ -318,16 +310,6 @@ export default function ContestTracker() {
     fetchAllData();
   }, [_id]);
 
-  const handleAddClick = () => {
-    if (!token) {
-      navigate("/login", {
-        state: { returnUrl: window.location.pathname },
-      });
-      return false;
-    }
-    return true;
-  };
-
   //refresh the page
   const handleRefresh = () => {
     window.location.reload();
@@ -359,46 +341,6 @@ export default function ContestTracker() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isUserMenuOpen]);
-
-  // const ifSameUserDetails = _id === userDetails?.id;
-
-  // const saveEditedContestant = () => {
-  //   if (editingContestant) {
-  //     const updatedContestants = contestants.map((c) =>
-  //       c._id === editingContestant._id ? editingContestant : c
-  //     );
-  //     setContestants(updatedContestants);
-  //     setIsEditDialogOpen(false);
-  //     setEditingContestant(null);
-  //   }
-  // };
-
-  // const handleDeleteContestant = async (id: string) => {
-  //   const alldataResponse = await fetch("/api/users/delete", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({ id }),
-  //   });
-  //   let data = await alldataResponse.json();
-  //   //console.log("data ==> ", data);
-  //   setContestants(data);
-  //   let verifiedId = await fetch(`/api/users/verfiedUser`, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Authorization: `${token}`,
-  //     },
-  //   });
-  //   let verifiedUserId = await verifiedId.json();
-  //   if (verifiedUserId.verifiedTokenUserId === id) {
-  //     navigate("/login");
-  //     dispatch(logout());
-  //   } else {
-  //     navigate("/home");
-  //   }
-  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
@@ -524,10 +466,10 @@ export default function ContestTracker() {
 
       <main className="container mx-auto py-8 px-4">
         <div className="flex flex-col md:flex-row gap-8">
-          <div className="md:w-3/4 max-h-[500px] ">
+          <div className="mb-36 md:w-3/4 max-h-[500px] ">
             <Card className="shadow-lg border-none">
               <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                   <div onClick={() => handleRefresh()}>
                     <CardTitle className="text-2xl text-cyan-900">
                       Contestants Dashboard
@@ -538,13 +480,12 @@ export default function ContestTracker() {
                   </div>
                   <div className="flex gap-2">
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Search by name..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        className="pl-10"
+                        className="pl-2"
                       />
                     </div>
                     <Button
@@ -552,7 +493,6 @@ export default function ContestTracker() {
                       className="px-6 hover:bg-black"
                     >
                       <Search className="h-4 w-4 mr-2" />
-                      Search
                     </Button>
 
                     <Button

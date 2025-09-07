@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+
 import * as d3 from "d3";
 
 interface RatingChange {
@@ -11,9 +12,10 @@ interface RatingChange {
 }
 
 export default function Graph({ handle }: { handle: string }) {
-  console.log("🧞‍♂️  handle --->", handle);
   const svgRef = useRef<SVGSVGElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [data, setData] = useState<RatingChange[] | null>(null); // Store data in state
 
   // Format timestamp to month/year
@@ -161,7 +163,7 @@ export default function Graph({ handle }: { handle: string }) {
           `/api/userApi/codeforces?handle=${encodeURIComponent(handle)}`
         );
         const responseData = await response.json();
-        console.log("🧞‍♂️  responseData --->", responseData);
+        // console.log("🧞‍♂️  responseData --->", responseData);
 
         if (!response.ok) {
           throw new Error(responseData.error || "Failed to fetch data");
@@ -206,12 +208,126 @@ export default function Graph({ handle }: { handle: string }) {
   }
 
   return (
-    <div className="w-full h-[500px] overflow-x-auto">
-      <svg
-        ref={svgRef}
-        className="w-full h-full"
-        style={{ minWidth: "800px" }}
-      ></svg>
+    <div className="w-full p-2 sm:p-4 md:p-6">
+      {/* Main Container */}
+      <div
+        ref={containerRef}
+        className="
+          w-full 
+          h-[180px]           /* Mobile Portrait (320-480px) */
+          xs:h-[200px]        /* Mobile Landscape (480-640px) */
+          sm:h-[280px]        /* Tablet Portrait (640-768px) */
+          md:h-[350px]        /* Tablet Landscape (768-1024px) */
+          lg:h-[420px]        /* Desktop Small (1024-1280px) */
+          xl:h-[480px]        /* Desktop Medium (1280-1536px) */
+          2xl:h-[520px]       /* Desktop Large (1536px+) */
+          
+          /* Container styling */
+          border border-gray-200 
+          rounded-lg 
+          shadow-sm 
+          bg-white
+          
+          /* Overflow handling */
+          overflow-hidden 
+          overflow-x-auto 
+          overflow-y-auto
+          
+          /* Smooth transitions */
+          transition-all 
+          duration-300 
+          ease-in-out
+        "
+        style={{
+          // Ensure minimum dimensions
+          minHeight: "150px",
+          maxHeight: "80vh",
+        }}
+      >
+        <svg
+          ref={svgRef}
+          className="w-full h-full"
+          style={{
+            // Responsive minimum widths
+            minWidth:
+              window.innerWidth < 480
+                ? "280px" // Small phones
+                : window.innerWidth < 640
+                ? "320px" // Large phones
+                : window.innerWidth < 768
+                ? "400px" // Small tablets
+                : window.innerWidth < 1024
+                ? "600px" // Large tablets
+                : "800px", // Desktop
+
+            // Maximum width constraints
+            maxWidth: "100%",
+
+            // Smooth scaling
+            transition: "all 0.3s ease-in-out",
+          }}
+          viewBox="0 0 1000 500"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          {/* Demo content - replace with your SVG content */}
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3B82F6" />
+              <stop offset="100%" stopColor="#8B5CF6" />
+            </linearGradient>
+          </defs>
+
+          {/* Sample chart elements */}
+          <rect
+            x="50"
+            y="50"
+            width="900"
+            height="400"
+            fill="url(#grad1)"
+            opacity="0.1"
+            rx="10"
+          />
+
+          {/* Sample data points */}
+          {[...Array(10)].map((_, i) => (
+            <g key={i}>
+              <circle
+                cx={100 + i * 80}
+                cy={250 - Math.sin(i) * 100}
+                r={window.innerWidth < 640 ? "4" : "6"}
+                fill="#3B82F6"
+              />
+              <text
+                x={100 + i * 80}
+                y={450}
+                textAnchor="middle"
+                className="text-xs fill-gray-600"
+              >
+                {`Item ${i + 1}`}
+              </text>
+            </g>
+          ))}
+
+          {/* Responsive text sizing */}
+          <text
+            x="500"
+            y="30"
+            textAnchor="middle"
+            className={`
+              fill-gray-800 font-semibold
+              ${
+                window.innerWidth < 640
+                  ? "text-sm"
+                  : window.innerWidth < 1024
+                  ? "text-base"
+                  : "text-lg"
+              }
+            `}
+          >
+            Responsive SVG Chart ({dimensions.width}x{dimensions.height})
+          </text>
+        </svg>
+      </div>
     </div>
   );
 }

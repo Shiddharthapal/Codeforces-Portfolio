@@ -57,8 +57,9 @@ export default function ProfilePage() {
   });
 
   const { _id, token } = useAppSelector((state) => state.auth);
-  console.log("🧞‍♂️  token profile --->", token);
-  console.log("🧞‍♂️  _id profile --->", _id);
+  // console.log("🧞‍♂️  token profile --->", token);
+  // console.log("🧞‍♂️  _id profile --->", _id);
+
   //for notification
   useEffect(() => {
     if (notification.show) {
@@ -87,6 +88,7 @@ export default function ProfilePage() {
     fetchdata();
   }, [_id]);
 
+  //handler function of create profile
   const handleCreateProfile = async (newProfile: Profile) => {
     let response = await fetch("./api/userApi/profileCreate", {
       method: "POST",
@@ -123,9 +125,7 @@ export default function ProfilePage() {
 
   const getInitials = (patientName: string) => {
     if (!patientName) return "AB";
-
     const cleanName = patientName.trim();
-
     if (!cleanName) return "AB";
 
     // Split the cleaned name and get first 2 words

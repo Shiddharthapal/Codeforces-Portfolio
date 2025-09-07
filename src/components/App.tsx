@@ -17,8 +17,6 @@ const Login = lazy(() => import("./pages/login"));
 const Register = lazy(() => import("./pages/register"));
 // Add more lazy imports as needed
 const Profile = lazy(() => import("./pages/profile"));
-// const Dashboard = lazy(() => import("./pages/dashboard"));
-// const Settings = lazy(() => import("./pages/settings"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -53,16 +51,6 @@ const routeConfig = [
     element: Profile,
     protected: true,
   },
-  // {
-  //   path: "/dashboard",
-  //   element: Dashboard,
-  //   protected: true,
-  // },
-  // {
-  //   path: "/settings",
-  //   element: Settings,
-  //   protected: true,
-  // },
 ];
 
 // Route renderer component

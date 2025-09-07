@@ -10,7 +10,6 @@ export const POST: APIRoute = async ({ request }) => {
   };
   try {
     const data = await request.json();
-    console.log("🧞‍♂️data --->", data);
     const { name, email, username, codeforces } = data;
 
     // Validate required fields
@@ -30,14 +29,12 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const token = request.headers.get("Authorization");
-    console.log("🧞‍♂️token --->", token);
+
     // Verify token
     let verifiedUserId = null;
     try {
       const verifyTokenData = await verifyToken(token || "");
-      console.log("🧞‍♂️verifyTokenData --->", verifyTokenData);
       verifiedUserId = verifyTokenData.userId;
-      console.log("🧞‍♂️verifiedUserId --->", verifiedUserId);
     } catch (error) {
       return new Response(
         JSON.stringify({

@@ -12,7 +12,6 @@ export const GET: APIRoute = async ({ params, request }) => {
     // Connect to database
     await connect();
     const { id } = params;
-    console.log("🧞‍♂️  params --->", params);
     if (!id) {
       return new Response(JSON.stringify({ message: "User ID is required" }), {
         status: 400,
@@ -22,7 +21,6 @@ export const GET: APIRoute = async ({ params, request }) => {
 
     // Fetch user details
     const user = await User.findOne({ _id: id });
-    console.log("🧞‍♂️  user --->", user);
     if (!user) {
       return new Response(
         JSON.stringify({ message: "User not found go for create account" }),
