@@ -30,6 +30,8 @@ import {
   Trophy,
   LogOut,
   User,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
@@ -91,6 +93,11 @@ export default function ContestTracker() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
+
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const toggleTheme = (theme: "light" | "dark") => {
+    setIsDarkMode(theme === "dark");
+  };
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -451,6 +458,32 @@ export default function ContestTracker() {
                         <LogOut className="h-4 w-4 mr-3 text-red-400" />
                         Logout
                       </button>
+
+                      {/*Light mode option */}
+                      <button
+                        onClick={() => toggleTheme("light")}
+                        className={`flex items-center gap-2 ${
+                          isDarkMode
+                            ? "text-gray-200 hover:bg-gray-700"
+                            : "text-gray-900"
+                        } ${!isDarkMode ? "bg-gray-100" : ""}`}
+                      >
+                        <Sun className="h-4 w-4" />
+                        Light Mode
+                      </button>
+
+                      {/*dark mode option */}
+                      <button
+                        onClick={() => toggleTheme("dark")}
+                        className={`flex items-center gap-2 ${
+                          isDarkMode
+                            ? "text-gray-200 hover:bg-gray-700"
+                            : "text-gray-900"
+                        } ${isDarkMode ? "bg-gray-700" : ""}`}
+                      >
+                        <Moon className="h-4 w-4" />
+                        Dark Mode
+                      </button>
                     </div>
                   ) : (
                     <div className="py-2 px-4 text-sm text-gray-500">
@@ -464,14 +497,27 @@ export default function ContestTracker() {
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-4">
+      <main
+        className={`mx-auto py-8 px-4 ${
+          isDarkMode ? "dark bg-gray-900 container" : "container"
+        }`}
+      >
         <div className="flex flex-col md:flex-row gap-8">
           <div className="mb-36 md:w-3/4 max-h-[500px] ">
             <Card className="shadow-lg border-none">
-              <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
+              <CardHeader
+                className={`bg-gradient-to-r rounded-t-lg ${
+                  isDarkMode
+                    ? "dark from-cyan-800 to-blue-80"
+                    : "from-cyan-50 to-blue-50"
+                } text-white`}
+              >
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                   <div onClick={() => handleRefresh()}>
-                    <CardTitle className="text-2xl text-cyan-900">
+                    <CardTitle
+                      className={`text-2xl text-cyan-900
+                    ${isDarkMode ? "text-white" : "text-cyan-900"}`}
+                    >
                       Contestants Dashboard
                     </CardTitle>
                     <CardDescription>
@@ -490,7 +536,8 @@ export default function ContestTracker() {
                     </div>
                     <Button
                       onClick={handleSearch}
-                      className="px-6 hover:bg-black"
+                      className={`px-6
+                    ${isDarkMode ? "hover:bg-gray-300" : "text-cyan-400"}`}
                     >
                       <Search className="h-4 w-4 mr-2" />
                     </Button>
@@ -549,7 +596,12 @@ export default function ContestTracker() {
                             {contestants?.map((contestant: UserDetails) => (
                               <div
                                 key={contestant.userId}
-                                className="flex items-center justify-between p-4 hover:bg-slate-50"
+                                className={`flex items-center justify-between p-4
+                                ${
+                                  isDarkMode
+                                    ? "hover:bg-cyan-800"
+                                    : "hover:bg-slate-50"
+                                }`}
                               >
                                 <div className="flex items-center gap-4">
                                   <Avatar>
@@ -618,7 +670,13 @@ export default function ContestTracker() {
                                 key={contestant.userId}
                                 className="overflow-hidden hover:shadow-md transition-shadow"
                               >
-                                <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 p-4">
+                                <CardHeader
+                                  className={`bg-gradient-to-r ${
+                                    isDarkMode
+                                      ? "dark from-cyan-800 to-blue-80 text-white"
+                                      : "from-cyan-50 to-blue-50 text-black"
+                                  }`}
+                                >
                                   <div className="flex justify-between">
                                     <Avatar className="h-12 w-12 border">
                                       <AvatarFallback>
@@ -647,8 +705,12 @@ export default function ContestTracker() {
                                   </CardDescription>
                                 </CardHeader>
                                 <CardContent className="p-4">
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div className="text-center p-2 bg-slate-50 rounded">
+                                  <div className="grid grid-cols-2 gap-2 ">
+                                    <div
+                                      className={`text-center p-2 ${
+                                        isDarkMode ? "dark" : "bg-slate-50"
+                                      }  rounded`}
+                                    >
                                       <p className="text-sm text-muted-foreground">
                                         Contests
                                       </p>
@@ -656,7 +718,11 @@ export default function ContestTracker() {
                                         {contestant.contests}
                                       </p>
                                     </div>
-                                    <div className="text-center p-2 bg-slate-50 rounded">
+                                    <div
+                                      className={`text-center p-2 ${
+                                        isDarkMode ? "dark" : "bg-slate-50"
+                                      }  rounded`}
+                                    >
                                       <p className="text-sm text-muted-foreground">
                                         Wins
                                       </p>
@@ -666,7 +732,11 @@ export default function ContestTracker() {
                                     </div>
                                   </div>
                                 </CardContent>
-                                <CardFooter className="flex justify-between p-4 bg-slate-50">
+                                <CardFooter
+                                  className={`flex justify-between p-4 ${
+                                    isDarkMode ? "dark" : "bg-slate-50"
+                                  }  rounded`}
+                                >
                                   <Dialog>
                                     <DialogTrigger asChild>
                                       <Button variant="outline" size="sm">
@@ -733,7 +803,7 @@ export default function ContestTracker() {
                                       <p className="font-medium">
                                         {contestant.name}
                                       </p>
-                                      <div className="flex justify-between text-sm">
+                                      <div className="flex  gap-2 text-sm">
                                         <span className="text-muted-foreground">
                                           Success rate:
                                         </span>
@@ -780,7 +850,7 @@ export default function ContestTracker() {
                                       <p className="font-medium">
                                         {contestant.name}
                                       </p>
-                                      <div className="flex justify-between text-sm">
+                                      <div className="flex gap-2 text-sm">
                                         <span className="text-muted-foreground">
                                           Rating:
                                         </span>
@@ -835,7 +905,7 @@ export default function ContestTracker() {
                                       <p className="font-medium">
                                         {contestant.name}
                                       </p>
-                                      <div className="flex justify-between text-sm">
+                                      <div className="flex gap-2 text-sm">
                                         <span className="text-muted-foreground">
                                           Contests:
                                         </span>
