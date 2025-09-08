@@ -809,7 +809,7 @@ export default function ContestTracker() {
                                         Details
                                       </Button>
                                     </DialogTrigger>
-                                    {about({ contestant })}
+                                    {about({ contestant, isDarkMode })}
                                   </Dialog>
                                 </CardFooter>
                               </Card>
@@ -1130,7 +1130,13 @@ export default function ContestTracker() {
                       >
                         <div className="flex justify-between items-start">
                           <h3 className="font-medium">{contest.name}</h3>
-                          <Badge>{contest.timeToStartFormatted}</Badge>
+                          <Badge
+                            className={`${
+                              isDarkMode ? "bg-cyan-700 text-white" : ""
+                            }`}
+                          >
+                            {contest.timeToStartFormatted}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           {contest.startTimeFormatted} •{" "}
