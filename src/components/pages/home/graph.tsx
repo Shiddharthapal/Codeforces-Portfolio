@@ -11,7 +11,13 @@ interface RatingChange {
   newRating: number;
 }
 
-export default function Graph({ handle }: { handle: string }) {
+export default function Graph({
+  handle,
+  isDarkMode,
+}: {
+  handle: string;
+  isDarkMode: boolean;
+}) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef(null);
@@ -108,16 +114,18 @@ export default function Graph({ handle }: { handle: string }) {
     // Add X axis label
     g.append("text")
       .attr("x", innerWidth / 2)
-      .attr("y", innerHeight + margin.bottom + 9)
+      .attr("y", innerHeight + margin.bottom + 35)
       .style("text-anchor", "middle")
+      .style("fill", isDarkMode ? "#ffffff" : "#000000")
       .text("Contest Date");
 
     // Add Y axis label
     g.append("text")
       .attr("transform", "rotate(-90)")
-      .attr("y", -margin.left + 20 - 7)
+      .attr("y", -margin.left + 20)
       .attr("x", -innerHeight / 2)
       .style("text-anchor", "middle")
+      .style("fill", isDarkMode ? "#ffffff" : "#000000")
       .text("Rating");
 
     // Add path for rating progression
@@ -212,7 +220,7 @@ export default function Graph({ handle }: { handle: string }) {
       {/* Main Container */}
       <div
         ref={containerRef}
-        className="
+        className={`
           w-full 
           h-[180px]           /* Mobile Portrait (320-480px) */
           xs:h-[200px]        /* Mobile Landscape (480-640px) */
@@ -226,7 +234,7 @@ export default function Graph({ handle }: { handle: string }) {
           border border-gray-200 
           rounded-lg 
           shadow-sm 
-          bg-white
+          ${isDarkMode ? "bg-cyan-950" : "bg-white"}
           
           /* Overflow handling */
           overflow-hidden 
@@ -237,7 +245,7 @@ export default function Graph({ handle }: { handle: string }) {
           transition-all 
           duration-300 
           ease-in-out
-        "
+        `}
         style={{
           // Ensure minimum dimensions
           minHeight: "150px",

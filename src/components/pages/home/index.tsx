@@ -531,13 +531,19 @@ export default function ContestTracker() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        className="pl-2"
+                        className={`pl-2 border ${
+                          isDarkMode ? "border-white" : "border-black"
+                        }  `}
                       />
                     </div>
                     <Button
                       onClick={handleSearch}
                       className={`px-6
-                    ${isDarkMode ? "hover:bg-gray-300" : "text-cyan-400"}`}
+                    ${
+                      isDarkMode
+                        ? "bg-blue-80 border border-white text-white hover:bg-cyan-950"
+                        : ""
+                    }`}
                     >
                       <Search className="h-4 w-4 mr-2" />
                     </Button>
@@ -548,6 +554,12 @@ export default function ContestTracker() {
                         e.stopPropagation();
                         handleProfile();
                       }}
+                      className={`px-6
+                    ${
+                      isDarkMode
+                        ? "bg-blue-80 border border-white text-white hover:bg-cyan-950"
+                        : ""
+                    }`}
                       role="menuitem"
                     >
                       <Plus className="mr-2 h-4 w-4" />
@@ -599,7 +611,7 @@ export default function ContestTracker() {
                                 className={`flex items-center justify-between p-4
                                 ${
                                   isDarkMode
-                                    ? "hover:bg-cyan-800"
+                                    ? "hover:bg-cyan-950"
                                     : "hover:bg-slate-50"
                                 }`}
                               >
@@ -936,15 +948,22 @@ export default function ContestTracker() {
               </CardContent>
             </Card>
             <div>
-              <Card className="shadow-lg my-10 border-none">
-                <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
-                  <div className=" text-2xl font-semibold text-cyan-900">
-                    Contest Graph
-                  </div>
+              <Card className="shadow-lg my-10 border-none ">
+                <CardHeader
+                  className={`${
+                    isDarkMode
+                      ? "bg-gradient-to-r from-cyan-800 to-blue-80 text-white"
+                      : " bg-gradient-to-r from-cyan-50 to-blue-50 text-black"
+                  } rounded-t-lg`}
+                >
+                  <div className=" text-2xl font-semibold ">Contest Graph</div>
                 </CardHeader>
                 <CardContent>
                   {" "}
-                  <Graph handle={userDetails?.codeforces || ""} />
+                  <Graph
+                    handle={userDetails?.codeforces || ""}
+                    isDarkMode={isDarkMode}
+                  />
                 </CardContent>
               </Card>
             </div>
