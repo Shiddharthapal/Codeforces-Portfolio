@@ -18,9 +18,19 @@ interface UserDetails {
   rating?: number;
   avatar?: string;
 }
-export function about({ contestant }: { contestant: UserDetails }) {
+export function about({
+  contestant,
+  isDarkMode,
+}: {
+  contestant: UserDetails;
+  isDarkMode: boolean;
+}) {
   return (
-    <DialogContent>
+    <DialogContent
+      className={`${
+        isDarkMode ? "bg-black text-white" : "bg-white text-black"
+      }`}
+    >
       <DialogHeader>
         <DialogTitle>{contestant.name}</DialogTitle>
         <DialogDescription>
@@ -56,6 +66,9 @@ export function about({ contestant }: { contestant: UserDetails }) {
                 ? "secondary"
                 : "outline"
             }
+            className={`${
+              isDarkMode ? "bg-cyan-950 text-white" : "bg-black text-white"
+            }`}
           >
             {contestant.rating}
           </Badge>

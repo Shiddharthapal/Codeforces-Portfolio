@@ -351,7 +351,13 @@ export default function ContestTracker() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
-      <header className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-4 shadow-md">
+      <header
+        className={`p-4 ${
+          isDarkMode
+            ? "bg-gradient-to-r from-cyan-800 to blue-300"
+            : "bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
+        }shadow-md`}
+      >
         <div className="container mx-auto flex justify-between items-center">
           <div
             onClick={() => handleRefresh()}
@@ -364,7 +370,9 @@ export default function ContestTracker() {
             <div className="dropdown-container relative">
               <Button
                 variant="outline"
-                className="border-white bg-white/20 hover:text-gray-800 focus-visible:ring-white"
+                className={` ${
+                  isDarkMode ? "border-black focus-visible:ring-black" : ""
+                }border-white bg-white/20 hover:text-gray-800 focus-visible:ring-white`}
                 onClick={() => setOpen(!open)}
               >
                 <Calendar className="mr-2 h-4 w-4" />
@@ -379,12 +387,31 @@ export default function ContestTracker() {
               </Button>
 
               {open && (
-                <div className="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-md border-none z-50">
-                  <div className="flex items-center justify-between p-3">
-                    <span className="text-gray-900 font-medium">
+                <div
+                  className={`absolute right-0 mt-2 w-80 shadow-lg rounded-md  border-none z-50 ${
+                    isDarkMode ? "bg-black" : "bg-white"
+                  }`}
+                >
+                  <div
+                    className={`flex items-center justify-between p-3 ${
+                      isDarkMode
+                        ? "bg-gradient-to-r from-cyan-800 to-blue-80"
+                        : "bg-gradient-to-r from-cyan-50 to-blue-50"
+                    }`}
+                  >
+                    <span
+                      className={`${
+                        isDarkMode ? "text-white" : "text-gray-900"
+                      } font-medium`}
+                    >
                       Upcoming Contests
                     </span>
-                    <Badge variant="outline" className="font-normal">
+                    <Badge
+                      variant="outline"
+                      className={`${
+                        isDarkMode ? "text-white" : "text-gray-900"
+                      } font-normal`}
+                    >
                       {upcomingContests?.length} contests
                     </Badge>
                   </div>
@@ -393,11 +420,17 @@ export default function ContestTracker() {
                     {upcomingContests?.map((contest) => (
                       <div
                         key={contest?.id}
-                        className="rounded-md p-2 hover:bg-accent cursor-pointer"
+                        className={`rounded-md p-2 ${
+                          isDarkMode ? "hover:bg-cyan-950" : "hover:bg-gray-200"
+                        } cursor-pointer`}
                       >
                         <div className="w-full">
                           <div className="flex justify-between items-start gap-2">
-                            <h3 className="text-gray-900 font-medium line-clamp-2">
+                            <h3
+                              className={`${
+                                isDarkMode ? "text-white" : "text-gray-900"
+                              } font-medium line-clamp-2`}
+                            >
                               {contest?.name}
                             </h3>
                             <Badge className="shrink-0">
@@ -428,12 +461,22 @@ export default function ContestTracker() {
               </Avatar>
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 dropdown-container">
+                <div
+                  className={`absolute right-0 mt-2 w-48 ${
+                    isDarkMode
+                      ? " bg-gray-700 rounded-md shadow-md shadow-white  "
+                      : "bg-white rounded-md shadow-md shadow-black border border-gray-200"
+                  }  z-50 dropdown-container`}
+                >
                   {token ? (
                     <div className="py-1">
                       {/* Profile Option */}
                       <button
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 focus:bg-gray-50 focus:outline-none"
+                        className={`flex items-center w-full px-4 py-2 text-sm${
+                          isDarkMode
+                            ? " bg-gray-700 text-gray-200 hover:bg-gray-500"
+                            : "bg--white text-gray-900 hover:bg-gray-100"
+                        } focus:outline-none`}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -447,7 +490,13 @@ export default function ContestTracker() {
 
                       {/* Logout Option */}
                       <button
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150 focus:bg-red-50 focus:outline-none"
+                        className={`flex items-center w-full px-4 py-2 text-sm 
+                          ${
+                            isDarkMode
+                              ? " bg-gray-700 text-gray-200 hover:bg-gray-500"
+                              : " bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
+                          }
+                          transition-colors duration-150 focus:bg-red-50 focus:outline-none`}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -461,12 +510,12 @@ export default function ContestTracker() {
 
                       {/*Light mode option */}
                       <button
-                        onClick={() => toggleTheme("light")}
-                        className={`flex items-center gap-2 ${
+                        className={`w-full px-4 py-2 flex items-center gap-2 ${
                           isDarkMode
-                            ? "text-gray-200 hover:bg-gray-700"
-                            : "text-gray-900"
+                            ? " bg-gray-700 text-gray-200 hover:bg-gray-500"
+                            : "bg-white text-gray-900 hover:bg-gray-100"
                         } ${!isDarkMode ? "bg-gray-100" : ""}`}
+                        onClick={() => toggleTheme("light")}
                       >
                         <Sun className="h-4 w-4" />
                         Light Mode
@@ -474,12 +523,12 @@ export default function ContestTracker() {
 
                       {/*dark mode option */}
                       <button
-                        onClick={() => toggleTheme("dark")}
-                        className={`flex items-center gap-2 ${
+                        className={`w-full px-4 py-2 flex items-center gap-2 ${
                           isDarkMode
-                            ? "text-gray-200 hover:bg-gray-700"
-                            : "text-gray-900"
+                            ? " bg-gray-700 text-gray-200 hover:bg-gray-500"
+                            : "text-gray-900 hover:bg-gray-100"
                         } ${isDarkMode ? "bg-gray-700" : ""}`}
+                        onClick={() => toggleTheme("dark")}
                       >
                         <Moon className="h-4 w-4" />
                         Dark Mode
@@ -609,11 +658,7 @@ export default function ContestTracker() {
                               <div
                                 key={contestant.userId}
                                 className={`flex items-center justify-between p-4
-                                ${
-                                  isDarkMode
-                                    ? "hover:bg-cyan-950"
-                                    : "hover:bg-slate-50"
-                                }`}
+                                `}
                               >
                                 <div className="flex items-center gap-4">
                                   <Avatar>
@@ -660,11 +705,19 @@ export default function ContestTracker() {
                                   <div className="">
                                     <Dialog>
                                       <DialogTrigger asChild>
-                                        <Button variant="outline" size="icon">
+                                        <Button
+                                          variant="outline"
+                                          size="icon"
+                                          className={`${
+                                            isDarkMode
+                                              ? "bg-cyan-950 border-white text-white hover:bg-cyan-800"
+                                              : "bg-white border-black text-black hover:bg-gray-100"
+                                          }`}
+                                        >
                                           <Info className="h-4 w-4" />
                                         </Button>
                                       </DialogTrigger>
-                                      {about({ contestant })}
+                                      {about({ contestant, isDarkMode })}
                                     </Dialog>
                                   </div>
                                 </div>
@@ -972,10 +1025,14 @@ export default function ContestTracker() {
           <div className="md:w-1/4">
             <div className="space-y-6">
               <Card className="shadow-lg border-none">
-                <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
-                  <CardTitle className="text-lg text-cyan-900">
-                    My Details
-                  </CardTitle>
+                <CardHeader
+                  className={`${
+                    isDarkMode
+                      ? "bg-gradient-to-r from-cyan-800 to-blue-80 text-white"
+                      : "bg-gradient-to-r from-cyan-50 to-blue-50 text-cyan-900"
+                  } rounded-t-lg`}
+                >
+                  <CardTitle className="text-lg ">My Details</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="space-y-4">
@@ -1054,15 +1111,23 @@ export default function ContestTracker() {
               </Card>
 
               <Card className="shadow-lg border-none">
-                <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-t-lg">
-                  <CardTitle className="text-lg text-cyan-900">
-                    Upcoming Contests
-                  </CardTitle>
+                <CardHeader
+                  className={`${
+                    isDarkMode
+                      ? "bg-gradient-to-r from-cyan-800 to-blue-80 text-white"
+                      : "bg-gradient-to-r from-cyan-50 to-blue-50 text-cyan-900"
+                  } rounded-t-lg`}
+                >
+                  <CardTitle className="text-lg ">Upcoming Contests</CardTitle>
                 </CardHeader>
                 {upcomingContests?.map((contest: UpcomingContest) => (
                   <CardContent key={contest.id} className="p-4">
                     <div className="space-y-3">
-                      <div className="border rounded-lg p-3 hover:bg-slate-50 cursor-pointer">
+                      <div
+                        className={`border rounded-lg p-3 ${
+                          isDarkMode ? "hover:bg-cyan-950" : "hover:bg-gray-200"
+                        } cursor-pointer`}
+                      >
                         <div className="flex justify-between items-start">
                           <h3 className="font-medium">{contest.name}</h3>
                           <Badge>{contest.timeToStartFormatted}</Badge>
