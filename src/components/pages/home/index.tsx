@@ -144,7 +144,9 @@ export default function ContestTracker() {
   const handleProfile = () => {
     setTimeout(() => {
       setIsUserMenuOpen(false);
-      navigate("/profile"); // Navigate to profile page
+      navigate("/profile/", {
+        state: { isDarkMode },
+      }); // Navigate to profile page
     }, 0);
   };
 
@@ -449,7 +451,9 @@ export default function ContestTracker() {
             </div>
             <div className="relative" ref={dropdownRef}>
               <Avatar
-                className="h-9 w-9 border-2 border-white cursor-pointer transition-all duration-200 hover:scale-110 hover:border-cyan-300 hover:shadow-md hover:shadow-cyan-300/30"
+                className={`h-9 w-9 border-2 border-white cursor-pointer transition-all duration-200 hover:scale-110 hover:border-cyan-300 hover:shadow-md hover:shadow-cyan-300/30 ${
+                  isDarkMode ? "border-black" : ""
+                }`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsUserMenuOpen(!isUserMenuOpen);

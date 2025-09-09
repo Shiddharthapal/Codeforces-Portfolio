@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-
+import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile>(demoProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const [notification, setNotification] = useState<{
     show: boolean;
     message: string;
@@ -55,6 +56,9 @@ export default function ProfilePage() {
     message: "",
     type: "success",
   });
+
+  const location = useLocation();
+  const isDarkMode = location.state?.isDarkMode;
 
   const { _id, token } = useAppSelector((state) => state.auth);
   // console.log("🧞‍♂️  token profile --->", token);
@@ -78,9 +82,7 @@ export default function ProfilePage() {
           throw new Error("Failed to fetch all users");
         }
         let userdata = await speceficUserResponse.json();
-        console.log("🧞‍♂️  userdata --->", userdata.userDetails);
         setProfile({ ...userdata?.userDetails, email: userdata.user.email });
-        console.log("🧞‍♂️  userdata --->", userdata);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -123,6 +125,7 @@ export default function ProfilePage() {
     navigate("/"); // specify the route to go back to
   };
 
+  let initial = "";
   const getInitials = (patientName: string) => {
     if (!patientName) return "AB";
     const cleanName = patientName.trim();
@@ -133,12 +136,15 @@ export default function ProfilePage() {
 
     if (words.length >= 2) {
       // Get first letter of first 2 words
-      return (words[0][0] + words[1][0]).toUpperCase();
+      initial = (words[0][0] + words[1][0]).toUpperCase();
+      return initial;
     } else if (words.length === 1) {
       // If only one word, get first 2 letters
-      return words[0].substring(0, 2).toUpperCase();
+      initial = words[0].substring(0, 2).toUpperCase();
+      return initial;
     } else {
-      return "AB";
+      initial = "AB";
+      return initial;
     }
   };
 
@@ -152,9 +158,9 @@ export default function ProfilePage() {
 
   if (!profile || isEditing) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-md">
+      <div className={`container mx-auto px-4 py-8 max-w-md `}>
         {notification.show && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-2">
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-2 ">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg flex items-center gap-3 min-w-[300px]">
               <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
               <span className="text-green-800 font-medium flex-1">
@@ -186,6 +192,7 @@ export default function ProfilePage() {
           onSubmit={handleCreateProfile}
           initialData={profile}
           onCancel={profile ? () => setIsEditing(false) : undefined}
+          isDarkMode={isDarkMode}
         />
       </div>
     );
@@ -204,7 +211,7 @@ export default function ProfilePage() {
           Back
         </Button>
       </div>
-      <Card>
+      <Card className={`${isDarkMode ? "bg-cyan-950" : ""}`}>
         <CardHeader className="text-center pb-4">
           <div className="flex justify-center mb-4">
             <Avatar className="h-24 w-24">
@@ -221,42 +228,64 @@ export default function ProfilePage() {
               </AvatarFallback>
             </Avatar>
           </div>
-          <CardTitle className="text-2xl">{profile?.name}</CardTitle>
+          <CardTitle className={`text-2xl ${isDarkMode ? "text-white" : ""}`}>
+            {profile?.name}
+          </CardTitle>
           <Badge variant="secondary" className="w-fit mx-auto">
             @{profile?.username || profile?.name.toLocaleLowerCase()}
           </Badge>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-            <Mail className="h-4 w-4 text-muted-foreground" />
+            <Mail
+              className={`h-4 w-4 text-muted-foreground ${
+                isDarkMode ? "text-gray-800" : ""
+              }`}
+            />
             <span className="text-sm">{profile?.email}</span>
           </div>
 
           <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-            <User className="h-4 w-4 text-muted-foreground" />
+            <User
+              className={`h-4 w-4 text-muted-foreground ${
+                isDarkMode ? "text-gray-800" : ""
+              }`}
+            />
             <span className="text-sm">
               {profile?.username || profile?.name.toLocaleLowerCase()}
             </span>
           </div>
 
           <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-            <School2 className="h-4 w-4 text-muted-foreground" />
+            <School2
+              className={`h-4 w-4 text-muted-foreground ${
+                isDarkMode ? "text-gray-800" : ""
+              }`}
+            />
             <span className="text-sm">{profile.universityName || " "}</span>
           </div>
 
           <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <GraduationCap
+              className={`h-4 w-4 text-muted-foreground ${
+                isDarkMode ? "text-gray-800" : ""
+              }`}
+            />
             <span className="text-sm">{profile?.department}</span>
           </div>
 
           {profile.codeforces && (
             <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-              <Code className="h-4 w-4 text-muted-foreground" />
+              <Code
+                className={`h-4 w-4 text-muted-foreground ${
+                  isDarkMode ? "text-gray-800" : ""
+                }`}
+              />
               <a
                 href={profile?.codeforces}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary text-blue-600 hover:underline"
               >
                 Codeforces Profile
               </a>
@@ -281,10 +310,12 @@ function ProfileForm({
   onSubmit,
   initialData,
   onCancel,
+  isDarkMode,
 }: {
   onSubmit: (profile: Profile) => void;
   initialData?: Profile | null;
   onCancel?: () => void;
+  isDarkMode: boolean;
 }) {
   const [formData, setFormData] = useState<Profile>({
     email: initialData?.email || "",
@@ -324,9 +355,9 @@ function ProfileForm({
   };
 
   return (
-    <Card>
+    <Card className={`${isDarkMode ? "bg-cyan-950 " : ""}`}>
       <CardHeader>
-        <CardTitle className="text-center">
+        <CardTitle className={`text-center ${isDarkMode ? "text-white" : ""}`}>
           {initialData ? "Edit Profile" : "Create Your Profile"}
         </CardTitle>
         <p className="text-sm text-muted-foreground text-center">
@@ -340,10 +371,7 @@ function ProfileForm({
           <div className="flex justify-center mb-6">
             <div className="relative">
               <Avatar className="h-20 w-20">
-                <AvatarImage
-                  src={picturePreview || "/placeholder.svg"}
-                  alt="Profile preview"
-                />
+                <AvatarImage src={picturePreview} alt="Profile preview" />
                 <AvatarFallback>
                   {formData.name
                     ? formData.name
@@ -370,7 +398,7 @@ function ProfileForm({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className={`space-y-2 ${isDarkMode ? "text-white" : ""}`}>
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
@@ -378,10 +406,11 @@ function ProfileForm({
               onChange={(e) => handleInputChange("name", e.target.value)}
               placeholder="Enter your full name"
               required
+              className={`space-y-2 ${isDarkMode ? "text-gray-400" : ""}`}
             />
           </div>
 
-          <div className="space-y-2">
+          <div className={`space-y-2 ${isDarkMode ? "text-white" : ""}`}>
             <Label htmlFor="username">Username</Label>
             <Input
               id="username"
@@ -394,9 +423,10 @@ function ProfileForm({
               }}
               placeholder="Choose a username"
               required
+              className={`space-y-2 ${isDarkMode ? "text-gray-400" : ""}`}
             />
           </div>
-          <div className="space-y-2">
+          <div className={`space-y-2 ${isDarkMode ? "text-white" : ""}`}>
             <Label htmlFor="universityName">University Name</Label>
             <Input
               id="universityName"
@@ -406,10 +436,11 @@ function ProfileForm({
               }
               placeholder="Enter your university name"
               required
+              className={`space-y-2 ${isDarkMode ? "text-gray-400" : ""}`}
             />
           </div>
 
-          <div className="space-y-2">
+          <div className={`space-y-2 ${isDarkMode ? "text-white" : ""}`}>
             <Label htmlFor="department">Department Name</Label>
             <Input
               id="department"
@@ -417,16 +448,18 @@ function ProfileForm({
               onChange={(e) => handleInputChange("department", e.target.value)}
               placeholder="Enter your department name"
               required
+              className={`space-y-2 ${isDarkMode ? "text-gray-400" : ""}`}
             />
           </div>
 
-          <div className="space-y-2">
+          <div className={`space-y-2 ${isDarkMode ? "text-white" : ""}`}>
             <Label htmlFor="codeforces">Codeforces Link</Label>
             <Input
               id="codeforces"
               value={formData.codeforces}
               onChange={(e) => handleInputChange("codeforces", e.target.value)}
               placeholder="https://codeforces.com/profile/username"
+              className={`space-y-2 ${isDarkMode ? "text-gray-400" : ""}`}
             />
           </div>
 
@@ -436,7 +469,9 @@ function ProfileForm({
                 type="button"
                 variant="outline"
                 onClick={onCancel}
-                className="flex-1 bg-transparent"
+                className={`flex-1 bg-transparent ${
+                  isDarkMode ? "text-white" : ""
+                }`}
               >
                 Cancel
               </Button>
