@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { codeforcesAPI } from "@/lib/codeforces_api";
-import type { Contest } from "@/types/codeForces_api_type";
 
 // Helper function to format duration in seconds to human readable format
 function formatDuration(seconds: number): string {
