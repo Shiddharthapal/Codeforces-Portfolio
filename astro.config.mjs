@@ -4,7 +4,7 @@ import tailwind from "@astrojs/tailwind";
 import vercel from "@astrojs/vercel";
 
 export default defineConfig({
-  output: "server",
+  output: "hybrid",
   adapter: vercel(),
   integrations: [
     react(),

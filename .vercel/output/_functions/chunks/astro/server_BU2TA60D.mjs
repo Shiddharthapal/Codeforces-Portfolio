@@ -1,4 +1,4 @@
-import { A as AstroError, E as EndpointDidNotReturnAResponse, I as InvalidComponentArgs, a as AstroGlobUsedOutside, b as AstroGlobNoMatch, M as MissingMediaQueryDirective, N as NoMatchingImport, O as OnlyResponseCanBeReturned, R as ResponseSentError, c as NoMatchingRenderer, d as NoClientOnlyHint, e as NoClientEntrypoint } from './assets-service_C-cWle8B.mjs';
+import { A as AstroError, E as EndpointDidNotReturnAResponse, I as InvalidComponentArgs, a as AstroGlobUsedOutside, b as AstroGlobNoMatch, M as MissingMediaQueryDirective, N as NoMatchingImport, O as OnlyResponseCanBeReturned, R as ResponseSentError, c as NoMatchingRenderer, d as NoClientOnlyHint, e as NoClientEntrypoint } from './assets-service_Bi-OBUcp.mjs';
 import { clsx } from 'clsx';
 
 const ASTRO_VERSION = "4.16.19";
@@ -13,8 +13,6 @@ const clientAddressSymbol = Symbol.for("astro.clientAddress");
 const clientLocalsSymbol = Symbol.for("astro.locals");
 const originPathnameSymbol = Symbol.for("astro.originPathname");
 const responseSentSymbol = Symbol.for("astro.responseSent");
-
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 function getAugmentedNamespace(n) {
   if (n.__esModule) return n;
@@ -2362,4 +2360,4 @@ function spreadAttributes(values = {}, _name, { class: scopedClassName } = {}) {
   return markHTMLString(output);
 }
 
-export { ASTRO_VERSION as A, bold as B, red as C, DEFAULT_404_COMPONENT as D, yellow as E, dim as F, blue as G, REROUTABLE_STATUS_CODES as H, getAugmentedNamespace as I, commonjsGlobal as J, NOOP_MIDDLEWARE_HEADER as N, REROUTE_DIRECTIVE_HEADER as R, createAstro as a, renderComponent as b, createComponent as c, decodeKey as d, renderTemplate as e, renderSlot as f, escape as g, addAttribute as h, renderSlotToString as i, renderJSX as j, chunkToString as k, isRenderInstruction as l, maybeRenderHead as m, ROUTE_TYPE_HEADER as n, originPathnameSymbol as o, clientLocalsSymbol as p, clientAddressSymbol as q, renderHead as r, spreadAttributes as s, responseSentSymbol as t, renderPage as u, REWRITE_DIRECTIVE_HEADER_KEY as v, REWRITE_DIRECTIVE_HEADER_VALUE as w, renderEndpoint as x, decryptString as y, createSlotValueFromString as z };
+export { ASTRO_VERSION as A, dim as B, blue as C, DEFAULT_404_COMPONENT as D, REROUTABLE_STATUS_CODES as E, getAugmentedNamespace as F, maybeRenderHead as G, addAttribute as H, spreadAttributes as I, NOOP_MIDDLEWARE_HEADER as N, REROUTE_DIRECTIVE_HEADER as R, createAstro as a, renderComponent as b, createComponent as c, decodeKey as d, renderTemplate as e, renderSlot as f, escape as g, renderSlotToString as h, renderJSX as i, chunkToString as j, isRenderInstruction as k, ROUTE_TYPE_HEADER as l, clientLocalsSymbol as m, clientAddressSymbol as n, originPathnameSymbol as o, responseSentSymbol as p, renderPage as q, renderHead as r, REWRITE_DIRECTIVE_HEADER_KEY as s, REWRITE_DIRECTIVE_HEADER_VALUE as t, renderEndpoint as u, decryptString as v, createSlotValueFromString as w, bold as x, red as y, yellow as z };

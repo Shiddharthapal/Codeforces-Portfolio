@@ -1,14 +1,13 @@
-import { n as ROUTE_TYPE_HEADER, R as REROUTE_DIRECTIVE_HEADER, y as decryptString, z as createSlotValueFromString, b as renderComponent, e as renderTemplate, D as DEFAULT_404_COMPONENT, B as bold, C as red, E as yellow, F as dim, G as blue, p as clientLocalsSymbol, q as clientAddressSymbol, H as REROUTABLE_STATUS_CODES, t as responseSentSymbol, I as getAugmentedNamespace, J as commonjsGlobal } from './astro/server_CuXvJhkw.mjs';
-import { e as ensure404Route, D as DEFAULT_404_ROUTE, a as default404Instance } from './astro-designed-error-pages_D663Q1vO.mjs';
+import { l as ROUTE_TYPE_HEADER, R as REROUTE_DIRECTIVE_HEADER, v as decryptString, w as createSlotValueFromString, b as renderComponent, e as renderTemplate, D as DEFAULT_404_COMPONENT, x as bold, y as red, z as yellow, B as dim, C as blue, m as clientLocalsSymbol, n as clientAddressSymbol, E as REROUTABLE_STATUS_CODES, p as responseSentSymbol, F as getAugmentedNamespace } from './astro/server_BU2TA60D.mjs';
+import { e as ensure404Route, D as DEFAULT_404_ROUTE, a as default404Instance } from './astro-designed-error-pages_DQNOyKaJ.mjs';
 import 'clsx';
 import buffer from 'node:buffer';
 import crypto$1 from 'node:crypto';
 import { Http2ServerResponse } from 'node:http2';
-import { r as requestIs404Or500, n as notFound, a as redirectToFallback, b as redirectToDefaultLocale, c as requestHasLocale, d as normalizeTheLocale, e as defineMiddleware, R as RouteCache, s as sequence, f as findRouteToRewrite, m as matchRoute, g as RenderContext, h as getSetCookiesFromResponse } from './index_vkAzE-44.mjs';
-import { W as fileExtension, s as joinPaths, X as slash, Y as prependForwardSlash, K as removeTrailingForwardSlash, q as appendForwardSlash, A as AstroError, Q as LocalsNotAnObject } from './astro/assets-service_C-cWle8B.mjs';
-import { N as NOOP_MIDDLEWARE_FN } from './noop-middleware_Beg0rfPo.mjs';
+import { r as requestIs404Or500, n as notFound, a as redirectToFallback, b as redirectToDefaultLocale, c as requestHasLocale, d as normalizeTheLocale, e as defineMiddleware, R as RouteCache, s as sequence, f as findRouteToRewrite, m as matchRoute, g as RenderContext, h as getSetCookiesFromResponse } from './index_CBZNMo_L.mjs';
+import { w as fileExtension, j as joinPaths, x as slash, y as prependForwardSlash, r as removeTrailingForwardSlash, f as appendForwardSlash, A as AstroError, L as LocalsNotAnObject } from './astro/assets-service_Bi-OBUcp.mjs';
+import { N as NOOP_MIDDLEWARE_FN } from './noop-middleware_q34-0uL0.mjs';
 import require$$0 from 'url';
-import './index_DfOMS8cV.mjs';
 import nodePath from 'node:path';
 
 function createI18nMiddleware(i18n, base, trailingSlash, format) {
@@ -1168,7 +1167,7 @@ function asyncIterableToBodyProps(iterable) {
 
 apply();
 
-var dist$1 = {exports: {}};
+var dist = {exports: {}};
 
 /**
  * Tokenize input string.
@@ -3215,7 +3214,7 @@ var types = __toCommonJS(types_exports);
 var hasRequiredDist;
 
 function requireDist () {
-	if (hasRequiredDist) return dist$1.exports;
+	if (hasRequiredDist) return dist.exports;
 	hasRequiredDist = 1;
 	(function (module) {
 		var __defProp = Object.defineProperty;
@@ -3580,402 +3579,11 @@ function requireDist () {
 		  }
 		  return { routes, error: null };
 		}
-	} (dist$1));
-	return dist$1.exports;
+	} (dist));
+	return dist.exports;
 }
 
 requireDist();
-
-var dist = {};
-
-var isPlainObject$1 = {};
-
-Object.defineProperty(isPlainObject$1, "__esModule", { value: true });
-const objConstructorString = Function.prototype.toString.call(Object);
-function isPlainObject(value) {
-    //base object
-    if (typeof value !== 'object' ||
-        value === null ||
-        Object.prototype.toString.call(value) !== '[object Object]') {
-        return false;
-    }
-    //get the prototype
-    const proto = Object.getPrototypeOf(value);
-    //no prototype === all good
-    if (proto === null) {
-        return true;
-    }
-    //has own prop 'constructor'
-    if (!Object.prototype.hasOwnProperty.call(proto, 'constructor')) {
-        return false;
-    }
-    // validate that the constructor is `Object`
-    return (typeof proto.constructor === 'function' &&
-        proto.constructor instanceof proto.constructor &&
-        Function.prototype.toString.call(proto.constructor) === objConstructorString);
-}
-isPlainObject$1.default = isPlainObject;
-
-var encoders = {};
-
-var base64$1 = {exports: {}};
-
-/*! https://mths.be/base64 v1.0.0 by @mathias | MIT license */
-base64$1.exports;
-
-(function (module, exports) {
-(function(root) {
-
-		// Detect free variables `exports`.
-		var freeExports = exports;
-
-		// Detect free variable `module`.
-		var freeModule = module &&
-			module.exports == freeExports && module;
-
-		// Detect free variable `global`, from Node.js or Browserified code, and use
-		// it as `root`.
-		var freeGlobal = typeof commonjsGlobal == 'object' && commonjsGlobal;
-		if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
-			root = freeGlobal;
-		}
-
-		/*--------------------------------------------------------------------------*/
-
-		var InvalidCharacterError = function(message) {
-			this.message = message;
-		};
-		InvalidCharacterError.prototype = new Error;
-		InvalidCharacterError.prototype.name = 'InvalidCharacterError';
-
-		var error = function(message) {
-			// Note: the error messages used throughout this file match those used by
-			// the native `atob`/`btoa` implementation in Chromium.
-			throw new InvalidCharacterError(message);
-		};
-
-		var TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-		// http://whatwg.org/html/common-microsyntaxes.html#space-character
-		var REGEX_SPACE_CHARACTERS = /[\t\n\f\r ]/g;
-
-		// `decode` is designed to be fully compatible with `atob` as described in the
-		// HTML Standard. http://whatwg.org/html/webappapis.html#dom-windowbase64-atob
-		// The optimized base64-decoding algorithm used is based on @atk’s excellent
-		// implementation. https://gist.github.com/atk/1020396
-		var decode = function(input) {
-			input = String(input)
-				.replace(REGEX_SPACE_CHARACTERS, '');
-			var length = input.length;
-			if (length % 4 == 0) {
-				input = input.replace(/==?$/, '');
-				length = input.length;
-			}
-			if (
-				length % 4 == 1 ||
-				// http://whatwg.org/C#alphanumeric-ascii-characters
-				/[^+a-zA-Z0-9/]/.test(input)
-			) {
-				error(
-					'Invalid character: the string to be decoded is not correctly encoded.'
-				);
-			}
-			var bitCounter = 0;
-			var bitStorage;
-			var buffer;
-			var output = '';
-			var position = -1;
-			while (++position < length) {
-				buffer = TABLE.indexOf(input.charAt(position));
-				bitStorage = bitCounter % 4 ? bitStorage * 64 + buffer : buffer;
-				// Unless this is the first of a group of 4 characters…
-				if (bitCounter++ % 4) {
-					// …convert the first 8 bits to a single ASCII character.
-					output += String.fromCharCode(
-						0xFF & bitStorage >> (-2 * bitCounter & 6)
-					);
-				}
-			}
-			return output;
-		};
-
-		// `encode` is designed to be fully compatible with `btoa` as described in the
-		// HTML Standard: http://whatwg.org/html/webappapis.html#dom-windowbase64-btoa
-		var encode = function(input) {
-			input = String(input);
-			if (/[^\0-\xFF]/.test(input)) {
-				// Note: no need to special-case astral symbols here, as surrogates are
-				// matched, and the input is supposed to only contain ASCII anyway.
-				error(
-					'The string to be encoded contains characters outside of the ' +
-					'Latin1 range.'
-				);
-			}
-			var padding = input.length % 3;
-			var output = '';
-			var position = -1;
-			var a;
-			var b;
-			var c;
-			var buffer;
-			// Make sure any padding is handled outside of the loop.
-			var length = input.length - padding;
-
-			while (++position < length) {
-				// Read three bytes, i.e. 24 bits.
-				a = input.charCodeAt(position) << 16;
-				b = input.charCodeAt(++position) << 8;
-				c = input.charCodeAt(++position);
-				buffer = a + b + c;
-				// Turn the 24 bits into four chunks of 6 bits each, and append the
-				// matching character for each of them to the output.
-				output += (
-					TABLE.charAt(buffer >> 18 & 0x3F) +
-					TABLE.charAt(buffer >> 12 & 0x3F) +
-					TABLE.charAt(buffer >> 6 & 0x3F) +
-					TABLE.charAt(buffer & 0x3F)
-				);
-			}
-
-			if (padding == 2) {
-				a = input.charCodeAt(position) << 8;
-				b = input.charCodeAt(++position);
-				buffer = a + b;
-				output += (
-					TABLE.charAt(buffer >> 10) +
-					TABLE.charAt((buffer >> 4) & 0x3F) +
-					TABLE.charAt((buffer << 2) & 0x3F) +
-					'='
-				);
-			} else if (padding == 1) {
-				buffer = input.charCodeAt(position);
-				output += (
-					TABLE.charAt(buffer >> 2) +
-					TABLE.charAt((buffer << 4) & 0x3F) +
-					'=='
-				);
-			}
-
-			return output;
-		};
-
-		var base64 = {
-			'encode': encode,
-			'decode': decode,
-			'version': '1.0.0'
-		};
-
-		// Some AMD build optimizers, like r.js, check for specific condition patterns
-		// like the following:
-		if (freeExports && !freeExports.nodeType) {
-			if (freeModule) { // in Node.js or RingoJS v0.8.0+
-				freeModule.exports = base64;
-			} else { // in Narwhal or RingoJS v0.7.0-
-				for (var key in base64) {
-					base64.hasOwnProperty(key) && (freeExports[key] = base64[key]);
-				}
-			}
-		} else { // in Rhino or a web browser
-			root.base64 = base64;
-		}
-
-	}(commonjsGlobal)); 
-} (base64$1, base64$1.exports));
-
-var base64Exports = base64$1.exports;
-
-Object.defineProperty(encoders, "__esModule", { value: true });
-encoders.encoders = void 0;
-const base_64_1 = base64Exports;
-const binary = (input) => {
-    let binary = "";
-    const bytes = new Uint8Array(input);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        const buffer = bytes[i];
-        if (buffer)
-            binary += String.fromCharCode(buffer);
-    }
-    return binary;
-};
-const hex = (input) => [...new Uint8Array(input)]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-// @see https://stackoverflow.com/questions/35155089/node-sha-256-base64-digest
-// @see https://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
-const base64 = (input) => (0, base_64_1.encode)(binary(input));
-const base64url = (input) => base64(input).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
-encoders.encoders = {
-    base64,
-    base64url,
-    hex,
-    binary,
-};
-
-var __importDefault = (commonjsGlobal && commonjsGlobal.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(dist, "__esModule", { value: true });
-dist.deterministicString = void 0;
-const node_crypto_1 = crypto$1;
-const isPlainObject_1 = __importDefault(isPlainObject$1);
-const encoders_1 = encoders;
-/** Creates a deterministic hash for all inputs. */
-async function deterministicHash(input, algorithm = "SHA-1", output = "hex") {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(deterministicString(input));
-    const hash = await node_crypto_1.webcrypto.subtle.digest(algorithm, data);
-    return encoders_1.encoders[output](hash);
-}
-dist.default = deterministicHash;
-function deterministicString(input) {
-    if (typeof input === 'string') {
-        //wrap in quotes (and escape queotes) to differentiate from stringified primitives
-        return JSON.stringify(input);
-    }
-    else if (typeof input === 'symbol' || typeof input === 'function') {
-        //use `toString` for an accurate representation of these
-        return input.toString();
-    }
-    else if (typeof input === 'bigint') {
-        //bigint turns into a string int, so I need to differentiate it from a normal int
-        return `${input}n`;
-    }
-    else if (input === globalThis || input === undefined || input === null || typeof input === 'boolean' || typeof input === 'number' || typeof input !== 'object') {
-        //cast to string for any of these
-        return `${input}`;
-    }
-    else if (input instanceof Date) {
-        //using timestamp for dates
-        return `(${input.constructor.name}:${input.getTime()})`;
-    }
-    else if (input instanceof RegExp || input instanceof Error || input instanceof WeakMap || input instanceof WeakSet) {
-        //use simple `toString`. `WeakMap` and `WeakSet` are non-iterable, so this is the best I can do
-        return `(${input.constructor.name}:${input.toString()})`;
-    }
-    else if (input instanceof Set) {
-        //add the constructor as a key
-        let ret = `(${input.constructor.name}:[`;
-        //add all unique values
-        for (const val of input.values()) {
-            ret += `${deterministicString(val)},`;
-        }
-        ret += '])';
-        return ret;
-    }
-    else if (Array.isArray(input) ||
-        input instanceof Int8Array ||
-        input instanceof Uint8Array ||
-        input instanceof Uint8ClampedArray ||
-        input instanceof Int16Array ||
-        input instanceof Uint16Array ||
-        input instanceof Int32Array ||
-        input instanceof Uint32Array ||
-        input instanceof Float32Array ||
-        input instanceof Float64Array ||
-        input instanceof BigInt64Array ||
-        input instanceof BigUint64Array) {
-        //add the constructor as a key
-        let ret = `(${input.constructor.name}:[`;
-        //add all key/value pairs
-        for (const [k, v] of input.entries()) {
-            ret += `(${k}:${deterministicString(v)}),`;
-        }
-        ret += '])';
-        return ret;
-    }
-    else if (input instanceof ArrayBuffer || input instanceof SharedArrayBuffer) {
-        //each typed array must be in multiples of their byte size.
-        //see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#typedarray_objects
-        if (input.byteLength % 8 === 0) {
-            return deterministicString(new BigUint64Array(input));
-        }
-        else if (input.byteLength % 4 === 0) {
-            return deterministicString(new Uint32Array(input));
-        }
-        else if (input.byteLength % 2 === 0) {
-            return deterministicString(new Uint16Array(input));
-        }
-        else {
-            /** @todo - Change this to a system that breaks it down into parts. E.g. byteLength of 17 = BigUint64Array*2 and Uint8Array */
-            let ret = '(';
-            for (let i = 0; i < input.byteLength; i++) {
-                ret += `${deterministicString(new Uint8Array(input.slice(i, i + 1)))},`;
-            }
-            ret += ')';
-            return ret;
-        }
-    }
-    else if (input instanceof Map || (0, isPlainObject_1.default)(input)) {
-        //all key/values will be put here for sorting by key
-        const sortable = [];
-        //get key/value pairs
-        const entries = (input instanceof Map
-            ? input.entries()
-            : Object.entries(input));
-        //add all key value pairs
-        for (const [k, v] of entries) {
-            sortable.push([deterministicString(k), deterministicString(v)]);
-        }
-        //if not a map, get Symbol keys and add them
-        if (!(input instanceof Map)) {
-            const symbolKeys = Object.getOwnPropertySymbols(input);
-            //convert each symbol key to a key/value pair
-            for (let i = 0; i < symbolKeys.length; i++) {
-                sortable.push([
-                    deterministicString(symbolKeys[i]),
-                    deterministicString(
-                    //have to ignore because `noImplicitAny` is `true` but this is implicitly `any`
-                    //@ts-ignore
-                    input[symbolKeys[i]])
-                ]);
-            }
-        }
-        //sort alphabetically by keys
-        sortable.sort(([a], [b]) => a.localeCompare(b));
-        //add the constructor as a key
-        let ret = `(${input.constructor.name}:[`;
-        //add all of the key/value pairs
-        for (const [k, v] of sortable) {
-            ret += `(${k}:${v}),`;
-        }
-        ret += '])';
-        return ret;
-    }
-    //a class/non-plain object
-    const allEntries = [];
-    for (const k in input) {
-        allEntries.push([
-            deterministicString(k),
-            deterministicString(
-            //have to ignore because `noImplicitAny` is `true` but this is implicitly `any`
-            //@ts-ignore
-            input[k])
-        ]);
-    }
-    //get all own property symbols
-    const symbolKeys = Object.getOwnPropertySymbols(input);
-    //convert each symbol key to a key/value pair
-    for (let i = 0; i < symbolKeys.length; i++) {
-        allEntries.push([
-            deterministicString(symbolKeys[i]),
-            deterministicString(
-            //have to ignore because `noImplicitAny` is `true` but this is implicitly `any`
-            //@ts-ignore
-            input[symbolKeys[i]])
-        ]);
-    }
-    //sort alphabetically by keys
-    allEntries.sort(([a], [b]) => a.localeCompare(b));
-    //add the constructor as a key
-    let ret = `(${input.constructor.name}:[`;
-    //add all of the key/value pairs
-    for (const [k, v] of allEntries) {
-        ret += `(${k}:${v}),`;
-    }
-    ret += '])';
-    return ret;
-}
-dist.deterministicString = deterministicString;
 
 nodePath.posix.join;
 
@@ -3984,10 +3592,7 @@ const ASTRO_PATH_PARAM = "x_astro_path";
 const ASTRO_LOCALS_HEADER = "x-astro-locals";
 const ASTRO_MIDDLEWARE_SECRET_HEADER = "x-astro-middleware-secret";
 
-const createExports = (manifest, {
-  middlewareSecret,
-  skewProtection
-}) => {
+const createExports = (manifest, { middlewareSecret, skewProtection }) => {
   const app = new NodeApp(manifest);
   const handler = async (req, res) => {
     const url = new URL(`https://example.com${req.url}`);
@@ -4011,16 +3616,10 @@ const createExports = (manifest, {
     if (skewProtection && process.env.VERCEL_SKEW_PROTECTION_ENABLED === "1") {
       req.headers["x-deployment-id"] = process.env.VERCEL_DEPLOYMENT_ID;
     }
-    const webResponse = await app.render(req, {
-      addCookieHeader: true,
-      clientAddress,
-      locals
-    });
+    const webResponse = await app.render(req, { addCookieHeader: true, clientAddress, locals });
     await NodeApp.writeResponse(webResponse, res);
   };
-  return {
-    default: handler
-  };
+  return { default: handler };
 };
 function start() {
 }
