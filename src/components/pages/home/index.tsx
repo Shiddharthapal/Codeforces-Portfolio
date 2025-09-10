@@ -1035,13 +1035,24 @@ export default function ContestTracker() {
                 >
                   <div className=" text-2xl font-semibold ">Contest Graph</div>
                 </CardHeader>
-                <CardContent>
-                  {" "}
-                  <Graph
-                    handle={userDetails?.codeforces || ""}
-                    isDarkMode={isDarkMode}
-                  />
-                </CardContent>
+                {userContest[0] ? (
+                  <CardContent>
+                    {" "}
+                    <Graph
+                      handle={userDetails?.codeforces || ""}
+                      isDarkMode={isDarkMode}
+                    />
+                  </CardContent>
+                ) : (
+                  <div className="p-12 rounded-t-none">
+                    <div className="space-y-2 flex flex-col items-center">
+                      <User className="h-12 w-12 text-muted-foreground mx-auto" />
+                      <h3 className="text-lg  font-medium mx-auto">
+                        Create Account
+                      </h3>
+                    </div>
+                  </div>
+                )}
               </Card>
             </div>
           </div>
