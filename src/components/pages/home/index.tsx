@@ -103,6 +103,7 @@ export default function ContestTracker() {
   const dropdownRef = useRef(null);
 
   const [isDarkMode, setIsDarkMode] = useState(false);
+
   const toggleTheme = (theme: "light" | "dark") => {
     setIsDarkMode(theme === "dark");
   };
