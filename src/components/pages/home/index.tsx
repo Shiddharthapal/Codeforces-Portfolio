@@ -61,6 +61,13 @@ interface UserDetails {
   avatar?: string;
 }
 
+interface UserContestData {
+  solve: number;
+  contests: number;
+  rating: number;
+  successRate: number;
+}
+
 export interface contestantData {
   cflastMonthSolveCount: number;
   averageSolve: number;
@@ -85,6 +92,7 @@ interface UpcomingContest {
 
 export default function ContestTracker() {
   const [contestants, setContestants] = useState<UserDetails[]>([]);
+  const [userContest, setUserContest] = useState<UserContestData[]>([]);
   const [open, setOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
@@ -224,7 +232,19 @@ export default function ContestTracker() {
           if (!response.ok) return null;
 
           const data = await response.json();
+          console.log("🧞‍♂️  data --->", data);
           if (!data.success) return null;
+
+          if (_id === user.userId) {
+            setUserContest([
+              {
+                solve: data?.data?.totalSolved || 0,
+                contests: data?.data?.totalContest || 0,
+                rating: data?.rating?.[data.rating.length - 1]?.newRating || 0,
+                successRate: data?.data?.successRate || 0,
+              },
+            ]);
+          }
 
           return {
             userId: user.userId,
@@ -278,7 +298,7 @@ export default function ContestTracker() {
         if (_id) {
           let speceficUserResponse = await fetch(`/api/userApi/${_id}`);
           const speceficUserDetails = await speceficUserResponse.json();
-          // console.log("🧞‍♂️  speceficUserDetails --->", speceficUserDetails);
+          console.log("🧞‍♂️  speceficUserDetails --->", speceficUserDetails);
           setUserDetails(speceficUserDetails?.userDetails);
         }
 
@@ -1038,80 +1058,73 @@ export default function ContestTracker() {
                 >
                   <CardTitle className="text-lg ">My Details</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Award className="h-5 w-5 text-blue-700" />
+                {userContest[0] ? (
+                  <CardContent className="p-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-blue-100 p-2 rounded-full">
+                          <Award className="h-5 w-5 text-blue-700" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Total Contest's Problem Solve
+                          </p>
+                          <p className="font-medium text-lg">
+                            {userContest[0]?.contests}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Total Contests
-                        </p>
-                        <p className="font-medium text-lg">
-                          {contestants.reduce(
-                            (sum, contestant) =>
-                              sum + (contestant.contests || 0),
-                            0
-                          )}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="bg-emerald-100 p-2 rounded-full">
+                          <Trophy className="h-5 w-5 text-emerald-700" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Total Solve
+                          </p>
+                          <p className="font-medium text-lg">
+                            {userContest[0]?.solve}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="bg-purple-100 p-2 rounded-full">
+                          <BarChart3 className="h-5 w-5 text-purple-700" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Current Rating
+                          </p>
+                          <p className="font-medium text-lg">
+                            {userContest[0]?.rating}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="bg-purple-100 p-2 rounded-full">
+                          <LineChart className="h-5 w-5 text-purple-700" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Success Rate
+                          </p>
+                          <p className="font-medium text-lg">
+                            {userContest[0]?.successRate || 0}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="bg-emerald-100 p-2 rounded-full">
-                        <Trophy className="h-5 w-5 text-emerald-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Total Solve
-                        </p>
-                        <p className="font-medium text-lg">
-                          {contestants.reduce(
-                            (sum, contestant) => sum + (contestant.solve || 0),
-                            0
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="bg-purple-100 p-2 rounded-full">
-                        <BarChart3 className="h-5 w-5 text-purple-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Current Rating
-                        </p>
-                        <p className="font-medium text-lg">
-                          {contestants.reduce(
-                            (sum, contestant) => sum + (contestant.rating || 0),
-                            0
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="bg-purple-100 p-2 rounded-full">
-                        <LineChart className="h-5 w-5 text-purple-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Avg. Rating
-                        </p>
-                        <p className="font-medium text-lg">
-                          {contestants.length > 0
-                            ? Math.round(
-                                contestants.reduce(
-                                  (sum, contestant) =>
-                                    sum + (contestant.rating || 0),
-                                  0
-                                ) / contestants.length
-                              )
-                            : 0}
-                        </p>
-                      </div>
+                  </CardContent>
+                ) : (
+                  <div className="p-12 rounded-t-none">
+                    <div className="space-y-2 flex flex-col items-center">
+                      <User className="h-12 w-12 text-muted-foreground mx-auto" />
+                      <h3 className="text-lg  font-medium mx-auto">
+                        Create Account
+                      </h3>
                     </div>
                   </div>
-                </CardContent>
+                )}
               </Card>
 
               <Card className="shadow-lg border-none">
