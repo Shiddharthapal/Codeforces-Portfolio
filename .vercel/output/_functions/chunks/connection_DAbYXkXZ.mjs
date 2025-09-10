@@ -1,30 +1,19 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 let isConnected = false;
-
 const connect = async () => {
   if (isConnected) {
     console.log("Using existing MongoDB connection");
     return;
   }
-
   try {
-    const MONGODB_URI =
-      import.meta.env.PUBLIC_MONGODB_URI || import.meta.env.MONGODB_URI;
-
-    if (!MONGODB_URI) {
-      throw new Error(
-        "MONGODB_URI environment variable is not defined. " +
-          "Please set it in your .env file as PUBLIC_MONGODB_URI or MONGODB_URI"
-      );
-    }
-
+    const MONGODB_URI = undefined                                   || "mongodb://localhost:27017/codeforces-portal";
+    if (!MONGODB_URI) ;
     const options = {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 5e3
+      // Timeout after 5s instead of 30s
     };
-
     await mongoose.connect(MONGODB_URI, options);
-
     isConnected = true;
     console.log("New MongoDB connection established");
   } catch (error) {
@@ -37,4 +26,4 @@ const connect = async () => {
   }
 };
 
-export default connect;
+export { connect as c };
