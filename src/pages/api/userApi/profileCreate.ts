@@ -10,9 +10,12 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const profileData = await request.json();
+    console.log("profileData ==> ", profileData);
 
     // Validate required fields
     const { _id, newProfile } = profileData;
+    console.log("_id ==> ", _id);
+    console.log("newProfile ==> ", newProfile);
     const { department, universityName, name, username, codeforces } =
       newProfile;
 
@@ -23,7 +26,6 @@ export const POST: APIRoute = async ({ request }) => {
           required: [
             "department",
             "universityName",
-            "email",
             "name",
             "username",
           ],

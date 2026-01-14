@@ -24,7 +24,7 @@ import { useAppSelector } from "@/redux/hooks";
 import { navigate } from "astro:transitions/client";
 
 interface Profile {
-  email: string;
+  email?: string;
   name: string;
   universityName: string;
   department: string;
@@ -92,7 +92,8 @@ export default function ProfilePage() {
 
   //handler function of create profile
   const handleCreateProfile = async (newProfile: Profile) => {
-    let response = await fetch("./api/userApi/profileCreate", {
+  console.log("newProfile ==> ", newProfile);
+    let response = await fetch("/api/userApi/profileCreate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -102,7 +102,7 @@ export default function ContestTracker() {
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef(null);
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   const toggleTheme = (theme: "light" | "dark") => {
     setIsDarkMode(theme === "dark");
@@ -344,19 +344,28 @@ export default function ContestTracker() {
   const handleRefresh = () => {
     window.location.reload();
   };
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (open && !target.closest(".dropdown-container")) {
-        setOpen(false);
-      }
-    };
+ useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (open && !target.closest(".dropdown-container")) {
+      setOpen(false);
+    }
+  };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [open]);
+  const handleEscapeKey = (event: KeyboardEvent) => {
+    if (event.key === "Escape" && open) {
+      setOpen(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+  document.addEventListener("keydown", handleEscapeKey);
+  
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+    document.removeEventListener("keydown", handleEscapeKey);
+  };
+}, [open]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -395,7 +404,7 @@ export default function ContestTracker() {
                 variant="outline"
                 className={` ${
                   isDarkMode ? "border-black focus-visible:ring-black" : ""
-                }border-white bg-white/20 hover:text-gray-800 focus-visible:ring-white`}
+                }border-white bg-white/20 hover:text-gray-800 focus:outline-none`}
                 onClick={() => setOpen(!open)}
               >
                 <Calendar className="mr-2 h-4 w-4" />
