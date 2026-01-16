@@ -1,4 +1,4 @@
-import { N as NOOP_MIDDLEWARE_HEADER } from './astro/server_BU2TA60D.mjs';
+import { am as NOOP_MIDDLEWARE_HEADER } from './astro/server_CGX8C4Zt.mjs';
 
 const NOOP_MIDDLEWARE_FN = async (_ctx, next) => {
   const response = await next();

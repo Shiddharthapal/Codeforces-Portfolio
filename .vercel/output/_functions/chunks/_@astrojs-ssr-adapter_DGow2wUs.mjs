@@ -1,14 +1,16 @@
-import { l as ROUTE_TYPE_HEADER, R as REROUTE_DIRECTIVE_HEADER, v as decryptString, w as createSlotValueFromString, b as renderComponent, e as renderTemplate, D as DEFAULT_404_COMPONENT, x as bold, y as red, z as yellow, B as dim, C as blue, m as clientLocalsSymbol, n as clientAddressSymbol, E as REROUTABLE_STATUS_CODES, p as responseSentSymbol, F as getAugmentedNamespace } from './astro/server_BU2TA60D.mjs';
-import { e as ensure404Route, D as DEFAULT_404_ROUTE, a as default404Instance } from './astro-designed-error-pages_DQNOyKaJ.mjs';
+import { R as ROUTE_TYPE_HEADER, p as REROUTE_DIRECTIVE_HEADER, D as DEFAULT_404_COMPONENT, A as AstroError, q as ActionNotFoundError, v as s, w as clientAddressSymbol, x as LocalsNotAnObject, y as REROUTABLE_STATUS_CODES, z as responseSentSymbol, B as nodeRequestAbortControllerCleanupSymbol, C as getAugmentedNamespace, G as commonjsGlobal } from './astro/server_CGX8C4Zt.mjs';
 import 'clsx';
+import { D as DEFAULT_404_ROUTE, d as default404Instance, e as ensure404Route } from './astro-designed-error-pages_wCEeDqdb.mjs';
 import buffer from 'node:buffer';
 import crypto$1 from 'node:crypto';
 import { Http2ServerResponse } from 'node:http2';
-import { r as requestIs404Or500, n as notFound, a as redirectToFallback, b as redirectToDefaultLocale, c as requestHasLocale, d as normalizeTheLocale, e as defineMiddleware, R as RouteCache, s as sequence, f as findRouteToRewrite, m as matchRoute, g as RenderContext, h as getSetCookiesFromResponse } from './index_CBZNMo_L.mjs';
-import { w as fileExtension, j as joinPaths, x as slash, y as prependForwardSlash, r as removeTrailingForwardSlash, f as appendForwardSlash, A as AstroError, L as LocalsNotAnObject } from './astro/assets-service_Bi-OBUcp.mjs';
-import { N as NOOP_MIDDLEWARE_FN } from './noop-middleware_q34-0uL0.mjs';
+import { f as fileExtension, j as joinPaths, s as slash, p as prependForwardSlash, r as removeTrailingForwardSlash, a as appendForwardSlash, b as isInternalPath, c as collapseDuplicateTrailingSlashes, h as hasFileExtension } from './path_De6Se6hL.mjs';
+import { m as matchPattern } from './index_BL6Pqka4.mjs';
+import { r as requestIs404Or500, i as isRequestServerIsland, n as notFound, a as redirectToFallback, b as redirectToDefaultLocale, c as requestHasLocale, d as normalizeTheLocale, e as defineMiddleware, S as SERVER_ISLAND_COMPONENT, f as SERVER_ISLAND_ROUTE, g as createEndpoint, R as RouteCache, s as sequence, h as findRouteToRewrite, v as validateAndDecodePathname, m as matchRoute, j as RenderContext, P as PERSIST_SYMBOL, k as getSetCookiesFromResponse } from './index_BsA__ajb.mjs';
+import { N as NOOP_MIDDLEWARE_FN } from './noop-middleware_DAuTXIVq.mjs';
 import require$$0 from 'url';
 import nodePath from 'node:path';
+import { builtinModules } from 'node:module';
 
 function createI18nMiddleware(i18n, base, trailingSlash, format) {
   if (!i18n) return (_, next) => next();
@@ -21,12 +23,12 @@ function createI18nMiddleware(i18n, base, trailingSlash, format) {
   const _noFoundForNonLocaleRoute = notFound(payload);
   const _requestHasLocale = requestHasLocale(payload.locales);
   const _redirectToFallback = redirectToFallback(payload);
-  const prefixAlways = (context) => {
+  const prefixAlways = (context, response) => {
     const url = context.url;
     if (url.pathname === base + "/" || url.pathname === base) {
       return _redirectToDefaultLocale(context);
     } else if (!_requestHasLocale(context)) {
-      return _noFoundForNonLocaleRoute(context);
+      return _noFoundForNonLocaleRoute(context, response);
     }
     return void 0;
   };
@@ -59,8 +61,12 @@ function createI18nMiddleware(i18n, base, trailingSlash, format) {
     if (requestIs404Or500(context.request, base)) {
       return response;
     }
+    if (isRequestServerIsland(context.request, base)) {
+      return response;
+    }
     const { currentLocale } = context;
     switch (i18n.strategy) {
+      // NOTE: theoretically, we should never hit this code path
       case "manual": {
         return response;
       }
@@ -97,7 +103,7 @@ function createI18nMiddleware(i18n, base, trailingSlash, format) {
         break;
       }
       case "pathname-prefix-always": {
-        const result = prefixAlways(context);
+        const result = prefixAlways(context, response);
         if (result) {
           return result;
         }
@@ -105,7 +111,7 @@ function createI18nMiddleware(i18n, base, trailingSlash, format) {
       }
       case "domains-prefix-always": {
         if (localeHasntDomain(i18n, currentLocale)) {
-          const result = prefixAlways(context);
+          const result = prefixAlways(context, response);
           if (result) {
             return result;
           }
@@ -125,28 +131,36 @@ function localeHasntDomain(i18n, currentLocale) {
   return true;
 }
 
+const NOOP_ACTIONS_MOD = {
+  server: {}
+};
+
 const FORM_CONTENT_TYPES = [
   "application/x-www-form-urlencoded",
   "multipart/form-data",
   "text/plain"
 ];
+const SAFE_METHODS = ["GET", "HEAD", "OPTIONS"];
 function createOriginCheckMiddleware() {
   return defineMiddleware((context, next) => {
-    const { request, url } = context;
-    if (request.method === "GET") {
+    const { request, url, isPrerendered } = context;
+    if (isPrerendered) {
       return next();
     }
-    const sameOrigin = (request.method === "POST" || request.method === "PUT" || request.method === "PATCH" || request.method === "DELETE") && request.headers.get("origin") === url.origin;
+    if (SAFE_METHODS.includes(request.method)) {
+      return next();
+    }
+    const isSameOrigin = request.headers.get("origin") === url.origin;
     const hasContentType = request.headers.has("content-type");
     if (hasContentType) {
       const formLikeHeader = hasFormLikeHeader(request.headers.get("content-type"));
-      if (formLikeHeader && !sameOrigin) {
+      if (formLikeHeader && !isSameOrigin) {
         return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
           status: 403
         });
       }
     } else {
-      if (!sameOrigin) {
+      if (!isSameOrigin) {
         return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
           status: 403
         });
@@ -166,111 +180,6 @@ function hasFormLikeHeader(contentType) {
   return false;
 }
 
-function getPattern(segments, base, addTrailingSlash) {
-  const pathname = segments.map((segment) => {
-    if (segment.length === 1 && segment[0].spread) {
-      return "(?:\\/(.*?))?";
-    } else {
-      return "\\/" + segment.map((part) => {
-        if (part.spread) {
-          return "(.*?)";
-        } else if (part.dynamic) {
-          return "([^/]+?)";
-        } else {
-          return part.content.normalize().replace(/\?/g, "%3F").replace(/#/g, "%23").replace(/%5B/g, "[").replace(/%5D/g, "]").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        }
-      }).join("");
-    }
-  }).join("");
-  const trailing = addTrailingSlash && segments.length ? getTrailingSlashPattern(addTrailingSlash) : "$";
-  let initial = "\\/";
-  if (addTrailingSlash === "never" && base !== "/") {
-    initial = "";
-  }
-  return new RegExp(`^${pathname || initial}${trailing}`);
-}
-function getTrailingSlashPattern(addTrailingSlash) {
-  if (addTrailingSlash === "always") {
-    return "\\/$";
-  }
-  if (addTrailingSlash === "never") {
-    return "$";
-  }
-  return "\\/?$";
-}
-
-const SERVER_ISLAND_ROUTE = "/_server-islands/[name]";
-const SERVER_ISLAND_COMPONENT = "_server-islands.astro";
-function getServerIslandRouteData(config) {
-  const segments = [
-    [{ content: "_server-islands", dynamic: false, spread: false }],
-    [{ content: "name", dynamic: true, spread: false }]
-  ];
-  const route = {
-    type: "page",
-    component: SERVER_ISLAND_COMPONENT,
-    generate: () => "",
-    params: ["name"],
-    segments,
-    pattern: getPattern(segments, config.base, config.trailingSlash),
-    prerender: false,
-    isIndex: false,
-    fallbackRoutes: [],
-    route: SERVER_ISLAND_ROUTE
-  };
-  return route;
-}
-function ensureServerIslandRoute(config, routeManifest) {
-  if (routeManifest.routes.some((route) => route.route === "/_server-islands/[name]")) {
-    return;
-  }
-  routeManifest.routes.unshift(getServerIslandRouteData(config));
-}
-function createEndpoint(manifest) {
-  const page = async (result) => {
-    const params = result.params;
-    const request = result.request;
-    const raw = await request.text();
-    const data = JSON.parse(raw);
-    if (!params.name) {
-      return new Response(null, {
-        status: 400,
-        statusText: "Bad request"
-      });
-    }
-    const componentId = params.name;
-    const imp = manifest.serverIslandMap?.get(componentId);
-    if (!imp) {
-      return new Response(null, {
-        status: 404,
-        statusText: "Not found"
-      });
-    }
-    const key = await manifest.key;
-    const encryptedProps = data.encryptedProps;
-    const propString = await decryptString(key, encryptedProps);
-    const props = JSON.parse(propString);
-    const componentModule = await imp();
-    const Component = componentModule[data.componentExport];
-    const slots = {};
-    for (const prop in data.slots) {
-      slots[prop] = createSlotValueFromString(data.slots[prop]);
-    }
-    return renderTemplate`${renderComponent(result, "Component", Component, props, slots)}`;
-  };
-  page.isAstroComponentFactory = true;
-  const instance = {
-    default: page,
-    partial: true
-  };
-  return instance;
-}
-
-function injectDefaultRoutes(ssrManifest, routeManifest) {
-  ensure404Route(routeManifest);
-  ensureServerIslandRoute(ssrManifest, routeManifest);
-  return routeManifest;
-}
 function createDefaultRoutes(manifest) {
   const root = new URL(manifest.hrefRoot);
   return [
@@ -290,10 +199,10 @@ function createDefaultRoutes(manifest) {
 }
 
 class Pipeline {
-  constructor(logger, manifest, mode, renderers, resolve, serverLike, streaming, adapterName = manifest.adapterName, clientDirectives = manifest.clientDirectives, inlinedScripts = manifest.inlinedScripts, compressHTML = manifest.compressHTML, i18n = manifest.i18n, middleware = manifest.middleware, routeCache = new RouteCache(logger, mode), site = manifest.site ? new URL(manifest.site) : void 0, defaultRoutes = createDefaultRoutes(manifest)) {
+  constructor(logger, manifest, runtimeMode, renderers, resolve, serverLike, streaming, adapterName = manifest.adapterName, clientDirectives = manifest.clientDirectives, inlinedScripts = manifest.inlinedScripts, compressHTML = manifest.compressHTML, i18n = manifest.i18n, middleware = manifest.middleware, routeCache = new RouteCache(logger, runtimeMode), site = manifest.site ? new URL(manifest.site) : void 0, defaultRoutes = createDefaultRoutes(manifest), actions = manifest.actions) {
     this.logger = logger;
     this.manifest = manifest;
-    this.mode = mode;
+    this.runtimeMode = runtimeMode;
     this.renderers = renderers;
     this.resolve = resolve;
     this.serverLike = serverLike;
@@ -307,6 +216,7 @@ class Pipeline {
     this.routeCache = routeCache;
     this.site = site;
     this.defaultRoutes = defaultRoutes;
+    this.actions = actions;
     this.internalMiddleware = [];
     if (i18n?.strategy !== "manual") {
       this.internalMiddleware.push(
@@ -316,6 +226,7 @@ class Pipeline {
   }
   internalMiddleware;
   resolvedMiddleware = void 0;
+  resolvedActions = void 0;
   /**
    * Resolves the middleware from the manifest, and returns the `onRequest` function. If `onRequest` isn't there,
    * it returns a no-op function
@@ -326,16 +237,51 @@ class Pipeline {
     } else if (this.middleware) {
       const middlewareInstance = await this.middleware();
       const onRequest = middlewareInstance.onRequest ?? NOOP_MIDDLEWARE_FN;
+      const internalMiddlewares = [onRequest];
       if (this.manifest.checkOrigin) {
-        this.resolvedMiddleware = sequence(createOriginCheckMiddleware(), onRequest);
-      } else {
-        this.resolvedMiddleware = onRequest;
+        internalMiddlewares.unshift(createOriginCheckMiddleware());
       }
+      this.resolvedMiddleware = sequence(...internalMiddlewares);
       return this.resolvedMiddleware;
     } else {
       this.resolvedMiddleware = NOOP_MIDDLEWARE_FN;
       return this.resolvedMiddleware;
     }
+  }
+  setActions(actions) {
+    this.resolvedActions = actions;
+  }
+  async getActions() {
+    if (this.resolvedActions) {
+      return this.resolvedActions;
+    } else if (this.actions) {
+      return await this.actions();
+    }
+    return NOOP_ACTIONS_MOD;
+  }
+  async getAction(path) {
+    const pathKeys = path.split(".").map((key) => decodeURIComponent(key));
+    let { server } = await this.getActions();
+    if (!server || !(typeof server === "object")) {
+      throw new TypeError(
+        `Expected \`server\` export in actions file to be an object. Received ${typeof server}.`
+      );
+    }
+    for (const key of pathKeys) {
+      if (!(key in server)) {
+        throw new AstroError({
+          ...ActionNotFoundError,
+          message: ActionNotFoundError.message(pathKeys.join("."))
+        });
+      }
+      server = server[key];
+    }
+    if (typeof server !== "function") {
+      throw new TypeError(
+        `Expected handler for action ${pathKeys.join(".")} to be a function. Received ${typeof server}.`
+      );
+    }
+    return server;
   }
 }
 
@@ -400,7 +346,7 @@ function getEventPrefix({ level, label }) {
   const timestamp = `${dateTimeFormat.format(/* @__PURE__ */ new Date())}`;
   const prefix = [];
   if (level === "error" || level === "warn") {
-    prefix.push(bold(timestamp));
+    prefix.push(s.bold(timestamp));
     prefix.push(`[${level.toUpperCase()}]`);
   } else {
     prefix.push(timestamp);
@@ -409,15 +355,15 @@ function getEventPrefix({ level, label }) {
     prefix.push(`[${label}]`);
   }
   if (level === "error") {
-    return red(prefix.join(" "));
+    return s.red(prefix.join(" "));
   }
   if (level === "warn") {
-    return yellow(prefix.join(" "));
+    return s.yellow(prefix.join(" "));
   }
   if (prefix.length === 1) {
-    return dim(prefix[0]);
+    return s.dim(prefix[0]);
   }
-  return dim(prefix[0]) + " " + blue(prefix.splice(1).join(" "));
+  return s.dim(prefix[0]) + " " + s.blue(prefix.splice(1).join(" "));
 }
 class Logger {
   options;
@@ -474,7 +420,7 @@ const consoleLogDestination = {
   write(event) {
     let dest = console.error;
     if (levels[event.level] < levels["error"]) {
-      dest = console.log;
+      dest = console.info;
     }
     if (event.label === "SKIP_FORMAT") {
       dest(event.message);
@@ -486,26 +432,31 @@ const consoleLogDestination = {
 };
 
 function getAssetsPrefix(fileExtension, assetsPrefix) {
-  if (!assetsPrefix) return "";
-  if (typeof assetsPrefix === "string") return assetsPrefix;
-  const dotLessFileExtension = fileExtension.slice(1);
-  if (assetsPrefix[dotLessFileExtension]) {
-    return assetsPrefix[dotLessFileExtension];
+  let prefix = "";
+  if (!assetsPrefix) {
+    prefix = "";
+  } else if (typeof assetsPrefix === "string") {
+    prefix = assetsPrefix;
+  } else {
+    const dotLessFileExtension = fileExtension.slice(1);
+    prefix = assetsPrefix[dotLessFileExtension] || assetsPrefix.fallback;
   }
-  return assetsPrefix.fallback;
+  return prefix;
 }
 
-function createAssetLink(href, base, assetsPrefix) {
+function createAssetLink(href, base, assetsPrefix, queryParams) {
+  let url = "";
   if (assetsPrefix) {
     const pf = getAssetsPrefix(fileExtension(href), assetsPrefix);
-    return joinPaths(pf, slash(href));
+    url = joinPaths(pf, slash(href));
   } else if (base) {
-    return prependForwardSlash(joinPaths(base, slash(href)));
+    url = prependForwardSlash(joinPaths(base, slash(href)));
   } else {
-    return href;
+    url = href;
   }
+  return url;
 }
-function createStylesheetElement(stylesheet, base, assetsPrefix) {
+function createStylesheetElement(stylesheet, base, assetsPrefix, queryParams) {
   if (stylesheet.type === "inline") {
     return {
       props: {},
@@ -521,10 +472,12 @@ function createStylesheetElement(stylesheet, base, assetsPrefix) {
     };
   }
 }
-function createStylesheetElementSet(stylesheets, base, assetsPrefix) {
-  return new Set(stylesheets.map((s) => createStylesheetElement(s, base, assetsPrefix)));
+function createStylesheetElementSet(stylesheets, base, assetsPrefix, queryParams) {
+  return new Set(
+    stylesheets.map((s) => createStylesheetElement(s, base, assetsPrefix))
+  );
 }
-function createModuleScriptElement(script, base, assetsPrefix) {
+function createModuleScriptElement(script, base, assetsPrefix, queryParams) {
   if (script.type === "external") {
     return createModuleScriptElementWithSrc(script.value, base, assetsPrefix);
   } else {
@@ -536,7 +489,7 @@ function createModuleScriptElement(script, base, assetsPrefix) {
     };
   }
 }
-function createModuleScriptElementWithSrc(src, base, assetsPrefix) {
+function createModuleScriptElementWithSrc(src, base, assetsPrefix, queryParams) {
   return {
     props: {
       type: "module",
@@ -546,12 +499,28 @@ function createModuleScriptElementWithSrc(src, base, assetsPrefix) {
   };
 }
 
+function redirectTemplate({
+  status,
+  absoluteLocation,
+  relativeLocation,
+  from
+}) {
+  const delay = status === 302 ? 2 : 0;
+  return `<!doctype html>
+<title>Redirecting to: ${relativeLocation}</title>
+<meta http-equiv="refresh" content="${delay};url=${relativeLocation}">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="${absoluteLocation}">
+<body>
+	<a href="${relativeLocation}">Redirecting ${from ? `from <code>${from}</code> ` : ""}to <code>${relativeLocation}</code></a>
+</body>`;
+}
+
 class AppPipeline extends Pipeline {
-  #manifestData;
-  static create(manifestData, {
+  static create({
     logger,
     manifest,
-    mode,
+    runtimeMode,
     renderers,
     resolve,
     serverLike,
@@ -561,7 +530,7 @@ class AppPipeline extends Pipeline {
     const pipeline = new AppPipeline(
       logger,
       manifest,
-      mode,
+      runtimeMode,
       renderers,
       resolve,
       serverLike,
@@ -576,7 +545,6 @@ class AppPipeline extends Pipeline {
       void 0,
       defaultRoutes
     );
-    pipeline.#manifestData = manifestData;
     return pipeline;
   }
   headElements(routeData) {
@@ -611,7 +579,8 @@ class AppPipeline extends Pipeline {
       routes: this.manifest?.routes.map((r) => r.routeData),
       trailingSlash: this.manifest.trailingSlash,
       buildFormat: this.manifest.buildFormat,
-      base: this.manifest.base
+      base: this.manifest.base,
+      outDir: this.serverLike ? this.manifest.buildClientDir : this.manifest.outDir
     });
     const componentInstance = await this.getComponentByRoute(routeData);
     return { newUrl, pathname, componentInstance, routeData };
@@ -656,14 +625,14 @@ class App {
   #baseWithoutTrailingSlash;
   #pipeline;
   #adapterLogger;
-  #renderOptionsDeprecationWarningShown = false;
   constructor(manifest, streaming = true) {
     this.#manifest = manifest;
-    this.#manifestData = injectDefaultRoutes(manifest, {
+    this.#manifestData = {
       routes: manifest.routes.map((route) => route.routeData)
-    });
+    };
+    ensure404Route(this.#manifestData);
     this.#baseWithoutTrailingSlash = removeTrailingForwardSlash(this.#manifest.base);
-    this.#pipeline = this.#createPipeline(this.#manifestData, streaming);
+    this.#pipeline = this.#createPipeline(streaming);
     this.#adapterLogger = new AstroIntegrationLogger(
       this.#logger.options,
       this.#manifest.adapterName
@@ -672,18 +641,108 @@ class App {
   getAdapterLogger() {
     return this.#adapterLogger;
   }
+  getAllowedDomains() {
+    return this.#manifest.allowedDomains;
+  }
+  get manifest() {
+    return this.#manifest;
+  }
+  set manifest(value) {
+    this.#manifest = value;
+  }
+  matchesAllowedDomains(forwardedHost, protocol) {
+    return App.validateForwardedHost(forwardedHost, this.#manifest.allowedDomains, protocol);
+  }
+  static validateForwardedHost(forwardedHost, allowedDomains, protocol) {
+    if (!allowedDomains || allowedDomains.length === 0) {
+      return false;
+    }
+    try {
+      const testUrl = new URL(`${protocol || "https"}://${forwardedHost}`);
+      return allowedDomains.some((pattern) => {
+        return matchPattern(testUrl, pattern);
+      });
+    } catch {
+      return false;
+    }
+  }
+  /**
+   * Validate a hostname by rejecting any with path separators.
+   * Prevents path injection attacks. Invalid hostnames return undefined.
+   */
+  static sanitizeHost(hostname) {
+    if (!hostname) return void 0;
+    if (/[/\\]/.test(hostname)) return void 0;
+    return hostname;
+  }
+  /**
+   * Validate forwarded headers (proto, host, port) against allowedDomains.
+   * Returns validated values or undefined for rejected headers.
+   * Uses strict defaults: http/https only for proto, rejects port if not in allowedDomains.
+   */
+  static validateForwardedHeaders(forwardedProtocol, forwardedHost, forwardedPort, allowedDomains) {
+    const result = {};
+    if (forwardedProtocol) {
+      if (allowedDomains && allowedDomains.length > 0) {
+        const hasProtocolPatterns = allowedDomains.some(
+          (pattern) => pattern.protocol !== void 0
+        );
+        if (hasProtocolPatterns) {
+          try {
+            const testUrl = new URL(`${forwardedProtocol}://example.com`);
+            const isAllowed = allowedDomains.some((pattern) => matchPattern(testUrl, pattern));
+            if (isAllowed) {
+              result.protocol = forwardedProtocol;
+            }
+          } catch {
+          }
+        } else if (/^https?$/.test(forwardedProtocol)) {
+          result.protocol = forwardedProtocol;
+        }
+      } else if (/^https?$/.test(forwardedProtocol)) {
+        result.protocol = forwardedProtocol;
+      }
+    }
+    if (forwardedPort && allowedDomains && allowedDomains.length > 0) {
+      const hasPortPatterns = allowedDomains.some((pattern) => pattern.port !== void 0);
+      if (hasPortPatterns) {
+        const isAllowed = allowedDomains.some((pattern) => pattern.port === forwardedPort);
+        if (isAllowed) {
+          result.port = forwardedPort;
+        }
+      }
+    }
+    if (forwardedHost && forwardedHost.length > 0 && allowedDomains && allowedDomains.length > 0) {
+      const protoForValidation = result.protocol || "https";
+      const sanitized = App.sanitizeHost(forwardedHost);
+      if (sanitized) {
+        try {
+          const hostnameOnly = sanitized.split(":")[0];
+          const portFromHost = sanitized.includes(":") ? sanitized.split(":")[1] : void 0;
+          const portForValidation = result.port || portFromHost;
+          const hostWithPort = portForValidation ? `${hostnameOnly}:${portForValidation}` : hostnameOnly;
+          const testUrl = new URL(`${protoForValidation}://${hostWithPort}`);
+          const isAllowed = allowedDomains.some((pattern) => matchPattern(testUrl, pattern));
+          if (isAllowed) {
+            result.host = sanitized;
+          }
+        } catch {
+        }
+      }
+    }
+    return result;
+  }
   /**
    * Creates a pipeline by reading the stored manifest
    *
-   * @param manifestData
    * @param streaming
    * @private
    */
-  #createPipeline(manifestData, streaming = false) {
-    return AppPipeline.create(manifestData, {
+  #createPipeline(streaming = false) {
+    return AppPipeline.create({
       logger: this.#logger,
       manifest: this.#manifest,
-      mode: "production",
+      runtimeMode: "production",
       renderers: this.#manifest.renderers,
       defaultRoutes: createDefaultRoutes(this.#manifest),
       resolve: async (specifier) => {
@@ -710,36 +769,64 @@ class App {
     }
     return pathname;
   }
+  /**
+   * It removes the base from the request URL, prepends it with a forward slash and attempts to decoded it.
+   *
+   * If the decoding fails, it logs the error and return the pathname as is.
+   * @param request
+   * @private
+   */
   #getPathnameFromRequest(request) {
     const url = new URL(request.url);
     const pathname = prependForwardSlash(this.removeBase(url.pathname));
-    return pathname;
+    try {
+      return validateAndDecodePathname(pathname);
+    } catch (e) {
+      this.getAdapterLogger().error(e.toString());
+      return pathname;
+    }
   }
-  match(request) {
+  /**
+   * Given a `Request`, it returns the `RouteData` that matches its `pathname`. By default, prerendered
+   * routes aren't returned, even if they are matched.
+   *
+   * When `allowPrerenderedRoutes` is `true`, the function returns matched prerendered routes too.
+   * @param request
+   * @param allowPrerenderedRoutes
+   */
+  match(request, allowPrerenderedRoutes = false) {
     const url = new URL(request.url);
     if (this.#manifest.assets.has(url.pathname)) return void 0;
     let pathname = this.#computePathnameFromDomain(request);
     if (!pathname) {
       pathname = prependForwardSlash(this.removeBase(url.pathname));
     }
+    try {
+      pathname = validateAndDecodePathname(pathname);
+    } catch {
+      return void 0;
+    }
     let routeData = matchRoute(pathname, this.#manifestData);
-    if (!routeData || routeData.prerender) return void 0;
+    if (!routeData) return void 0;
+    if (allowPrerenderedRoutes) {
+      return routeData;
+    } else if (routeData.prerender) {
+      return void 0;
+    }
     return routeData;
   }
   #computePathnameFromDomain(request) {
     let pathname = void 0;
     const url = new URL(request.url);
     if (this.#manifest.i18n && (this.#manifest.i18n.strategy === "domains-prefix-always" || this.#manifest.i18n.strategy === "domains-prefix-other-locales" || this.#manifest.i18n.strategy === "domains-prefix-always-no-redirect")) {
-      let host = request.headers.get("X-Forwarded-Host");
-      let protocol = request.headers.get("X-Forwarded-Proto");
-      if (protocol) {
-        protocol = protocol + ":";
-      } else {
-        protocol = url.protocol;
-      }
-      if (!host) {
-        host = request.headers.get("Host");
-      }
+      const validated = App.validateForwardedHeaders(
+        request.headers.get("X-Forwarded-Proto") ?? void 0,
+        request.headers.get("X-Forwarded-Host") ?? void 0,
+        request.headers.get("X-Forwarded-Port") ?? void 0,
+        this.#manifest.allowedDomains
+      );
+      let protocol = validated.protocol ? validated.protocol + ":" : url.protocol;
+      let host = validated.host ?? request.headers.get("Host");
       if (host && protocol) {
         host = host.split(":")[0];
         try {
@@ -773,31 +860,55 @@ class App {
     }
     return pathname;
   }
-  async render(request, routeDataOrOptions, maybeLocals) {
+  #redirectTrailingSlash(pathname) {
+    const { trailingSlash } = this.#manifest;
+    if (pathname === "/" || isInternalPath(pathname)) {
+      return pathname;
+    }
+    const path = collapseDuplicateTrailingSlashes(pathname, trailingSlash !== "never");
+    if (path !== pathname) {
+      return path;
+    }
+    if (trailingSlash === "ignore") {
+      return pathname;
+    }
+    if (trailingSlash === "always" && !hasFileExtension(pathname)) {
+      return appendForwardSlash(pathname);
+    }
+    if (trailingSlash === "never") {
+      return removeTrailingForwardSlash(pathname);
+    }
+    return pathname;
+  }
+  async render(request, renderOptions) {
     let routeData;
     let locals;
     let clientAddress;
     let addCookieHeader;
-    if (routeDataOrOptions && ("addCookieHeader" in routeDataOrOptions || "clientAddress" in routeDataOrOptions || "locals" in routeDataOrOptions || "routeData" in routeDataOrOptions)) {
-      if ("addCookieHeader" in routeDataOrOptions) {
-        addCookieHeader = routeDataOrOptions.addCookieHeader;
-      }
-      if ("clientAddress" in routeDataOrOptions) {
-        clientAddress = routeDataOrOptions.clientAddress;
-      }
-      if ("routeData" in routeDataOrOptions) {
-        routeData = routeDataOrOptions.routeData;
-      }
-      if ("locals" in routeDataOrOptions) {
-        locals = routeDataOrOptions.locals;
-      }
-    } else {
-      routeData = routeDataOrOptions;
-      locals = maybeLocals;
-      if (routeDataOrOptions || locals) {
-        this.#logRenderOptionsDeprecationWarning();
-      }
+    const url = new URL(request.url);
+    const redirect = this.#redirectTrailingSlash(url.pathname);
+    const prerenderedErrorPageFetch = renderOptions?.prerenderedErrorPageFetch ?? fetch;
+    if (redirect !== url.pathname) {
+      const status = request.method === "GET" ? 301 : 308;
+      return new Response(
+        redirectTemplate({
+          status,
+          relativeLocation: url.pathname,
+          absoluteLocation: redirect,
+          from: request.url
+        }),
+        {
+          status,
+          headers: {
+            location: redirect + url.search
+          }
+        }
+      );
     }
+    addCookieHeader = renderOptions?.addCookieHeader;
+    clientAddress = renderOptions?.clientAddress ?? Reflect.get(request, clientAddressSymbol);
+    routeData = renderOptions?.routeData;
+    locals = renderOptions?.locals;
     if (routeData) {
       this.#logger.debug(
         "router",
@@ -810,12 +921,13 @@ class App {
       if (typeof locals !== "object") {
         const error = new AstroError(LocalsNotAnObject);
         this.#logger.error(null, error.stack);
-        return this.#renderError(request, { status: 500, error });
+        return this.#renderError(request, {
+          status: 500,
+          error,
+          clientAddress,
+          prerenderedErrorPageFetch
+        });
       }
-      Reflect.set(request, clientLocalsSymbol, locals);
-    }
-    if (clientAddress) {
-      Reflect.set(request, clientAddressSymbol, clientAddress);
     }
     if (!routeData) {
       routeData = this.match(request);
@@ -823,13 +935,24 @@ class App {
       this.#logger.debug("router", "RouteData:\n" + routeData);
     }
     if (!routeData) {
+      routeData = this.#manifestData.routes.find(
+        (route) => route.component === "404.astro" || route.component === DEFAULT_404_COMPONENT
+      );
+    }
+    if (!routeData) {
       this.#logger.debug("router", "Astro hasn't found routes that match " + request.url);
       this.#logger.debug("router", "Here's the available routes:\n", this.#manifestData);
-      return this.#renderError(request, { locals, status: 404 });
+      return this.#renderError(request, {
+        locals,
+        status: 404,
+        clientAddress,
+        prerenderedErrorPageFetch
+      });
     }
     const pathname = this.#getPathnameFromRequest(request);
     const defaultStatus = this.#getDefaultStatusCode(routeData, pathname);
     let response;
+    let session;
     try {
       const mod = await this.#pipeline.getModuleForRoute(routeData);
       const renderContext = await RenderContext.create({
@@ -838,21 +961,35 @@ class App {
         pathname,
         request,
         routeData,
-        status: defaultStatus
+        status: defaultStatus,
+        clientAddress
       });
+      session = renderContext.session;
       response = await renderContext.render(await mod.page());
     } catch (err) {
       this.#logger.error(null, err.stack || err.message || String(err));
-      return this.#renderError(request, { locals, status: 500, error: err });
+      return this.#renderError(request, {
+        locals,
+        status: 500,
+        error: err,
+        clientAddress,
+        prerenderedErrorPageFetch
+      });
+    } finally {
+      await session?.[PERSIST_SYMBOL]();
     }
-    if (REROUTABLE_STATUS_CODES.includes(response.status) && response.headers.get(REROUTE_DIRECTIVE_HEADER) !== "no") {
+    if (REROUTABLE_STATUS_CODES.includes(response.status) && // If the body isn't null, that means the user sets the 404 status
+    // but uses the current route to handle the 404
+    response.body === null && response.headers.get(REROUTE_DIRECTIVE_HEADER) !== "no") {
       return this.#renderError(request, {
         locals,
         response,
         status: response.status,
         // We don't have an error to report here. Passing null means we pass nothing intentionally
         // while undefined means there's no error
-        error: response.status === 500 ? null : void 0
+        error: response.status === 500 ? null : void 0,
+        clientAddress,
+        prerenderedErrorPageFetch
       });
     }
     if (response.headers.has(REROUTE_DIRECTIVE_HEADER)) {
@@ -865,14 +1002,6 @@ class App {
     }
     Reflect.set(response, responseSentSymbol, true);
     return response;
-  }
-  #logRenderOptionsDeprecationWarning() {
-    if (this.#renderOptionsDeprecationWarningShown) return;
-    this.#logger.warn(
-      "deprecated",
-      `The adapter ${this.#manifest.adapterName} is using a deprecated signature of the 'app.render()' method. From Astro 4.0, locals and routeData are provided as properties on an optional object to this method. Using the old signature will cause an error in Astro 5.0. See https://github.com/withastro/astro/pull/9199 for more information.`
-    );
-    this.#renderOptionsDeprecationWarningShown = true;
   }
   setCookieHeaders(response) {
     return getSetCookiesFromResponse(response);
@@ -898,7 +1027,9 @@ class App {
     status,
     response: originalResponse,
     skipMiddleware = false,
-    error
+    error,
+    clientAddress,
+    prerenderedErrorPageFetch
   }) {
     const errorRoutePath = `/${status}${this.#manifest.trailingSlash === "always" ? "/" : ""}`;
     const errorRouteData = matchRoute(errorRoutePath, this.#manifestData);
@@ -911,12 +1042,13 @@ class App {
           url
         );
         if (statusURL.toString() !== request.url) {
-          const response2 = await fetch(statusURL.toString());
-          const override = { status };
+          const response2 = await prerenderedErrorPageFetch(statusURL.toString());
+          const override = { status, removeContentEncodingHeaders: true };
           return this.#mergeResponses(response2, originalResponse, override);
         }
       }
       const mod = await this.#pipeline.getModuleForRoute(errorRouteData);
+      let session;
       try {
         const renderContext = await RenderContext.create({
           locals,
@@ -926,8 +1058,10 @@ class App {
           request,
           routeData: errorRouteData,
           status,
-          props: { error }
+          props: { error },
+          clientAddress
         });
+        session = renderContext.session;
         const response2 = await renderContext.render(await mod.page());
         return this.#mergeResponses(response2, originalResponse);
       } catch {
@@ -936,9 +1070,13 @@ class App {
             locals,
             status,
             response: originalResponse,
-            skipMiddleware: true
+            skipMiddleware: true,
+            clientAddress,
+            prerenderedErrorPageFetch
           });
         }
+      } finally {
+        await session?.[PERSIST_SYMBOL]();
       }
     }
     const response = this.#mergeResponses(new Response(null, { status }), originalResponse);
@@ -946,12 +1084,18 @@ class App {
     return response;
   }
   #mergeResponses(newResponse, originalResponse, override) {
+    let newResponseHeaders = newResponse.headers;
+    if (override?.removeContentEncodingHeaders) {
+      newResponseHeaders = new Headers(newResponseHeaders);
+      newResponseHeaders.delete("Content-Encoding");
+      newResponseHeaders.delete("Content-Length");
+    }
     if (!originalResponse) {
       if (override !== void 0) {
         return new Response(newResponse.body, {
           status: override.status,
           statusText: newResponse.statusText,
-          headers: newResponse.headers
+          headers: newResponseHeaders
         });
       }
       return newResponse;
@@ -961,6 +1105,14 @@ class App {
       originalResponse.headers.delete("Content-type");
     } catch {
     }
+    const mergedHeaders = new Map([
+      ...Array.from(newResponseHeaders),
+      ...Array.from(originalResponse.headers)
+    ]);
+    const newHeaders = new Headers();
+    for (const [name, value] of mergedHeaders) {
+      newHeaders.set(name, value);
+    }
     return new Response(newResponse.body, {
       status,
       statusText: status === 200 ? newResponse.statusText : originalResponse.statusText,
@@ -969,10 +1121,7 @@ class App {
       // If users see something weird, it's because they are setting some headers they should not.
       //
       // Although, we don't want it to replace the content-type, because the error page must return `text/html`
-      headers: new Headers([
-        ...Array.from(newResponse.headers),
-        ...Array.from(originalResponse.headers)
-      ])
+      headers: newHeaders
     });
   }
   #getDefaultStatusCode(routeData, pathname) {
@@ -1021,17 +1170,24 @@ function apply() {
 }
 
 class NodeApp extends App {
-  match(req) {
+  headersMap = void 0;
+  setHeadersMap(headers) {
+    this.headersMap = headers;
+  }
+  match(req, allowPrerenderedRoutes = false) {
     if (!(req instanceof Request)) {
       req = NodeApp.createRequest(req, {
-        skipBody: true
+        skipBody: true,
+        allowedDomains: this.manifest.allowedDomains
       });
     }
-    return super.match(req);
+    return super.match(req, allowPrerenderedRoutes);
   }
   render(req, routeDataOrOptions, maybeLocals) {
     if (!(req instanceof Request)) {
-      req = NodeApp.createRequest(req);
+      req = NodeApp.createRequest(req, {
+        allowedDomains: this.manifest.allowedDomains
+      });
     }
     return super.render(req, routeDataOrOptions, maybeLocals);
   }
@@ -1048,28 +1204,81 @@ class NodeApp extends App {
    * })
    * ```
    */
-  static createRequest(req, { skipBody = false } = {}) {
+  static createRequest(req, {
+    skipBody = false,
+    allowedDomains = []
+  } = {}) {
+    const controller = new AbortController();
     const isEncrypted = "encrypted" in req.socket && req.socket.encrypted;
     const getFirstForwardedValue = (multiValueHeader) => {
       return multiValueHeader?.toString()?.split(",").map((e) => e.trim())?.[0];
     };
-    const forwardedProtocol = getFirstForwardedValue(req.headers["x-forwarded-proto"]);
-    const protocol = forwardedProtocol ?? (isEncrypted ? "https" : "http");
-    const forwardedHostname = getFirstForwardedValue(req.headers["x-forwarded-host"]);
-    const hostname = forwardedHostname ?? req.headers.host ?? req.headers[":authority"];
-    const port = getFirstForwardedValue(req.headers["x-forwarded-port"]);
-    const portInHostname = typeof hostname === "string" && /:\d+$/.test(hostname);
-    const hostnamePort = portInHostname ? hostname : `${hostname}${port ? `:${port}` : ""}`;
-    const url = `${protocol}://${hostnamePort}${req.url}`;
+    const providedProtocol = isEncrypted ? "https" : "http";
+    const providedHostname = req.headers.host ?? req.headers[":authority"];
+    const validated = App.validateForwardedHeaders(
+      getFirstForwardedValue(req.headers["x-forwarded-proto"]),
+      getFirstForwardedValue(req.headers["x-forwarded-host"]),
+      getFirstForwardedValue(req.headers["x-forwarded-port"]),
+      allowedDomains
+    );
+    const protocol = validated.protocol ?? providedProtocol;
+    const sanitizedProvidedHostname = App.sanitizeHost(
+      typeof providedHostname === "string" ? providedHostname : void 0
+    );
+    const hostname = validated.host ?? sanitizedProvidedHostname;
+    const port = validated.port;
+    let url;
+    try {
+      const hostnamePort = getHostnamePort(hostname, port);
+      url = new URL(`${protocol}://${hostnamePort}${req.url}`);
+    } catch {
+      const hostnamePort = getHostnamePort(providedHostname, port);
+      url = new URL(`${providedProtocol}://${hostnamePort}`);
+    }
     const options = {
       method: req.method || "GET",
-      headers: makeRequestHeaders(req)
+      headers: makeRequestHeaders(req),
+      signal: controller.signal
     };
     const bodyAllowed = options.method !== "HEAD" && options.method !== "GET" && skipBody === false;
     if (bodyAllowed) {
       Object.assign(options, makeRequestBody(req));
     }
     const request = new Request(url, options);
+    const socket = getRequestSocket(req);
+    if (socket && typeof socket.on === "function") {
+      const existingCleanup = getAbortControllerCleanup(req);
+      if (existingCleanup) {
+        existingCleanup();
+      }
+      let cleanedUp = false;
+      const removeSocketListener = () => {
+        if (typeof socket.off === "function") {
+          socket.off("close", onSocketClose);
+        } else if (typeof socket.removeListener === "function") {
+          socket.removeListener("close", onSocketClose);
+        }
+      };
+      const cleanup = () => {
+        if (cleanedUp) return;
+        cleanedUp = true;
+        removeSocketListener();
+        controller.signal.removeEventListener("abort", cleanup);
+        Reflect.deleteProperty(req, nodeRequestAbortControllerCleanupSymbol);
+      };
+      const onSocketClose = () => {
+        cleanup();
+        if (!controller.signal.aborted) {
+          controller.abort();
+        }
+      };
+      socket.on("close", onSocketClose);
+      controller.signal.addEventListener("abort", cleanup, { once: true });
+      Reflect.set(req, nodeRequestAbortControllerCleanupSymbol, cleanup);
+      if (socket.destroyed) {
+        onSocketClose();
+      }
+    }
     const forwardedClientIp = getFirstForwardedValue(req.headers["x-forwarded-for"]);
     const clientIp = forwardedClientIp || req.socket?.remoteAddress;
     if (clientIp) {
@@ -1098,6 +1307,23 @@ class NodeApp extends App {
       destination.statusMessage = statusText;
     }
     destination.writeHead(status, createOutgoingHttpHeaders(headers));
+    const cleanupAbortFromDestination = getAbortControllerCleanup(
+      destination.req ?? void 0
+    );
+    if (cleanupAbortFromDestination) {
+      const runCleanup = () => {
+        cleanupAbortFromDestination();
+        if (typeof destination.off === "function") {
+          destination.off("finish", runCleanup);
+          destination.off("close", runCleanup);
+        } else {
+          destination.removeListener?.("finish", runCleanup);
+          destination.removeListener?.("close", runCleanup);
+        }
+      };
+      destination.on("finish", runCleanup);
+      destination.on("close", runCleanup);
+    }
     if (!body) return destination.end();
     try {
       const reader = body.getReader();
@@ -1121,6 +1347,11 @@ class NodeApp extends App {
       });
     }
   }
+}
+function getHostnamePort(hostname, port) {
+  const portInHostname = typeof hostname === "string" && /:\d+$/.test(hostname);
+  const hostnamePort = portInHostname ? hostname : `${hostname}${port ? `:${port}` : ""}`;
+  return hostnamePort;
 }
 function makeRequestHeaders(req) {
   const headers = new Headers();
@@ -1164,10 +1395,25 @@ function asyncIterableToBodyProps(iterable) {
     duplex: "half"
   };
 }
+function getAbortControllerCleanup(req) {
+  if (!req) return void 0;
+  const cleanup = Reflect.get(req, nodeRequestAbortControllerCleanupSymbol);
+  return typeof cleanup === "function" ? cleanup : void 0;
+}
+function getRequestSocket(req) {
+  if (req.socket && typeof req.socket.on === "function") {
+    return req.socket;
+  }
+  const http2Socket = req.stream?.session?.socket;
+  if (http2Socket && typeof http2Socket.on === "function") {
+    return http2Socket;
+  }
+  return void 0;
+}
 
 apply();
 
-var dist = {exports: {}};
+var dist$1 = {exports: {}};
 
 /**
  * Tokenize input string.
@@ -1411,7 +1657,7 @@ function tokensToFunction$1(tokens, options) {
  */
 function match$1(str, options) {
     var keys = [];
-    var re = pathToRegexp$2(str, keys, options);
+    var re = pathToRegexp$1(str, keys, options);
     return regexpToFunction$1(re, keys, options);
 }
 /**
@@ -1483,7 +1729,7 @@ function regexpToRegexp$1(path, keys) {
  * Transform an array into a regexp.
  */
 function arrayToRegexp$1(paths, keys, options) {
-    var parts = paths.map(function (path) { return pathToRegexp$2(path, keys, options).source; });
+    var parts = paths.map(function (path) { return pathToRegexp$1(path, keys, options).source; });
     return new RegExp("(?:" + parts.join("|") + ")", flags$1(options));
 }
 /**
@@ -1558,7 +1804,7 @@ function tokensToRegexp$1(tokens, keys, options) {
  * placeholder key descriptions. For example, using `/user/:id`, `keys` will
  * contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
  */
-function pathToRegexp$2(path, keys, options) {
+function pathToRegexp$1(path, keys, options) {
     if (path instanceof RegExp)
         return regexpToRegexp$1(path, keys);
     if (Array.isArray(path))
@@ -1571,7 +1817,7 @@ const dist_es2015$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.definePrope
   compile: compile$1,
   match: match$1,
   parse: parse$1,
-  pathToRegexp: pathToRegexp$2,
+  pathToRegexp: pathToRegexp$1,
   regexpToFunction: regexpToFunction$1,
   tokensToFunction: tokensToFunction$1,
   tokensToRegexp: tokensToRegexp$1
@@ -1837,7 +2083,7 @@ function tokensToFunction(tokens, options) {
  */
 function match(str, options) {
     var keys = [];
-    var re = pathToRegexp$1(str, keys, options);
+    var re = pathToRegexp(str, keys, options);
     return regexpToFunction(re, keys, options);
 }
 /**
@@ -1909,7 +2155,7 @@ function regexpToRegexp(path, keys) {
  * Transform an array into a regexp.
  */
 function arrayToRegexp(paths, keys, options) {
-    var parts = paths.map(function (path) { return pathToRegexp$1(path, keys, options).source; });
+    var parts = paths.map(function (path) { return pathToRegexp(path, keys, options).source; });
     return new RegExp("(?:".concat(parts.join("|"), ")"), flags(options));
 }
 /**
@@ -1986,7 +2232,7 @@ function tokensToRegexp(tokens, keys, options) {
  * placeholder key descriptions. For example, using `/user/:id`, `keys` will
  * contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
  */
-function pathToRegexp$1(path, keys, options) {
+function pathToRegexp(path, keys, options) {
     if (path instanceof RegExp)
         return regexpToRegexp(path, keys);
     if (Array.isArray(path))
@@ -1999,7 +2245,7 @@ const dist_es2015 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.definePropert
   compile,
   match,
   parse,
-  pathToRegexp: pathToRegexp$1,
+  pathToRegexp,
   regexpToFunction,
   tokensToFunction,
   tokensToRegexp
@@ -2007,404 +2253,418 @@ const dist_es2015 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.definePropert
 
 const require$$2 = /*@__PURE__*/getAugmentedNamespace(dist_es2015);
 
-var __defProp$2 = Object.defineProperty;
-var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$2 = Object.getOwnPropertyNames;
-var __hasOwnProp$2 = Object.prototype.hasOwnProperty;
-var __export$1 = (target, all) => {
-  for (var name in all)
-    __defProp$2(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps$2 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames$2(from))
-      if (!__hasOwnProp$2.call(to, key) && key !== except)
-        __defProp$2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc$2(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS$2 = (mod) => __copyProps$2(__defProp$2({}, "__esModule", { value: true }), mod);
-var superstatic_exports = {};
-__export$1(superstatic_exports, {
-  collectHasSegments: () => collectHasSegments,
-  convertCleanUrls: () => convertCleanUrls,
-  convertHeaders: () => convertHeaders,
-  convertRedirects: () => convertRedirects,
-  convertRewrites: () => convertRewrites,
-  convertTrailingSlash: () => convertTrailingSlash,
-  getCleanUrls: () => getCleanUrls,
-  pathToRegexp: () => pathToRegexp,
-  sourceToRegex: () => sourceToRegex
-});
-var superstatic = __toCommonJS$2(superstatic_exports);
-var import_url = require$$0;
-var import_path_to_regexp = require$$1;
-var import_path_to_regexp_updated = require$$2;
-function cloneKeys(keys) {
-  if (typeof keys === "undefined") {
-    return void 0;
-  }
-  return keys.slice(0);
-}
-function compareKeys(left, right) {
-  const leftSerialized = typeof left === "undefined" ? "undefined" : left.toString();
-  const rightSerialized = typeof right === "undefined" ? "undefined" : right.toString();
-  return leftSerialized === rightSerialized;
-}
-function pathToRegexp(callerId, path, keys, options) {
-  const newKeys = cloneKeys(keys);
-  const currentRegExp = (0, import_path_to_regexp.pathToRegexp)(path, keys, options);
-  try {
-    const currentKeys = keys;
-    const newRegExp = (0, import_path_to_regexp_updated.pathToRegexp)(path, newKeys, options);
-    const isDiffRegExp = currentRegExp.toString() !== newRegExp.toString();
-    if (process.env.FORCE_PATH_TO_REGEXP_LOG || isDiffRegExp) {
-      const message = JSON.stringify({
-        path,
-        currentRegExp: currentRegExp.toString(),
-        newRegExp: newRegExp.toString()
-      });
-      console.error(`[vc] PATH TO REGEXP PATH DIFF @ #${callerId}: ${message}`);
-    }
-    const isDiffKeys = !compareKeys(keys, newKeys);
-    if (process.env.FORCE_PATH_TO_REGEXP_LOG || isDiffKeys) {
-      const message = JSON.stringify({
-        isDiffKeys,
-        currentKeys,
-        newKeys
-      });
-      console.error(`[vc] PATH TO REGEXP KEYS DIFF @ #${callerId}: ${message}`);
-    }
-  } catch (err) {
-    const error = err;
-    const message = JSON.stringify({
-      path,
-      error: error.message
-    });
-    console.error(`[vc] PATH TO REGEXP ERROR @ #${callerId}: ${message}`);
-  }
-  return currentRegExp;
-}
-const UN_NAMED_SEGMENT = "__UN_NAMED_SEGMENT__";
-function getCleanUrls(filePaths) {
-  const htmlFiles = filePaths.map(toRoute).filter((f) => f.endsWith(".html")).map((f) => ({
-    html: f,
-    clean: f.slice(0, -5)
-  }));
-  return htmlFiles;
-}
-function convertCleanUrls(cleanUrls, trailingSlash, status = 308) {
-  const routes = [];
-  if (cleanUrls) {
-    const loc = trailingSlash ? "/$1/" : "/$1";
-    routes.push({
-      src: "^/(?:(.+)/)?index(?:\\.html)?/?$",
-      headers: { Location: loc },
-      status
-    });
-    routes.push({
-      src: "^/(.*)\\.html/?$",
-      headers: { Location: loc },
-      status
-    });
-  }
-  return routes;
-}
-function convertRedirects(redirects, defaultStatus = 308) {
-  return redirects.map((r) => {
-    const { src, segments } = sourceToRegex(r.source);
-    const hasSegments = collectHasSegments(r.has);
-    normalizeHasKeys(r.has);
-    normalizeHasKeys(r.missing);
-    try {
-      const loc = replaceSegments(segments, hasSegments, r.destination, true);
-      let status;
-      if (typeof r.permanent === "boolean") {
-        status = r.permanent ? 308 : 307;
-      } else if (r.statusCode) {
-        status = r.statusCode;
-      } else {
-        status = defaultStatus;
-      }
-      const route = {
-        src,
-        headers: { Location: loc },
-        status
-      };
-      if (r.has) {
-        route.has = r.has;
-      }
-      if (r.missing) {
-        route.missing = r.missing;
-      }
-      return route;
-    } catch (e) {
-      throw new Error(`Failed to parse redirect: ${JSON.stringify(r)}`);
-    }
-  });
-}
-function convertRewrites(rewrites, internalParamNames) {
-  return rewrites.map((r) => {
-    const { src, segments } = sourceToRegex(r.source);
-    const hasSegments = collectHasSegments(r.has);
-    normalizeHasKeys(r.has);
-    normalizeHasKeys(r.missing);
-    try {
-      const dest = replaceSegments(
-        segments,
-        hasSegments,
-        r.destination,
-        false,
-        internalParamNames
-      );
-      const route = { src, dest, check: true };
-      if (r.has) {
-        route.has = r.has;
-      }
-      if (r.missing) {
-        route.missing = r.missing;
-      }
-      if (r.statusCode) {
-        route.status = r.statusCode;
-      }
-      return route;
-    } catch (e) {
-      throw new Error(`Failed to parse rewrite: ${JSON.stringify(r)}`);
-    }
-  });
-}
-function convertHeaders(headers) {
-  return headers.map((h) => {
-    const obj = {};
-    const { src, segments } = sourceToRegex(h.source);
-    const hasSegments = collectHasSegments(h.has);
-    normalizeHasKeys(h.has);
-    normalizeHasKeys(h.missing);
-    const namedSegments = segments.filter((name) => name !== UN_NAMED_SEGMENT);
-    const indexes = {};
-    segments.forEach((name, index) => {
-      indexes[name] = toSegmentDest(index);
-    });
-    hasSegments.forEach((name) => {
-      indexes[name] = "$" + name;
-    });
-    h.headers.forEach(({ key, value }) => {
-      if (namedSegments.length > 0 || hasSegments.length > 0) {
-        if (key.includes(":")) {
-          key = safelyCompile(key, indexes);
-        }
-        if (value.includes(":")) {
-          value = safelyCompile(value, indexes);
-        }
-      }
-      obj[key] = value;
-    });
-    const route = {
-      src,
-      headers: obj,
-      continue: true
-    };
-    if (h.has) {
-      route.has = h.has;
-    }
-    if (h.missing) {
-      route.missing = h.missing;
-    }
-    return route;
-  });
-}
-function convertTrailingSlash(enable, status = 308) {
-  const routes = [];
-  if (enable) {
-    routes.push({
-      src: "^/\\.well-known(?:/.*)?$"
-    });
-    routes.push({
-      src: "^/((?:[^/]+/)*[^/\\.]+)$",
-      headers: { Location: "/$1/" },
-      status
-    });
-    routes.push({
-      src: "^/((?:[^/]+/)*[^/]+\\.\\w+)/$",
-      headers: { Location: "/$1" },
-      status
-    });
-  } else {
-    routes.push({
-      src: "^/(.*)\\/$",
-      headers: { Location: "/$1" },
-      status
-    });
-  }
-  return routes;
-}
-function sourceToRegex(source) {
-  const keys = [];
-  const r = pathToRegexp("632", source, keys, {
-    strict: true,
-    sensitive: true,
-    delimiter: "/"
-  });
-  const segments = keys.map((k) => k.name).map((name) => {
-    if (typeof name !== "string") {
-      return UN_NAMED_SEGMENT;
-    }
-    return name;
-  });
-  return { src: r.source, segments };
-}
-const namedGroupsRegex = /\(\?<([a-zA-Z][a-zA-Z0-9]*)>/g;
-const normalizeHasKeys = (hasItems = []) => {
-  for (const hasItem of hasItems) {
-    if ("key" in hasItem && hasItem.type === "header") {
-      hasItem.key = hasItem.key.toLowerCase();
-    }
-  }
-  return hasItems;
-};
-function getStringValueForRegex(value) {
-  if (typeof value === "string") {
-    return value;
-  }
-  if (value && typeof value === "object" && value !== null) {
-    if ("re" in value && typeof value.re === "string") {
-      return value.re;
-    }
-  }
-  return null;
-}
-function collectHasSegments(has) {
-  const hasSegments = /* @__PURE__ */ new Set();
-  for (const hasItem of has || []) {
-    if (!hasItem.value && "key" in hasItem) {
-      hasSegments.add(hasItem.key);
-    }
-    const stringValue = getStringValueForRegex(hasItem.value);
-    if (stringValue) {
-      for (const match of stringValue.matchAll(namedGroupsRegex)) {
-        if (match[1]) {
-          hasSegments.add(match[1]);
-        }
-      }
-      if (hasItem.type === "host") {
-        hasSegments.add("host");
-      }
-    }
-  }
-  return [...hasSegments];
-}
-const escapeSegment = (str, segmentName) => str.replace(new RegExp(`:${segmentName}`, "g"), `__ESC_COLON_${segmentName}`);
-const unescapeSegments = (str) => str.replace(/__ESC_COLON_/gi, ":");
-function replaceSegments(segments, hasItemSegments, destination, isRedirect, internalParamNames) {
-  const namedSegments = segments.filter((name) => name !== UN_NAMED_SEGMENT);
-  const canNeedReplacing = destination.includes(":") && namedSegments.length > 0 || hasItemSegments.length > 0 || !isRedirect;
-  if (!canNeedReplacing) {
-    return destination;
-  }
-  let escapedDestination = destination;
-  const indexes = {};
-  segments.forEach((name, index) => {
-    indexes[name] = toSegmentDest(index);
-    escapedDestination = escapeSegment(escapedDestination, name);
-  });
-  hasItemSegments.forEach((name) => {
-    indexes[name] = "$" + name;
-    escapedDestination = escapeSegment(escapedDestination, name);
-  });
-  const parsedDestination = (0, import_url.parse)(escapedDestination, true);
-  delete parsedDestination.href;
-  delete parsedDestination.path;
-  delete parsedDestination.search;
-  delete parsedDestination.host;
-  let { pathname, hash, query, hostname, ...rest } = parsedDestination;
-  pathname = unescapeSegments(pathname || "");
-  hash = unescapeSegments(hash || "");
-  hostname = unescapeSegments(hostname || "");
-  let destParams = /* @__PURE__ */ new Set();
-  const pathnameKeys = [];
-  const hashKeys = [];
-  const hostnameKeys = [];
-  try {
-    pathToRegexp("528", pathname, pathnameKeys);
-    pathToRegexp("834", hash || "", hashKeys);
-    pathToRegexp("712", hostname || "", hostnameKeys);
-  } catch (_) {
-  }
-  destParams = new Set(
-    [...pathnameKeys, ...hashKeys, ...hostnameKeys].map((key) => key.name).filter((val) => typeof val === "string")
-  );
-  pathname = safelyCompile(pathname, indexes, true);
-  hash = hash ? safelyCompile(hash, indexes, true) : null;
-  hostname = hostname ? safelyCompile(hostname, indexes, true) : null;
-  for (const [key, strOrArray] of Object.entries(query)) {
-    if (Array.isArray(strOrArray)) {
-      query[key] = strOrArray.map(
-        (str) => safelyCompile(unescapeSegments(str), indexes, true)
-      );
-    } else {
-      query[key] = safelyCompile(
-        unescapeSegments(strOrArray),
-        indexes,
-        true
-      );
-    }
-  }
-  const paramKeys = Object.keys(indexes);
-  const needsQueryUpdating = (
-    // we do not consider an internal param since it is added automatically
-    !isRedirect && !paramKeys.some(
-      (param) => !(internalParamNames && internalParamNames.includes(param)) && destParams.has(param)
-    )
-  );
-  if (needsQueryUpdating) {
-    for (const param of paramKeys) {
-      if (!(param in query) && param !== UN_NAMED_SEGMENT) {
-        query[param] = indexes[param];
-      }
-    }
-  }
-  destination = (0, import_url.format)({
-    ...rest,
-    hostname,
-    pathname,
-    query,
-    hash
-  });
-  return destination.replace(/%24/g, "$");
-}
-function safelyCompile(value, indexes, attemptDirectCompile) {
-  if (!value) {
-    return value;
-  }
-  if (attemptDirectCompile) {
-    try {
-      return (0, import_path_to_regexp.compile)(value, { validate: false })(indexes);
-    } catch (e) {
-    }
-  }
-  for (const key of Object.keys(indexes)) {
-    if (value.includes(`:${key}`)) {
-      value = value.replace(
-        new RegExp(`:${key}\\*`, "g"),
-        `:${key}--ESCAPED_PARAM_ASTERISK`
-      ).replace(
-        new RegExp(`:${key}\\?`, "g"),
-        `:${key}--ESCAPED_PARAM_QUESTION`
-      ).replace(new RegExp(`:${key}\\+`, "g"), `:${key}--ESCAPED_PARAM_PLUS`).replace(
-        new RegExp(`:${key}(?!\\w)`, "g"),
-        `--ESCAPED_PARAM_COLON${key}`
-      );
-    }
-  }
-  value = value.replace(/(:|\*|\?|\+|\(|\)|\{|\})/g, "\\$1").replace(/--ESCAPED_PARAM_PLUS/g, "+").replace(/--ESCAPED_PARAM_COLON/g, ":").replace(/--ESCAPED_PARAM_QUESTION/g, "?").replace(/--ESCAPED_PARAM_ASTERISK/g, "*");
-  return (0, import_path_to_regexp.compile)(`/${value}`, { validate: false })(indexes).slice(1);
-}
-function toSegmentDest(index) {
-  const i = index + 1;
-  return "$" + i.toString();
-}
-function toRoute(filePath) {
-  return filePath.startsWith("/") ? filePath : "/" + filePath;
+var superstatic;
+var hasRequiredSuperstatic;
+
+function requireSuperstatic () {
+	if (hasRequiredSuperstatic) return superstatic;
+	hasRequiredSuperstatic = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+	var superstatic_exports = {};
+	__export(superstatic_exports, {
+	  collectHasSegments: () => collectHasSegments,
+	  convertCleanUrls: () => convertCleanUrls,
+	  convertHeaders: () => convertHeaders,
+	  convertRedirects: () => convertRedirects,
+	  convertRewrites: () => convertRewrites,
+	  convertTrailingSlash: () => convertTrailingSlash,
+	  getCleanUrls: () => getCleanUrls,
+	  pathToRegexp: () => pathToRegexp,
+	  sourceToRegex: () => sourceToRegex
+	});
+	superstatic = __toCommonJS(superstatic_exports);
+	var import_url = require$$0;
+	var import_path_to_regexp = require$$1;
+	var import_path_to_regexp_updated = require$$2;
+	function cloneKeys(keys) {
+	  if (typeof keys === "undefined") {
+	    return void 0;
+	  }
+	  return keys.slice(0);
+	}
+	function compareKeys(left, right) {
+	  const leftSerialized = typeof left === "undefined" ? "undefined" : left.toString();
+	  const rightSerialized = typeof right === "undefined" ? "undefined" : right.toString();
+	  return leftSerialized === rightSerialized;
+	}
+	function pathToRegexp(callerId, path, keys, options) {
+	  const newKeys = cloneKeys(keys);
+	  const currentRegExp = (0, import_path_to_regexp.pathToRegexp)(path, keys, options);
+	  try {
+	    const currentKeys = keys;
+	    const newRegExp = (0, import_path_to_regexp_updated.pathToRegexp)(path, newKeys, options);
+	    const isDiffRegExp = currentRegExp.toString() !== newRegExp.toString();
+	    if (process.env.FORCE_PATH_TO_REGEXP_LOG || isDiffRegExp) {
+	      const message = JSON.stringify({
+	        path,
+	        currentRegExp: currentRegExp.toString(),
+	        newRegExp: newRegExp.toString()
+	      });
+	      console.error(`[vc] PATH TO REGEXP PATH DIFF @ #${callerId}: ${message}`);
+	    }
+	    const isDiffKeys = !compareKeys(keys, newKeys);
+	    if (process.env.FORCE_PATH_TO_REGEXP_LOG || isDiffKeys) {
+	      const message = JSON.stringify({
+	        isDiffKeys,
+	        currentKeys,
+	        newKeys
+	      });
+	      console.error(`[vc] PATH TO REGEXP KEYS DIFF @ #${callerId}: ${message}`);
+	    }
+	  } catch (err) {
+	    const error = err;
+	    const message = JSON.stringify({
+	      path,
+	      error: error.message
+	    });
+	    console.error(`[vc] PATH TO REGEXP ERROR @ #${callerId}: ${message}`);
+	  }
+	  return currentRegExp;
+	}
+	const UN_NAMED_SEGMENT = "__UN_NAMED_SEGMENT__";
+	function getCleanUrls(filePaths) {
+	  const htmlFiles = filePaths.map(toRoute).filter((f) => f.endsWith(".html")).map((f) => ({
+	    html: f,
+	    clean: f.slice(0, -5)
+	  }));
+	  return htmlFiles;
+	}
+	function convertCleanUrls(cleanUrls, trailingSlash, status = 308) {
+	  const routes = [];
+	  if (cleanUrls) {
+	    const loc = trailingSlash ? "/$1/" : "/$1";
+	    routes.push({
+	      src: "^/(?:(.+)/)?index(?:\\.html)?/?$",
+	      headers: { Location: loc },
+	      status
+	    });
+	    routes.push({
+	      src: "^/(.*)\\.html/?$",
+	      headers: { Location: loc },
+	      status
+	    });
+	  }
+	  return routes;
+	}
+	function convertRedirects(redirects, defaultStatus = 308) {
+	  return redirects.map((r) => {
+	    const { src, segments } = sourceToRegex(r.source);
+	    const hasSegments = collectHasSegments(r.has);
+	    normalizeHasKeys(r.has);
+	    normalizeHasKeys(r.missing);
+	    try {
+	      const loc = replaceSegments(segments, hasSegments, r.destination, true);
+	      let status;
+	      if (typeof r.permanent === "boolean") {
+	        status = r.permanent ? 308 : 307;
+	      } else if (r.statusCode) {
+	        status = r.statusCode;
+	      } else {
+	        status = defaultStatus;
+	      }
+	      const route = {
+	        src,
+	        headers: { Location: loc },
+	        status
+	      };
+	      if (typeof r.env !== "undefined") {
+	        route.env = r.env;
+	      }
+	      if (r.has) {
+	        route.has = r.has;
+	      }
+	      if (r.missing) {
+	        route.missing = r.missing;
+	      }
+	      return route;
+	    } catch (e) {
+	      throw new Error(`Failed to parse redirect: ${JSON.stringify(r)}`);
+	    }
+	  });
+	}
+	function convertRewrites(rewrites, internalParamNames) {
+	  return rewrites.map((r) => {
+	    const { src, segments } = sourceToRegex(r.source);
+	    const hasSegments = collectHasSegments(r.has);
+	    normalizeHasKeys(r.has);
+	    normalizeHasKeys(r.missing);
+	    try {
+	      const dest = replaceSegments(
+	        segments,
+	        hasSegments,
+	        r.destination,
+	        false,
+	        internalParamNames
+	      );
+	      const route = { src, dest, check: true };
+	      if (typeof r.env !== "undefined") {
+	        route.env = r.env;
+	      }
+	      if (r.has) {
+	        route.has = r.has;
+	      }
+	      if (r.missing) {
+	        route.missing = r.missing;
+	      }
+	      if (r.statusCode) {
+	        route.status = r.statusCode;
+	      }
+	      return route;
+	    } catch (e) {
+	      throw new Error(`Failed to parse rewrite: ${JSON.stringify(r)}`);
+	    }
+	  });
+	}
+	function convertHeaders(headers) {
+	  return headers.map((h) => {
+	    const obj = {};
+	    const { src, segments } = sourceToRegex(h.source);
+	    const hasSegments = collectHasSegments(h.has);
+	    normalizeHasKeys(h.has);
+	    normalizeHasKeys(h.missing);
+	    const namedSegments = segments.filter((name) => name !== UN_NAMED_SEGMENT);
+	    const indexes = {};
+	    segments.forEach((name, index) => {
+	      indexes[name] = toSegmentDest(index);
+	    });
+	    hasSegments.forEach((name) => {
+	      indexes[name] = "$" + name;
+	    });
+	    h.headers.forEach(({ key, value }) => {
+	      if (namedSegments.length > 0 || hasSegments.length > 0) {
+	        if (key.includes(":")) {
+	          key = safelyCompile(key, indexes);
+	        }
+	        if (value.includes(":")) {
+	          value = safelyCompile(value, indexes);
+	        }
+	      }
+	      obj[key] = value;
+	    });
+	    const route = {
+	      src,
+	      headers: obj,
+	      continue: true
+	    };
+	    if (h.has) {
+	      route.has = h.has;
+	    }
+	    if (h.missing) {
+	      route.missing = h.missing;
+	    }
+	    return route;
+	  });
+	}
+	function convertTrailingSlash(enable, status = 308) {
+	  const routes = [];
+	  if (enable) {
+	    routes.push({
+	      src: "^/\\.well-known(?:/.*)?$"
+	    });
+	    routes.push({
+	      src: "^/((?:[^/]+/)*[^/\\.]+)$",
+	      headers: { Location: "/$1/" },
+	      status
+	    });
+	    routes.push({
+	      src: "^/((?:[^/]+/)*[^/]+\\.\\w+)/$",
+	      headers: { Location: "/$1" },
+	      status
+	    });
+	  } else {
+	    routes.push({
+	      src: "^/(.*)\\/$",
+	      headers: { Location: "/$1" },
+	      status
+	    });
+	  }
+	  return routes;
+	}
+	function sourceToRegex(source) {
+	  const keys = [];
+	  const r = pathToRegexp("632", source, keys, {
+	    strict: true,
+	    sensitive: true,
+	    delimiter: "/"
+	  });
+	  const segments = keys.map((k) => k.name).map((name) => {
+	    if (typeof name !== "string") {
+	      return UN_NAMED_SEGMENT;
+	    }
+	    return name;
+	  });
+	  return { src: r.source, segments };
+	}
+	const namedGroupsRegex = /\(\?<([a-zA-Z][a-zA-Z0-9_]*)>/g;
+	const normalizeHasKeys = (hasItems = []) => {
+	  for (const hasItem of hasItems) {
+	    if ("key" in hasItem && hasItem.type === "header") {
+	      hasItem.key = hasItem.key.toLowerCase();
+	    }
+	  }
+	  return hasItems;
+	};
+	function getStringValueForRegex(value) {
+	  if (typeof value === "string") {
+	    return value;
+	  }
+	  if (value && typeof value === "object" && value !== null) {
+	    if ("re" in value && typeof value.re === "string") {
+	      return value.re;
+	    }
+	  }
+	  return null;
+	}
+	function collectHasSegments(has) {
+	  const hasSegments = /* @__PURE__ */ new Set();
+	  for (const hasItem of has || []) {
+	    if (!hasItem.value && "key" in hasItem) {
+	      hasSegments.add(hasItem.key);
+	    }
+	    const stringValue = getStringValueForRegex(hasItem.value);
+	    if (stringValue) {
+	      for (const match of stringValue.matchAll(namedGroupsRegex)) {
+	        if (match[1]) {
+	          hasSegments.add(match[1]);
+	        }
+	      }
+	      if (hasItem.type === "host") {
+	        hasSegments.add("host");
+	      }
+	    }
+	  }
+	  return [...hasSegments];
+	}
+	const escapeSegment = (str, segmentName) => str.replace(new RegExp(`:${segmentName}`, "g"), `__ESC_COLON_${segmentName}`);
+	const unescapeSegments = (str) => str.replace(/__ESC_COLON_/gi, ":");
+	function replaceSegments(segments, hasItemSegments, destination, isRedirect, internalParamNames) {
+	  const namedSegments = segments.filter((name) => name !== UN_NAMED_SEGMENT);
+	  const canNeedReplacing = destination.includes(":") && namedSegments.length > 0 || hasItemSegments.length > 0 || !isRedirect;
+	  if (!canNeedReplacing) {
+	    return destination;
+	  }
+	  let escapedDestination = destination;
+	  const indexes = {};
+	  segments.forEach((name, index) => {
+	    indexes[name] = toSegmentDest(index);
+	    escapedDestination = escapeSegment(escapedDestination, name);
+	  });
+	  hasItemSegments.forEach((name) => {
+	    indexes[name] = "$" + name;
+	    escapedDestination = escapeSegment(escapedDestination, name);
+	  });
+	  const parsedDestination = (0, import_url.parse)(escapedDestination, true);
+	  delete parsedDestination.href;
+	  delete parsedDestination.path;
+	  delete parsedDestination.search;
+	  delete parsedDestination.host;
+	  let { pathname, hash, query, hostname, ...rest } = parsedDestination;
+	  pathname = unescapeSegments(pathname || "");
+	  hash = unescapeSegments(hash || "");
+	  hostname = unescapeSegments(hostname || "");
+	  let destParams = /* @__PURE__ */ new Set();
+	  const pathnameKeys = [];
+	  const hashKeys = [];
+	  const hostnameKeys = [];
+	  try {
+	    pathToRegexp("528", pathname, pathnameKeys);
+	    pathToRegexp("834", hash || "", hashKeys);
+	    pathToRegexp("712", hostname || "", hostnameKeys);
+	  } catch (_) {
+	  }
+	  destParams = new Set(
+	    [...pathnameKeys, ...hashKeys, ...hostnameKeys].map((key) => key.name).filter((val) => typeof val === "string")
+	  );
+	  pathname = safelyCompile(pathname, indexes, true);
+	  hash = hash ? safelyCompile(hash, indexes, true) : null;
+	  hostname = hostname ? safelyCompile(hostname, indexes, true) : null;
+	  for (const [key, strOrArray] of Object.entries(query)) {
+	    if (Array.isArray(strOrArray)) {
+	      query[key] = strOrArray.map(
+	        (str) => safelyCompile(unescapeSegments(str), indexes, true)
+	      );
+	    } else {
+	      query[key] = safelyCompile(
+	        unescapeSegments(strOrArray),
+	        indexes,
+	        true
+	      );
+	    }
+	  }
+	  const paramKeys = Object.keys(indexes);
+	  const needsQueryUpdating = (
+	    // we do not consider an internal param since it is added automatically
+	    !isRedirect && !paramKeys.some(
+	      (param) => !(internalParamNames && internalParamNames.includes(param)) && destParams.has(param)
+	    )
+	  );
+	  if (needsQueryUpdating) {
+	    for (const param of paramKeys) {
+	      if (!(param in query) && param !== UN_NAMED_SEGMENT) {
+	        query[param] = indexes[param];
+	      }
+	    }
+	  }
+	  destination = (0, import_url.format)({
+	    ...rest,
+	    hostname,
+	    pathname,
+	    query,
+	    hash
+	  });
+	  return destination.replace(/%24/g, "$");
+	}
+	function safelyCompile(value, indexes, attemptDirectCompile) {
+	  if (!value) {
+	    return value;
+	  }
+	  if (attemptDirectCompile) {
+	    try {
+	      return (0, import_path_to_regexp.compile)(value, { validate: false })(indexes);
+	    } catch (e) {
+	    }
+	  }
+	  for (const key of Object.keys(indexes)) {
+	    if (value.includes(`:${key}`)) {
+	      value = value.replace(
+	        new RegExp(`:${key}\\*`, "g"),
+	        `:${key}--ESCAPED_PARAM_ASTERISK`
+	      ).replace(
+	        new RegExp(`:${key}\\?`, "g"),
+	        `:${key}--ESCAPED_PARAM_QUESTION`
+	      ).replace(new RegExp(`:${key}\\+`, "g"), `:${key}--ESCAPED_PARAM_PLUS`).replace(
+	        new RegExp(`:${key}(?!\\w)`, "g"),
+	        `--ESCAPED_PARAM_COLON${key}`
+	      );
+	    }
+	  }
+	  value = value.replace(/(:|\*|\?|\+|\(|\)|\{|\})/g, "\\$1").replace(/--ESCAPED_PARAM_PLUS/g, "+").replace(/--ESCAPED_PARAM_COLON/g, ":").replace(/--ESCAPED_PARAM_QUESTION/g, "?").replace(/--ESCAPED_PARAM_ASTERISK/g, "*");
+	  return (0, import_path_to_regexp.compile)(`/${value}`, { validate: false })(indexes).slice(1);
+	}
+	function toSegmentDest(index) {
+	  const i = index + 1;
+	  return "$" + i.toString();
+	}
+	function toRoute(filePath) {
+	  return filePath.startsWith("/") ? filePath : "/" + filePath;
+	}
+	return superstatic;
 }
 
 var append;
@@ -2435,7 +2695,7 @@ function requireAppend () {
 	  appendRoutesToPhase: () => appendRoutesToPhase
 	});
 	append = __toCommonJS(append_exports);
-	var import_index = requireDist();
+	var import_index = requireDist$1();
 	function appendRoutesToPhase({
 	  routes: prevRoutes,
 	  newRoutes,
@@ -2505,7 +2765,7 @@ function requireMerge () {
 	  mergeRoutes: () => mergeRoutes
 	});
 	merge = __toCommonJS(merge_exports);
-	var import_index = requireDist();
+	var import_index = requireDist$1();
 	function getBuilderRoutesMapping(builds) {
 	  const builderRoutes = {};
 	  for (const { entrypoint, routes, use } of builds) {
@@ -2599,623 +2859,726 @@ function requireMerge () {
 	return merge;
 }
 
-var __defProp$1 = Object.defineProperty;
-var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames$1 = Object.getOwnPropertyNames;
-var __hasOwnProp$1 = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp$1(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps$1 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames$1(from))
-      if (!__hasOwnProp$1.call(to, key) && key !== except)
-        __defProp$1(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc$1(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS$1 = (mod) => __copyProps$1(__defProp$1({}, "__esModule", { value: true }), mod);
-var schemas_exports = {};
-__export(schemas_exports, {
-  cleanUrlsSchema: () => cleanUrlsSchema,
-  hasSchema: () => hasSchema,
-  headersSchema: () => headersSchema,
-  redirectsSchema: () => redirectsSchema,
-  rewritesSchema: () => rewritesSchema,
-  routesSchema: () => routesSchema,
-  trailingSlashSchema: () => trailingSlashSchema
-});
-var schemas = __toCommonJS$1(schemas_exports);
-const mitigateSchema = {
-  description: "Mitigation action to take on a route",
-  type: "object",
-  additionalProperties: false,
-  required: ["action"],
-  properties: {
-    action: {
-      description: "The mitigation action to take",
-      type: "string",
-      enum: ["challenge", "deny"]
-    }
-  }
-};
-const matchableValueSchema = {
-  description: "A value to match against. Can be a string (regex) or a condition operation object",
-  anyOf: [
-    {
-      description: "A regular expression used to match thev value. Named groups can be used in the destination.",
-      type: "string",
-      maxLength: 4096
-    },
-    {
-      description: "A condition operation object",
-      type: "object",
-      additionalProperties: false,
-      minProperties: 1,
-      properties: {
-        eq: {
-          description: "Equal to",
-          anyOf: [
-            {
-              type: "string",
-              maxLength: 4096
-            },
-            {
-              type: "number"
-            }
-          ]
-        },
-        neq: {
-          description: "Not equal",
-          type: "string",
-          maxLength: 4096
-        },
-        inc: {
-          description: "In array",
-          type: "array",
-          items: {
-            type: "string",
-            maxLength: 4096
-          }
-        },
-        ninc: {
-          description: "Not in array",
-          type: "array",
-          items: {
-            type: "string",
-            maxLength: 4096
-          }
-        },
-        pre: {
-          description: "Starts with",
-          type: "string",
-          maxLength: 4096
-        },
-        suf: {
-          description: "Ends with",
-          type: "string",
-          maxLength: 4096
-        },
-        re: {
-          description: "Regex",
-          type: "string",
-          maxLength: 4096
-        },
-        gt: {
-          description: "Greater than",
-          type: "number"
-        },
-        gte: {
-          description: "Greater than or equal to",
-          type: "number"
-        },
-        lt: {
-          description: "Less than",
-          type: "number"
-        },
-        lte: {
-          description: "Less than or equal to",
-          type: "number"
-        }
-      }
-    }
-  ]
-};
-const hasSchema = {
-  description: "An array of requirements that are needed to match",
-  type: "array",
-  maxItems: 16,
-  items: {
-    anyOf: [
-      {
-        type: "object",
-        additionalProperties: false,
-        required: ["type", "value"],
-        properties: {
-          type: {
-            description: "The type of request element to check",
-            type: "string",
-            enum: ["host"]
-          },
-          value: matchableValueSchema
-        }
-      },
-      {
-        type: "object",
-        additionalProperties: false,
-        required: ["type", "key"],
-        properties: {
-          type: {
-            description: "The type of request element to check",
-            type: "string",
-            enum: ["header", "cookie", "query"]
-          },
-          key: {
-            description: "The name of the element contained in the particular type",
-            type: "string",
-            maxLength: 4096
-          },
-          value: matchableValueSchema
-        }
-      }
-    ]
-  }
-};
-const transformsSchema = {
-  description: "A list of transform rules to adjust the query parameters of a request or HTTP headers of request or response",
-  type: "array",
-  minItems: 1,
-  items: {
-    type: "object",
-    additionalProperties: false,
-    required: ["type", "op", "target"],
-    properties: {
-      type: {
-        description: "The scope of the transform to apply",
-        type: "string",
-        enum: ["request.headers", "request.query", "response.headers"]
-      },
-      op: {
-        description: "The operation to perform on the target",
-        type: "string",
-        enum: ["append", "set", "delete"]
-      },
-      target: {
-        description: "The target of the transform",
-        type: "object",
-        required: ["key"],
-        properties: {
-          // re is not supported for transforms. Once supported, replace target.key with matchableValueSchema
-          key: {
-            description: "A value to match against. Can be a string or a condition operation object (without regex support)",
-            anyOf: [
-              {
-                description: "A valid header name (letters, numbers, hyphens, underscores)",
-                type: "string",
-                maxLength: 4096
-              },
-              {
-                description: "A condition operation object",
-                type: "object",
-                additionalProperties: false,
-                minProperties: 1,
-                properties: {
-                  eq: {
-                    description: "Equal to",
-                    anyOf: [
-                      {
-                        type: "string",
-                        maxLength: 4096
-                      },
-                      {
-                        type: "number"
-                      }
-                    ]
-                  },
-                  neq: {
-                    description: "Not equal",
-                    type: "string",
-                    maxLength: 4096
-                  },
-                  inc: {
-                    description: "In array",
-                    type: "array",
-                    items: {
-                      type: "string",
-                      maxLength: 4096
-                    }
-                  },
-                  ninc: {
-                    description: "Not in array",
-                    type: "array",
-                    items: {
-                      type: "string",
-                      maxLength: 4096
-                    }
-                  },
-                  pre: {
-                    description: "Starts with",
-                    type: "string",
-                    maxLength: 4096
-                  },
-                  suf: {
-                    description: "Ends with",
-                    type: "string",
-                    maxLength: 4096
-                  },
-                  gt: {
-                    description: "Greater than",
-                    type: "number"
-                  },
-                  gte: {
-                    description: "Greater than or equal to",
-                    type: "number"
-                  },
-                  lt: {
-                    description: "Less than",
-                    type: "number"
-                  },
-                  lte: {
-                    description: "Less than or equal to",
-                    type: "number"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      args: {
-        description: "The arguments to the operation",
-        anyOf: [
-          {
-            type: "string",
-            maxLength: 4096
-          },
-          {
-            type: "array",
-            minItems: 1,
-            items: {
-              type: "string",
-              maxLength: 4096
-            }
-          }
-        ]
-      }
-    },
-    allOf: [
-      {
-        if: {
-          properties: {
-            op: {
-              enum: ["append", "set"]
-            }
-          }
-        },
-        then: {
-          required: ["args"]
-        }
-      },
-      {
-        if: {
-          allOf: [
-            {
-              properties: {
-                type: {
-                  enum: ["request.headers", "response.headers"]
-                }
-              }
-            },
-            {
-              properties: {
-                op: {
-                  enum: ["set", "append"]
-                }
-              }
-            }
-          ]
-        },
-        then: {
-          properties: {
-            target: {
-              properties: {
-                key: {
-                  if: {
-                    type: "string"
-                  },
-                  then: {
-                    pattern: "^[a-zA-Z0-9_-]+$"
-                  }
-                }
-              }
-            },
-            args: {
-              anyOf: [
-                {
-                  type: "string",
-                  pattern: "^[a-zA-Z0-9_ :;.,\"'?!(){}\\[\\]@<>=+*#$&`|~\\^%/-]+$"
-                },
-                {
-                  type: "array",
-                  items: {
-                    type: "string",
-                    pattern: "^[a-zA-Z0-9_ :;.,\"'?!(){}\\[\\]@<>=+*#$&`|~\\^%/-]+$"
-                  }
-                }
-              ]
-            }
-          }
-        }
-      }
-    ]
-  }
-};
-const routesSchema = {
-  type: "array",
-  deprecated: true,
-  description: "A list of routes objects used to rewrite paths to point towards other internal or external paths",
-  example: [{ dest: "https://docs.example.com", src: "/docs" }],
-  items: {
-    anyOf: [
-      {
-        type: "object",
-        required: ["src"],
-        additionalProperties: false,
-        properties: {
-          src: {
-            type: "string",
-            maxLength: 4096
-          },
-          dest: {
-            type: "string",
-            maxLength: 4096
-          },
-          headers: {
-            type: "object",
-            additionalProperties: false,
-            minProperties: 1,
-            maxProperties: 100,
-            patternProperties: {
-              "^.{1,256}$": {
-                type: "string",
-                maxLength: 4096
-              }
-            }
-          },
-          methods: {
-            type: "array",
-            maxItems: 10,
-            items: {
-              type: "string",
-              maxLength: 32
-            }
-          },
-          caseSensitive: {
-            type: "boolean"
-          },
-          important: {
-            type: "boolean"
-          },
-          user: {
-            type: "boolean"
-          },
-          continue: {
-            type: "boolean"
-          },
-          override: {
-            type: "boolean"
-          },
-          check: {
-            type: "boolean"
-          },
-          isInternal: {
-            type: "boolean"
-          },
-          status: {
-            type: "integer",
-            minimum: 100,
-            maximum: 999
-          },
-          locale: {
-            type: "object",
-            additionalProperties: false,
-            minProperties: 1,
-            properties: {
-              redirect: {
-                type: "object",
-                additionalProperties: false,
-                minProperties: 1,
-                maxProperties: 100,
-                patternProperties: {
-                  "^.{1,256}$": {
-                    type: "string",
-                    maxLength: 4096
-                  }
-                }
-              },
-              value: {
-                type: "string",
-                maxLength: 4096
-              },
-              path: {
-                type: "string",
-                maxLength: 4096
-              },
-              cookie: {
-                type: "string",
-                maxLength: 4096
-              },
-              default: {
-                type: "string",
-                maxLength: 4096
-              }
-            }
-          },
-          middleware: { type: "number" },
-          middlewarePath: { type: "string" },
-          middlewareRawSrc: {
-            type: "array",
-            items: {
-              type: "string"
-            }
-          },
-          has: hasSchema,
-          missing: hasSchema,
-          mitigate: mitigateSchema,
-          transforms: transformsSchema
-        }
-      },
-      {
-        type: "object",
-        required: ["handle"],
-        additionalProperties: false,
-        properties: {
-          handle: {
-            type: "string",
-            maxLength: 32,
-            enum: ["error", "filesystem", "hit", "miss", "resource", "rewrite"]
-          }
-        }
-      }
-    ]
-  }
-};
-const rewritesSchema = {
-  type: "array",
-  maxItems: 2048,
-  description: "A list of rewrite definitions.",
-  items: {
-    type: "object",
-    additionalProperties: false,
-    required: ["source", "destination"],
-    properties: {
-      source: {
-        description: "A pattern that matches each incoming pathname (excluding querystring).",
-        type: "string",
-        maxLength: 4096
-      },
-      destination: {
-        description: "An absolute pathname to an existing resource or an external URL.",
-        type: "string",
-        maxLength: 4096
-      },
-      has: hasSchema,
-      missing: hasSchema,
-      statusCode: {
-        description: "An optional integer to override the status code of the response.",
-        type: "integer",
-        minimum: 100,
-        maximum: 999
-      }
-    }
-  }
-};
-const redirectsSchema = {
-  title: "Redirects",
-  type: "array",
-  maxItems: 2048,
-  description: "A list of redirect definitions.",
-  items: {
-    type: "object",
-    additionalProperties: false,
-    required: ["source", "destination"],
-    properties: {
-      source: {
-        description: "A pattern that matches each incoming pathname (excluding querystring).",
-        type: "string",
-        maxLength: 4096
-      },
-      destination: {
-        description: "A location destination defined as an absolute pathname or external URL.",
-        type: "string",
-        maxLength: 4096
-      },
-      permanent: {
-        description: "A boolean to toggle between permanent and temporary redirect. When `true`, the status code is `308`. When `false` the status code is `307`.",
-        type: "boolean"
-      },
-      statusCode: {
-        description: "An optional integer to define the status code of the redirect.",
-        private: true,
-        type: "integer",
-        minimum: 100,
-        maximum: 999
-      },
-      has: hasSchema,
-      missing: hasSchema
-    }
-  }
-};
-const headersSchema = {
-  type: "array",
-  maxItems: 2048,
-  description: "A list of header definitions.",
-  items: {
-    type: "object",
-    additionalProperties: false,
-    required: ["source", "headers"],
-    properties: {
-      source: {
-        description: "A pattern that matches each incoming pathname (excluding querystring)",
-        type: "string",
-        maxLength: 4096
-      },
-      headers: {
-        description: "An array of key/value pairs representing each response header.",
-        type: "array",
-        maxItems: 1024,
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["key", "value"],
-          properties: {
-            key: {
-              type: "string",
-              maxLength: 4096
-            },
-            value: {
-              type: "string",
-              maxLength: 4096
-            }
-          }
-        }
-      },
-      has: hasSchema,
-      missing: hasSchema
-    }
-  }
-};
-const cleanUrlsSchema = {
-  description: "When set to `true`, all HTML files and Serverless Functions will have their extension removed. When visiting a path that ends with the extension, a 308 response will redirect the client to the extensionless path.",
-  type: "boolean"
-};
-const trailingSlashSchema = {
-  description: "When `false`, visiting a path that ends with a forward slash will respond with a `308` status code and redirect to the path without the trailing slash.",
-  type: "boolean"
-};
+var schemas;
+var hasRequiredSchemas;
 
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var types_exports = {};
-var types = __toCommonJS(types_exports);
+function requireSchemas () {
+	if (hasRequiredSchemas) return schemas;
+	hasRequiredSchemas = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __export = (target, all) => {
+	  for (var name in all)
+	    __defProp(target, name, { get: all[name], enumerable: true });
+	};
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+	var schemas_exports = {};
+	__export(schemas_exports, {
+	  bulkRedirectsSchema: () => bulkRedirectsSchema,
+	  cleanUrlsSchema: () => cleanUrlsSchema,
+	  hasSchema: () => hasSchema,
+	  headersSchema: () => headersSchema,
+	  redirectsSchema: () => redirectsSchema,
+	  rewritesSchema: () => rewritesSchema,
+	  routesSchema: () => routesSchema,
+	  trailingSlashSchema: () => trailingSlashSchema
+	});
+	schemas = __toCommonJS(schemas_exports);
+	const mitigateSchema = {
+	  description: "Mitigation action to take on a route",
+	  type: "object",
+	  additionalProperties: false,
+	  required: ["action"],
+	  properties: {
+	    action: {
+	      description: "The mitigation action to take",
+	      type: "string",
+	      enum: ["challenge", "deny"]
+	    }
+	  }
+	};
+	const matchableValueSchema = {
+	  description: "A value to match against. Can be a string (regex) or a condition operation object",
+	  anyOf: [
+	    {
+	      description: "A regular expression used to match thev value. Named groups can be used in the destination.",
+	      type: "string",
+	      maxLength: 4096
+	    },
+	    {
+	      description: "A condition operation object",
+	      type: "object",
+	      additionalProperties: false,
+	      minProperties: 1,
+	      properties: {
+	        eq: {
+	          description: "Equal to",
+	          anyOf: [
+	            {
+	              type: "string",
+	              maxLength: 4096
+	            },
+	            {
+	              type: "number"
+	            }
+	          ]
+	        },
+	        neq: {
+	          description: "Not equal",
+	          type: "string",
+	          maxLength: 4096
+	        },
+	        inc: {
+	          description: "In array",
+	          type: "array",
+	          items: {
+	            type: "string",
+	            maxLength: 4096
+	          }
+	        },
+	        ninc: {
+	          description: "Not in array",
+	          type: "array",
+	          items: {
+	            type: "string",
+	            maxLength: 4096
+	          }
+	        },
+	        pre: {
+	          description: "Starts with",
+	          type: "string",
+	          maxLength: 4096
+	        },
+	        suf: {
+	          description: "Ends with",
+	          type: "string",
+	          maxLength: 4096
+	        },
+	        re: {
+	          description: "Regex",
+	          type: "string",
+	          maxLength: 4096
+	        },
+	        gt: {
+	          description: "Greater than",
+	          type: "number"
+	        },
+	        gte: {
+	          description: "Greater than or equal to",
+	          type: "number"
+	        },
+	        lt: {
+	          description: "Less than",
+	          type: "number"
+	        },
+	        lte: {
+	          description: "Less than or equal to",
+	          type: "number"
+	        }
+	      }
+	    }
+	  ]
+	};
+	const hasSchema = {
+	  description: "An array of requirements that are needed to match",
+	  type: "array",
+	  maxItems: 16,
+	  items: {
+	    anyOf: [
+	      {
+	        type: "object",
+	        additionalProperties: false,
+	        required: ["type", "value"],
+	        properties: {
+	          type: {
+	            description: "The type of request element to check",
+	            type: "string",
+	            enum: ["host"]
+	          },
+	          value: matchableValueSchema
+	        }
+	      },
+	      {
+	        type: "object",
+	        additionalProperties: false,
+	        required: ["type", "key"],
+	        properties: {
+	          type: {
+	            description: "The type of request element to check",
+	            type: "string",
+	            enum: ["header", "cookie", "query"]
+	          },
+	          key: {
+	            description: "The name of the element contained in the particular type",
+	            type: "string",
+	            maxLength: 4096
+	          },
+	          value: matchableValueSchema
+	        }
+	      }
+	    ]
+	  }
+	};
+	const transformsSchema = {
+	  description: "A list of transform rules to adjust the query parameters of a request or HTTP headers of request or response",
+	  type: "array",
+	  minItems: 1,
+	  items: {
+	    type: "object",
+	    additionalProperties: false,
+	    required: ["type", "op", "target"],
+	    properties: {
+	      type: {
+	        description: "The scope of the transform to apply",
+	        type: "string",
+	        enum: ["request.headers", "request.query", "response.headers"]
+	      },
+	      op: {
+	        description: "The operation to perform on the target",
+	        type: "string",
+	        enum: ["append", "set", "delete"]
+	      },
+	      target: {
+	        description: "The target of the transform",
+	        type: "object",
+	        required: ["key"],
+	        properties: {
+	          // re is not supported for transforms. Once supported, replace target.key with matchableValueSchema
+	          key: {
+	            description: "A value to match against. Can be a string or a condition operation object (without regex support)",
+	            anyOf: [
+	              {
+	                description: "A valid header name (letters, numbers, hyphens, underscores)",
+	                type: "string",
+	                maxLength: 4096
+	              },
+	              {
+	                description: "A condition operation object",
+	                type: "object",
+	                additionalProperties: false,
+	                minProperties: 1,
+	                properties: {
+	                  eq: {
+	                    description: "Equal to",
+	                    anyOf: [
+	                      {
+	                        type: "string",
+	                        maxLength: 4096
+	                      },
+	                      {
+	                        type: "number"
+	                      }
+	                    ]
+	                  },
+	                  neq: {
+	                    description: "Not equal",
+	                    type: "string",
+	                    maxLength: 4096
+	                  },
+	                  inc: {
+	                    description: "In array",
+	                    type: "array",
+	                    items: {
+	                      type: "string",
+	                      maxLength: 4096
+	                    }
+	                  },
+	                  ninc: {
+	                    description: "Not in array",
+	                    type: "array",
+	                    items: {
+	                      type: "string",
+	                      maxLength: 4096
+	                    }
+	                  },
+	                  pre: {
+	                    description: "Starts with",
+	                    type: "string",
+	                    maxLength: 4096
+	                  },
+	                  suf: {
+	                    description: "Ends with",
+	                    type: "string",
+	                    maxLength: 4096
+	                  },
+	                  gt: {
+	                    description: "Greater than",
+	                    type: "number"
+	                  },
+	                  gte: {
+	                    description: "Greater than or equal to",
+	                    type: "number"
+	                  },
+	                  lt: {
+	                    description: "Less than",
+	                    type: "number"
+	                  },
+	                  lte: {
+	                    description: "Less than or equal to",
+	                    type: "number"
+	                  }
+	                }
+	              }
+	            ]
+	          }
+	        }
+	      },
+	      args: {
+	        description: "The arguments to the operation",
+	        anyOf: [
+	          {
+	            type: "string",
+	            maxLength: 4096
+	          },
+	          {
+	            type: "array",
+	            minItems: 1,
+	            items: {
+	              type: "string",
+	              maxLength: 4096
+	            }
+	          }
+	        ]
+	      },
+	      env: {
+	        description: "An array of environment variable names that should be replaced at runtime in the args value",
+	        type: "array",
+	        minItems: 1,
+	        maxItems: 64,
+	        items: {
+	          type: "string",
+	          maxLength: 256
+	        }
+	      }
+	    },
+	    allOf: [
+	      {
+	        if: {
+	          properties: {
+	            op: {
+	              enum: ["append", "set"]
+	            }
+	          }
+	        },
+	        then: {
+	          required: ["args"]
+	        }
+	      },
+	      {
+	        if: {
+	          allOf: [
+	            {
+	              properties: {
+	                type: {
+	                  enum: ["request.headers", "response.headers"]
+	                }
+	              }
+	            },
+	            {
+	              properties: {
+	                op: {
+	                  enum: ["set", "append"]
+	                }
+	              }
+	            }
+	          ]
+	        },
+	        then: {
+	          properties: {
+	            target: {
+	              properties: {
+	                key: {
+	                  if: {
+	                    type: "string"
+	                  },
+	                  then: {
+	                    pattern: "^[a-zA-Z0-9_-]+$"
+	                  }
+	                }
+	              }
+	            },
+	            args: {
+	              anyOf: [
+	                {
+	                  type: "string",
+	                  pattern: "^[a-zA-Z0-9_ :;.,\"'?!(){}\\[\\]@<>=+*#$&`|~\\^%/-]+$"
+	                },
+	                {
+	                  type: "array",
+	                  items: {
+	                    type: "string",
+	                    pattern: "^[a-zA-Z0-9_ :;.,\"'?!(){}\\[\\]@<>=+*#$&`|~\\^%/-]+$"
+	                  }
+	                }
+	              ]
+	            }
+	          }
+	        }
+	      }
+	    ]
+	  }
+	};
+	const routesSchema = {
+	  type: "array",
+	  deprecated: true,
+	  description: "A list of routes objects used to rewrite paths to point towards other internal or external paths",
+	  example: [{ dest: "https://docs.example.com", src: "/docs" }],
+	  items: {
+	    anyOf: [
+	      {
+	        type: "object",
+	        required: ["src"],
+	        additionalProperties: false,
+	        properties: {
+	          src: {
+	            type: "string",
+	            maxLength: 4096
+	          },
+	          dest: {
+	            type: "string",
+	            maxLength: 4096
+	          },
+	          headers: {
+	            type: "object",
+	            additionalProperties: false,
+	            minProperties: 1,
+	            maxProperties: 100,
+	            patternProperties: {
+	              "^.{1,256}$": {
+	                type: "string",
+	                maxLength: 32768
+	              }
+	            }
+	          },
+	          methods: {
+	            type: "array",
+	            maxItems: 10,
+	            items: {
+	              type: "string",
+	              maxLength: 32
+	            }
+	          },
+	          caseSensitive: {
+	            type: "boolean"
+	          },
+	          important: {
+	            type: "boolean"
+	          },
+	          user: {
+	            type: "boolean"
+	          },
+	          continue: {
+	            type: "boolean"
+	          },
+	          override: {
+	            type: "boolean"
+	          },
+	          check: {
+	            type: "boolean"
+	          },
+	          isInternal: {
+	            type: "boolean"
+	          },
+	          status: {
+	            type: "integer",
+	            minimum: 100,
+	            maximum: 999
+	          },
+	          locale: {
+	            type: "object",
+	            additionalProperties: false,
+	            minProperties: 1,
+	            properties: {
+	              redirect: {
+	                type: "object",
+	                additionalProperties: false,
+	                minProperties: 1,
+	                maxProperties: 100,
+	                patternProperties: {
+	                  "^.{1,256}$": {
+	                    type: "string",
+	                    maxLength: 4096
+	                  }
+	                }
+	              },
+	              value: {
+	                type: "string",
+	                maxLength: 4096
+	              },
+	              path: {
+	                type: "string",
+	                maxLength: 4096
+	              },
+	              cookie: {
+	                type: "string",
+	                maxLength: 4096
+	              },
+	              default: {
+	                type: "string",
+	                maxLength: 4096
+	              }
+	            }
+	          },
+	          middleware: { type: "number" },
+	          middlewarePath: { type: "string" },
+	          middlewareRawSrc: {
+	            type: "array",
+	            items: {
+	              type: "string"
+	            }
+	          },
+	          has: hasSchema,
+	          missing: hasSchema,
+	          mitigate: mitigateSchema,
+	          transforms: transformsSchema,
+	          env: {
+	            description: "An array of environment variable names that should be replaced at runtime in the destination or headers",
+	            type: "array",
+	            minItems: 1,
+	            maxItems: 64,
+	            items: {
+	              type: "string",
+	              maxLength: 256
+	            }
+	          },
+	          respectOriginCacheControl: {
+	            description: "When set to true (default), external rewrites will respect the Cache-Control header from the origin. When false, caching is disabled for this rewrite.",
+	            type: "boolean"
+	          }
+	        }
+	      },
+	      {
+	        type: "object",
+	        required: ["handle"],
+	        additionalProperties: false,
+	        properties: {
+	          handle: {
+	            type: "string",
+	            maxLength: 32,
+	            enum: ["error", "filesystem", "hit", "miss", "resource", "rewrite"]
+	          }
+	        }
+	      }
+	    ]
+	  }
+	};
+	const rewritesSchema = {
+	  type: "array",
+	  maxItems: 2048,
+	  description: "A list of rewrite definitions.",
+	  items: {
+	    type: "object",
+	    additionalProperties: false,
+	    required: ["source", "destination"],
+	    properties: {
+	      source: {
+	        description: "A pattern that matches each incoming pathname (excluding querystring).",
+	        type: "string",
+	        maxLength: 4096
+	      },
+	      destination: {
+	        description: "An absolute pathname to an existing resource or an external URL.",
+	        type: "string",
+	        maxLength: 4096
+	      },
+	      has: hasSchema,
+	      missing: hasSchema,
+	      statusCode: {
+	        description: "An optional integer to override the status code of the response.",
+	        type: "integer",
+	        minimum: 100,
+	        maximum: 999
+	      },
+	      env: {
+	        description: "An array of environment variable names that should be replaced at runtime in the destination",
+	        type: "array",
+	        minItems: 1,
+	        maxItems: 64,
+	        items: {
+	          type: "string",
+	          maxLength: 256
+	        }
+	      },
+	      respectOriginCacheControl: {
+	        description: "When set to true (default), external rewrites will respect the Cache-Control header from the origin. When false, caching is disabled for this rewrite.",
+	        type: "boolean"
+	      }
+	    }
+	  }
+	};
+	const redirectsSchema = {
+	  title: "Redirects",
+	  type: "array",
+	  maxItems: 2048,
+	  description: "A list of redirect definitions.",
+	  items: {
+	    type: "object",
+	    additionalProperties: false,
+	    required: ["source", "destination"],
+	    properties: {
+	      source: {
+	        description: "A pattern that matches each incoming pathname (excluding querystring).",
+	        type: "string",
+	        maxLength: 4096
+	      },
+	      destination: {
+	        description: "A location destination defined as an absolute pathname or external URL.",
+	        type: "string",
+	        maxLength: 4096
+	      },
+	      permanent: {
+	        description: "A boolean to toggle between permanent and temporary redirect. When `true`, the status code is `308`. When `false` the status code is `307`.",
+	        type: "boolean"
+	      },
+	      statusCode: {
+	        description: "An optional integer to define the status code of the redirect.",
+	        private: true,
+	        type: "integer",
+	        minimum: 100,
+	        maximum: 999
+	      },
+	      has: hasSchema,
+	      missing: hasSchema,
+	      env: {
+	        description: "An array of environment variable names that should be replaced at runtime in the destination",
+	        type: "array",
+	        minItems: 1,
+	        maxItems: 64,
+	        items: {
+	          type: "string",
+	          maxLength: 256
+	        }
+	      }
+	    }
+	  }
+	};
+	const headersSchema = {
+	  type: "array",
+	  maxItems: 2048,
+	  description: "A list of header definitions.",
+	  items: {
+	    type: "object",
+	    additionalProperties: false,
+	    required: ["source", "headers"],
+	    properties: {
+	      source: {
+	        description: "A pattern that matches each incoming pathname (excluding querystring)",
+	        type: "string",
+	        maxLength: 4096
+	      },
+	      headers: {
+	        description: "An array of key/value pairs representing each response header.",
+	        type: "array",
+	        maxItems: 1024,
+	        items: {
+	          type: "object",
+	          additionalProperties: false,
+	          required: ["key", "value"],
+	          properties: {
+	            key: {
+	              type: "string",
+	              maxLength: 4096
+	            },
+	            value: {
+	              type: "string",
+	              maxLength: 32768
+	            }
+	          }
+	        }
+	      },
+	      has: hasSchema,
+	      missing: hasSchema
+	    }
+	  }
+	};
+	const cleanUrlsSchema = {
+	  description: "When set to `true`, all HTML files and Serverless Functions will have their extension removed. When visiting a path that ends with the extension, a 308 response will redirect the client to the extensionless path.",
+	  type: "boolean"
+	};
+	const trailingSlashSchema = {
+	  description: "When `false`, visiting a path that ends with a forward slash will respond with a `308` status code and redirect to the path without the trailing slash.",
+	  type: "boolean"
+	};
+	const bulkRedirectsSchema = {
+	  type: "array",
+	  description: "A list of bulk redirect definitions.",
+	  items: {
+	    type: "object",
+	    additionalProperties: false,
+	    required: ["source", "destination"],
+	    properties: {
+	      source: {
+	        description: "The exact URL path or pattern to match.",
+	        type: "string",
+	        maxLength: 2048
+	      },
+	      destination: {
+	        description: "The target URL path where traffic should be redirected.",
+	        type: "string",
+	        maxLength: 2048
+	      },
+	      permanent: {
+	        description: "A boolean to toggle between permanent and temporary redirect. When `true`, the status code is `308`. When `false` the status code is `307`.",
+	        type: "boolean"
+	      },
+	      statusCode: {
+	        description: "An optional integer to define the status code of the redirect.",
+	        type: "integer",
+	        enum: [301, 302, 307, 308]
+	      },
+	      sensitive: {
+	        description: "A boolean to toggle between case-sensitive and case-insensitive redirect. When `true`, the redirect is case-sensitive. When `false` the redirect is case-insensitive.",
+	        type: "boolean"
+	      },
+	      query: {
+	        description: "Whether the query string should be preserved by the redirect. The default is `false`.",
+	        type: "boolean"
+	      }
+	    }
+	  }
+	};
+	return schemas;
+}
 
-var hasRequiredDist;
+var types;
+var hasRequiredTypes;
 
-function requireDist () {
-	if (hasRequiredDist) return dist.exports;
-	hasRequiredDist = 1;
+function requireTypes () {
+	if (hasRequiredTypes) return types;
+	hasRequiredTypes = 1;
+	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __copyProps = (to, from, except, desc) => {
+	  if (from && typeof from === "object" || typeof from === "function") {
+	    for (let key of __getOwnPropNames(from))
+	      if (!__hasOwnProp.call(to, key) && key !== except)
+	        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+	  }
+	  return to;
+	};
+	var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+	var types_exports = {};
+	types = __toCommonJS(types_exports);
+	return types;
+}
+
+var hasRequiredDist$1;
+
+function requireDist$1 () {
+	if (hasRequiredDist$1) return dist$1.exports;
+	hasRequiredDist$1 = 1;
 	(function (module) {
 		var __defProp = Object.defineProperty;
 		var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -3243,16 +3606,17 @@ function requireDist () {
 		  isHandler: () => isHandler,
 		  isValidHandleValue: () => isValidHandleValue,
 		  mergeRoutes: () => import_merge.mergeRoutes,
-		  normalizeRoutes: () => normalizeRoutes
+		  normalizeRoutes: () => normalizeRoutes,
+		  sourceToRegex: () => import_superstatic2.sourceToRegex
 		});
 		module.exports = __toCommonJS(src_exports);
 		var import_url = require$$0;
-		var import_superstatic = superstatic;
+		var import_superstatic = requireSuperstatic();
 		var import_append = requireAppend();
 		var import_merge = requireMerge();
-		__reExport(src_exports, schemas, module.exports);
-		var import_superstatic2 = superstatic;
-		__reExport(src_exports, types, module.exports);
+		__reExport(src_exports, requireSchemas(), module.exports);
+		var import_superstatic2 = requireSuperstatic();
+		__reExport(src_exports, requireTypes(), module.exports);
 		const VALID_HANDLE_VALUES = [
 		  "filesystem",
 		  "hit",
@@ -3579,20 +3943,446 @@ function requireDist () {
 		  }
 		  return { routes, error: null };
 		}
-	} (dist));
-	return dist.exports;
+	} (dist$1));
+	return dist$1.exports;
+}
+
+requireDist$1();
+
+var dist = {};
+
+var isPlainObject = {};
+
+var hasRequiredIsPlainObject;
+
+function requireIsPlainObject () {
+	if (hasRequiredIsPlainObject) return isPlainObject;
+	hasRequiredIsPlainObject = 1;
+	Object.defineProperty(isPlainObject, "__esModule", { value: true });
+	const objConstructorString = Function.prototype.toString.call(Object);
+	function isPlainObject$1(value) {
+	    //base object
+	    if (typeof value !== 'object' ||
+	        value === null ||
+	        Object.prototype.toString.call(value) !== '[object Object]') {
+	        return false;
+	    }
+	    //get the prototype
+	    const proto = Object.getPrototypeOf(value);
+	    //no prototype === all good
+	    if (proto === null) {
+	        return true;
+	    }
+	    //has own prop 'constructor'
+	    if (!Object.prototype.hasOwnProperty.call(proto, 'constructor')) {
+	        return false;
+	    }
+	    // validate that the constructor is `Object`
+	    return (typeof proto.constructor === 'function' &&
+	        proto.constructor instanceof proto.constructor &&
+	        Function.prototype.toString.call(proto.constructor) === objConstructorString);
+	}
+	isPlainObject.default = isPlainObject$1;
+	return isPlainObject;
+}
+
+var encoders = {};
+
+var base64$1 = {exports: {}};
+
+/*! https://mths.be/base64 v1.0.0 by @mathias | MIT license */
+var base64 = base64$1.exports;
+
+var hasRequiredBase64;
+
+function requireBase64 () {
+	if (hasRequiredBase64) return base64$1.exports;
+	hasRequiredBase64 = 1;
+	(function (module, exports) {
+(function(root) {
+
+			// Detect free variables `exports`.
+			var freeExports = exports;
+
+			// Detect free variable `module`.
+			var freeModule = module &&
+				module.exports == freeExports && module;
+
+			// Detect free variable `global`, from Node.js or Browserified code, and use
+			// it as `root`.
+			var freeGlobal = typeof commonjsGlobal == 'object' && commonjsGlobal;
+			if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
+				root = freeGlobal;
+			}
+
+			/*--------------------------------------------------------------------------*/
+
+			var InvalidCharacterError = function(message) {
+				this.message = message;
+			};
+			InvalidCharacterError.prototype = new Error;
+			InvalidCharacterError.prototype.name = 'InvalidCharacterError';
+
+			var error = function(message) {
+				// Note: the error messages used throughout this file match those used by
+				// the native `atob`/`btoa` implementation in Chromium.
+				throw new InvalidCharacterError(message);
+			};
+
+			var TABLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+			// http://whatwg.org/html/common-microsyntaxes.html#space-character
+			var REGEX_SPACE_CHARACTERS = /[\t\n\f\r ]/g;
+
+			// `decode` is designed to be fully compatible with `atob` as described in the
+			// HTML Standard. http://whatwg.org/html/webappapis.html#dom-windowbase64-atob
+			// The optimized base64-decoding algorithm used is based on @atk’s excellent
+			// implementation. https://gist.github.com/atk/1020396
+			var decode = function(input) {
+				input = String(input)
+					.replace(REGEX_SPACE_CHARACTERS, '');
+				var length = input.length;
+				if (length % 4 == 0) {
+					input = input.replace(/==?$/, '');
+					length = input.length;
+				}
+				if (
+					length % 4 == 1 ||
+					// http://whatwg.org/C#alphanumeric-ascii-characters
+					/[^+a-zA-Z0-9/]/.test(input)
+				) {
+					error(
+						'Invalid character: the string to be decoded is not correctly encoded.'
+					);
+				}
+				var bitCounter = 0;
+				var bitStorage;
+				var buffer;
+				var output = '';
+				var position = -1;
+				while (++position < length) {
+					buffer = TABLE.indexOf(input.charAt(position));
+					bitStorage = bitCounter % 4 ? bitStorage * 64 + buffer : buffer;
+					// Unless this is the first of a group of 4 characters…
+					if (bitCounter++ % 4) {
+						// …convert the first 8 bits to a single ASCII character.
+						output += String.fromCharCode(
+							0xFF & bitStorage >> (-2 * bitCounter & 6)
+						);
+					}
+				}
+				return output;
+			};
+
+			// `encode` is designed to be fully compatible with `btoa` as described in the
+			// HTML Standard: http://whatwg.org/html/webappapis.html#dom-windowbase64-btoa
+			var encode = function(input) {
+				input = String(input);
+				if (/[^\0-\xFF]/.test(input)) {
+					// Note: no need to special-case astral symbols here, as surrogates are
+					// matched, and the input is supposed to only contain ASCII anyway.
+					error(
+						'The string to be encoded contains characters outside of the ' +
+						'Latin1 range.'
+					);
+				}
+				var padding = input.length % 3;
+				var output = '';
+				var position = -1;
+				var a;
+				var b;
+				var c;
+				var buffer;
+				// Make sure any padding is handled outside of the loop.
+				var length = input.length - padding;
+
+				while (++position < length) {
+					// Read three bytes, i.e. 24 bits.
+					a = input.charCodeAt(position) << 16;
+					b = input.charCodeAt(++position) << 8;
+					c = input.charCodeAt(++position);
+					buffer = a + b + c;
+					// Turn the 24 bits into four chunks of 6 bits each, and append the
+					// matching character for each of them to the output.
+					output += (
+						TABLE.charAt(buffer >> 18 & 0x3F) +
+						TABLE.charAt(buffer >> 12 & 0x3F) +
+						TABLE.charAt(buffer >> 6 & 0x3F) +
+						TABLE.charAt(buffer & 0x3F)
+					);
+				}
+
+				if (padding == 2) {
+					a = input.charCodeAt(position) << 8;
+					b = input.charCodeAt(++position);
+					buffer = a + b;
+					output += (
+						TABLE.charAt(buffer >> 10) +
+						TABLE.charAt((buffer >> 4) & 0x3F) +
+						TABLE.charAt((buffer << 2) & 0x3F) +
+						'='
+					);
+				} else if (padding == 1) {
+					buffer = input.charCodeAt(position);
+					output += (
+						TABLE.charAt(buffer >> 2) +
+						TABLE.charAt((buffer << 4) & 0x3F) +
+						'=='
+					);
+				}
+
+				return output;
+			};
+
+			var base64 = {
+				'encode': encode,
+				'decode': decode,
+				'version': '1.0.0'
+			};
+
+			// Some AMD build optimizers, like r.js, check for specific condition patterns
+			// like the following:
+			if (freeExports && !freeExports.nodeType) {
+				if (freeModule) { // in Node.js or RingoJS v0.8.0+
+					freeModule.exports = base64;
+				} else { // in Narwhal or RingoJS v0.7.0-
+					for (var key in base64) {
+						base64.hasOwnProperty(key) && (freeExports[key] = base64[key]);
+					}
+				}
+			} else { // in Rhino or a web browser
+				root.base64 = base64;
+			}
+
+		}(base64)); 
+	} (base64$1, base64$1.exports));
+	return base64$1.exports;
+}
+
+var hasRequiredEncoders;
+
+function requireEncoders () {
+	if (hasRequiredEncoders) return encoders;
+	hasRequiredEncoders = 1;
+	Object.defineProperty(encoders, "__esModule", { value: true });
+	encoders.encoders = void 0;
+	const base_64_1 = requireBase64();
+	const binary = (input) => {
+	    let binary = "";
+	    const bytes = new Uint8Array(input);
+	    const len = bytes.byteLength;
+	    for (let i = 0; i < len; i++) {
+	        const buffer = bytes[i];
+	        if (buffer)
+	            binary += String.fromCharCode(buffer);
+	    }
+	    return binary;
+	};
+	const hex = (input) => [...new Uint8Array(input)]
+	    .map((b) => b.toString(16).padStart(2, "0"))
+	    .join("");
+	// @see https://stackoverflow.com/questions/35155089/node-sha-256-base64-digest
+	// @see https://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
+	const base64 = (input) => (0, base_64_1.encode)(binary(input));
+	const base64url = (input) => base64(input).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+	encoders.encoders = {
+	    base64,
+	    base64url,
+	    hex,
+	    binary,
+	};
+	return encoders;
+}
+
+var hasRequiredDist;
+
+function requireDist () {
+	if (hasRequiredDist) return dist;
+	hasRequiredDist = 1;
+	var __importDefault = (dist && dist.__importDefault) || function (mod) {
+	    return (mod && mod.__esModule) ? mod : { "default": mod };
+	};
+	Object.defineProperty(dist, "__esModule", { value: true });
+	dist.deterministicString = void 0;
+	const node_crypto_1 = crypto$1;
+	const isPlainObject_1 = __importDefault(requireIsPlainObject());
+	const encoders_1 = requireEncoders();
+	/** Creates a deterministic hash for all inputs. */
+	async function deterministicHash(input, algorithm = "SHA-1", output = "hex") {
+	    const encoder = new TextEncoder();
+	    const data = encoder.encode(deterministicString(input));
+	    const hash = await node_crypto_1.webcrypto.subtle.digest(algorithm, data);
+	    return encoders_1.encoders[output](hash);
+	}
+	dist.default = deterministicHash;
+	function deterministicString(input) {
+	    if (typeof input === 'string') {
+	        //wrap in quotes (and escape queotes) to differentiate from stringified primitives
+	        return JSON.stringify(input);
+	    }
+	    else if (typeof input === 'symbol' || typeof input === 'function') {
+	        //use `toString` for an accurate representation of these
+	        return input.toString();
+	    }
+	    else if (typeof input === 'bigint') {
+	        //bigint turns into a string int, so I need to differentiate it from a normal int
+	        return `${input}n`;
+	    }
+	    else if (input === globalThis || input === undefined || input === null || typeof input === 'boolean' || typeof input === 'number' || typeof input !== 'object') {
+	        //cast to string for any of these
+	        return `${input}`;
+	    }
+	    else if (input instanceof Date) {
+	        //using timestamp for dates
+	        return `(${input.constructor.name}:${input.getTime()})`;
+	    }
+	    else if (input instanceof RegExp || input instanceof Error || input instanceof WeakMap || input instanceof WeakSet) {
+	        //use simple `toString`. `WeakMap` and `WeakSet` are non-iterable, so this is the best I can do
+	        return `(${input.constructor.name}:${input.toString()})`;
+	    }
+	    else if (input instanceof Set) {
+	        //add the constructor as a key
+	        let ret = `(${input.constructor.name}:[`;
+	        //add all unique values
+	        for (const val of input.values()) {
+	            ret += `${deterministicString(val)},`;
+	        }
+	        ret += '])';
+	        return ret;
+	    }
+	    else if (Array.isArray(input) ||
+	        input instanceof Int8Array ||
+	        input instanceof Uint8Array ||
+	        input instanceof Uint8ClampedArray ||
+	        input instanceof Int16Array ||
+	        input instanceof Uint16Array ||
+	        input instanceof Int32Array ||
+	        input instanceof Uint32Array ||
+	        input instanceof Float32Array ||
+	        input instanceof Float64Array ||
+	        input instanceof BigInt64Array ||
+	        input instanceof BigUint64Array) {
+	        //add the constructor as a key
+	        let ret = `(${input.constructor.name}:[`;
+	        //add all key/value pairs
+	        for (const [k, v] of input.entries()) {
+	            ret += `(${k}:${deterministicString(v)}),`;
+	        }
+	        ret += '])';
+	        return ret;
+	    }
+	    else if (input instanceof ArrayBuffer || input instanceof SharedArrayBuffer) {
+	        //each typed array must be in multiples of their byte size.
+	        //see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#typedarray_objects
+	        if (input.byteLength % 8 === 0) {
+	            return deterministicString(new BigUint64Array(input));
+	        }
+	        else if (input.byteLength % 4 === 0) {
+	            return deterministicString(new Uint32Array(input));
+	        }
+	        else if (input.byteLength % 2 === 0) {
+	            return deterministicString(new Uint16Array(input));
+	        }
+	        else {
+	            /** @todo - Change this to a system that breaks it down into parts. E.g. byteLength of 17 = BigUint64Array*2 and Uint8Array */
+	            let ret = '(';
+	            for (let i = 0; i < input.byteLength; i++) {
+	                ret += `${deterministicString(new Uint8Array(input.slice(i, i + 1)))},`;
+	            }
+	            ret += ')';
+	            return ret;
+	        }
+	    }
+	    else if (input instanceof Map || (0, isPlainObject_1.default)(input)) {
+	        //all key/values will be put here for sorting by key
+	        const sortable = [];
+	        //get key/value pairs
+	        const entries = (input instanceof Map
+	            ? input.entries()
+	            : Object.entries(input));
+	        //add all key value pairs
+	        for (const [k, v] of entries) {
+	            sortable.push([deterministicString(k), deterministicString(v)]);
+	        }
+	        //if not a map, get Symbol keys and add them
+	        if (!(input instanceof Map)) {
+	            const symbolKeys = Object.getOwnPropertySymbols(input);
+	            //convert each symbol key to a key/value pair
+	            for (let i = 0; i < symbolKeys.length; i++) {
+	                sortable.push([
+	                    deterministicString(symbolKeys[i]),
+	                    deterministicString(
+	                    //have to ignore because `noImplicitAny` is `true` but this is implicitly `any`
+	                    //@ts-ignore
+	                    input[symbolKeys[i]])
+	                ]);
+	            }
+	        }
+	        //sort alphabetically by keys
+	        sortable.sort(([a], [b]) => a.localeCompare(b));
+	        //add the constructor as a key
+	        let ret = `(${input.constructor.name}:[`;
+	        //add all of the key/value pairs
+	        for (const [k, v] of sortable) {
+	            ret += `(${k}:${v}),`;
+	        }
+	        ret += '])';
+	        return ret;
+	    }
+	    //a class/non-plain object
+	    const allEntries = [];
+	    for (const k in input) {
+	        allEntries.push([
+	            deterministicString(k),
+	            deterministicString(
+	            //have to ignore because `noImplicitAny` is `true` but this is implicitly `any`
+	            //@ts-ignore
+	            input[k])
+	        ]);
+	    }
+	    //get all own property symbols
+	    const symbolKeys = Object.getOwnPropertySymbols(input);
+	    //convert each symbol key to a key/value pair
+	    for (let i = 0; i < symbolKeys.length; i++) {
+	        allEntries.push([
+	            deterministicString(symbolKeys[i]),
+	            deterministicString(
+	            //have to ignore because `noImplicitAny` is `true` but this is implicitly `any`
+	            //@ts-ignore
+	            input[symbolKeys[i]])
+	        ]);
+	    }
+	    //sort alphabetically by keys
+	    allEntries.sort(([a], [b]) => a.localeCompare(b));
+	    //add the constructor as a key
+	    let ret = `(${input.constructor.name}:[`;
+	    //add all of the key/value pairs
+	    for (const [k, v] of allEntries) {
+	        ret += `(${k}:${v}),`;
+	    }
+	    ret += '])';
+	    return ret;
+	}
+	dist.deterministicString = deterministicString;
+	return dist;
 }
 
 requireDist();
 
 nodePath.posix.join;
 
+new RegExp(
+  builtinModules.map((mod) => `(^${mod}$|^node:${mod}$)`).join("|")
+);
+
 const ASTRO_PATH_HEADER = "x-astro-path";
 const ASTRO_PATH_PARAM = "x_astro_path";
 const ASTRO_LOCALS_HEADER = "x-astro-locals";
 const ASTRO_MIDDLEWARE_SECRET_HEADER = "x-astro-middleware-secret";
 
-const createExports = (manifest, { middlewareSecret, skewProtection }) => {
+const createExports = (manifest, {
+  middlewareSecret,
+  skewProtection
+}) => {
   const app = new NodeApp(manifest);
   const handler = async (req, res) => {
     const url = new URL(`https://example.com${req.url}`);
@@ -3616,12 +4406,24 @@ const createExports = (manifest, { middlewareSecret, skewProtection }) => {
     if (skewProtection && process.env.VERCEL_SKEW_PROTECTION_ENABLED === "1") {
       req.headers["x-deployment-id"] = process.env.VERCEL_DEPLOYMENT_ID;
     }
-    const webResponse = await app.render(req, { addCookieHeader: true, clientAddress, locals });
+    const webResponse = await app.render(req, {
+      addCookieHeader: true,
+      clientAddress,
+      locals
+    });
     await NodeApp.writeResponse(webResponse, res);
   };
-  return { default: handler };
+  return {
+    default: handler
+  };
 };
 function start() {
 }
 
-export { createExports as c, start as s };
+const serverEntrypointModule = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  createExports,
+  start
+}, Symbol.toStringTag, { value: 'Module' }));
+
+export { start as a, createExports as c, serverEntrypointModule as s };

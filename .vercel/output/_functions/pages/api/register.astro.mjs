@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { U as User } from '../../chunks/user_BoVRk9tZ.mjs';
-import { c as connect } from '../../chunks/connection_DAbYXkXZ.mjs';
+import { U as User } from '../../chunks/User_BoVRk9tZ.mjs';
+import { c as connect } from '../../chunks/connection_suXsM9xL.mjs';
 export { renderers } from '../../renderers.mjs';
 
 const POST = async ({ request }) => {
@@ -39,7 +39,7 @@ const POST = async ({ request }) => {
     await user.save();
     const token = jwt.sign(
       { id: user._id },
-      "your_jwt_secret_key",
+      undefined                           || "your_jwt_secret",
       { expiresIn: "24h" }
     );
     let _id = user._id;
