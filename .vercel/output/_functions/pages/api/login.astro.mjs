@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { U as User } from '../../chunks/user_BoVRk9tZ.mjs';
-import { c as connect } from '../../chunks/connection_DAbYXkXZ.mjs';
+import { U as User } from '../../chunks/User_BoVRk9tZ.mjs';
+import { c as connect } from '../../chunks/connection_suXsM9xL.mjs';
 import 'mongoose';
 export { renderers } from '../../renderers.mjs';
 
@@ -65,7 +65,7 @@ const POST = async ({ request }) => {
         headers
       });
     }
-    const jwtSecret = "your_jwt_secret_key";
+    const jwtSecret = undefined                           || "your_jwt_secret";
     if (!jwtSecret) ;
     const payload = {
       userId: user._id.toString()

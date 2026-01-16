@@ -1,6 +1,6 @@
 import { U as UserDetails } from '../../../chunks/UserDetails_FAlKQu3v.mjs';
-import { U as User } from '../../../chunks/user_BoVRk9tZ.mjs';
-import { c as connect } from '../../../chunks/connection_DAbYXkXZ.mjs';
+import { U as User } from '../../../chunks/User_BoVRk9tZ.mjs';
+import { c as connect } from '../../../chunks/connection_suXsM9xL.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const POST = async ({ request }) => {
@@ -9,7 +9,10 @@ const POST = async ({ request }) => {
   };
   try {
     const profileData = await request.json();
+    console.log("profileData ==> ", profileData);
     const { _id, newProfile } = profileData;
+    console.log("_id ==> ", _id);
+    console.log("newProfile ==> ", newProfile);
     const { department, universityName, name, username, codeforces } = newProfile;
     if (!department || !universityName || !name) {
       return new Response(
@@ -18,7 +21,6 @@ const POST = async ({ request }) => {
           required: [
             "department",
             "universityName",
-            "email",
             "name",
             "username"
           ]
