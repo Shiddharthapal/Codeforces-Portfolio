@@ -5,14 +5,19 @@ import vercel from "@astrojs/vercel";
 
 export default defineConfig({
   output: "server",
-  adapter: vercel(),
+  adapter: vercel({
+    // Disable symlinks - copy files instead
+    includeFiles: [], 
+    functionPerRoute: false, // Use single function
+  }),
+  
   integrations: [
     react(),
     tailwind({
       applyBaseStyles: false,
     }),
   ],
-  // Configure path aliases
+
   vite: {
     resolve: {
       alias: {
