@@ -1,22 +1,20 @@
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
-import vercel from "@astrojs/vercel";
+import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
 
 export default defineConfig({
-  output: "server",
-  adapter: vercel(),
-  integrations: [
-    react(),
-    tailwind({
-      applyBaseStyles: false,
-    }),
-  ],
-  // Configure path aliases
+  integrations: [react()],
+  output: 'static', // or 'server' if using SSR
+  
+  // Add this for SPA routing
   vite: {
-    resolve: {
-      alias: {
-        "@": "/src",
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        },
       },
     },
   },
