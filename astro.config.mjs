@@ -1,20 +1,27 @@
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
-import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
+import vercel from "@astrojs/vercel";
 
 export default defineConfig({
-  integrations: [react()],
-  output: 'static', // or 'server' if using SSR
+  output: "server",
+  adapter: vercel({
+    // Disable symlinks - copy files instead
+    includeFiles: [], 
+    functionPerRoute: false, // Use single function
+  }),
   
-  // Add this for SPA routing
+  integrations: [
+    react(),
+    tailwind({
+      applyBaseStyles: false,
+    }),
+  ],
+
   vite: {
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: undefined,
-        },
+    resolve: {
+      alias: {
+        "@": "/src",
       },
     },
   },
