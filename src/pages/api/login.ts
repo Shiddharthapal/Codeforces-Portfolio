@@ -110,7 +110,7 @@ export const POST: APIRoute = async ({ request }) => {
     };
 
     // Generate token
-    const token = jwt.sign(payload, jwtSecret, { expiresIn: "7d" });
+    const token = jwt.sign(payload, jwtSecret, { expiresIn: "24h" });
 
     // Return success response
     return new Response(
