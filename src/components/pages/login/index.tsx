@@ -90,12 +90,12 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     try {
       setGoogleLoading(true)
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+      // const response = await fetch("/api/auth/google", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      // })
 
       const result = await response.json()
 

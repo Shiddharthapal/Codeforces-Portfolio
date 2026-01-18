@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 export default async function ContestantDetails({id}: {id:string}) {
   
       try {
-        const response = await fetch(`/api/users/${id}`, {
+        const response = await fetch(`/api/userApi/${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -25,7 +25,7 @@ export default async function ContestantDetails({id}: {id:string}) {
         }
 
         const Userresponse = await fetch(
-          `/api/users/codeforces?handle=${encodeURIComponent(handle)}`,
+          `/api/userApi/codeforces?handle=${encodeURIComponent(handle)}`,
           {
             method: "GET",
             headers: {
