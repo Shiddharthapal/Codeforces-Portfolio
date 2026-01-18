@@ -10,12 +10,12 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const profileData = await request.json();
-    console.log("profileData ==> ", profileData);
+    // console.log("profileData ==> ", profileData);
 
     // Validate required fields
     const { id, newProfile } = profileData;
-    console.log("_id ==> ", id);
-    console.log("newProfile ==> ", newProfile);
+    // console.log("_id ==> ", id);
+    // console.log("newProfile ==> ", newProfile);
     const { department, universityName, name, username, codeforces } =
       newProfile;
 
@@ -39,7 +39,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Check if user exists
     const user = await User.findById({ _id: id });
-    console.log("user ==> ", user);
+    // console.log("user ==> ", user);
     if (!user) {
       return new Response(
         JSON.stringify({
@@ -51,7 +51,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Check if profile already exists
     let profiledetails = await UserDetails.findOne({ userId: id });
-    console.log("profiledetails ==> ", profiledetails);
+    // console.log("profiledetails ==> ", profiledetails);
     if (!profiledetails) {
       profiledetails = new UserDetails({
         userId: id,
@@ -65,7 +65,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
 
       const savedProfile = await profiledetails.save();
-      console.log("savedProfile ==> ", savedProfile);
+      // console.log("savedProfile ==> ", savedProfile);
     } else {
       (profiledetails.name = name || profiledetails.name),
         (profiledetails.username = username || profiledetails.username),

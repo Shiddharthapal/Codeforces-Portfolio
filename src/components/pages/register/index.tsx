@@ -6,14 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { Eye, EyeOff } from "lucide-react";
-import { handleRegister } from "@/lib/auth";
 import type { RootState } from "@/redux/store";
 import {
   loginStart,
   loginSuccess,
   loginFailure,
 } from "@/redux/slices/authSlice";
-import type { AppDispatch } from "@/redux/store";
 
 // Create a forwardRef version of Input
 const Input = forwardRef<
@@ -68,6 +66,7 @@ export default function Register() {
           throw new Error("Registration failed");
         }
         const result = await response.json();
+        // console.log("result ==> ", result);
     
         // Update Redux state
         dispatch(
