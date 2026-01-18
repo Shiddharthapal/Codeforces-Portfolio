@@ -30,7 +30,6 @@ const userSchema = new mongoose.Schema<IUser>(
       type: String,
       required: [true, "Please provide a password"],
       minlength: [6, "Password must be at least 6 characters long"],
-      select: false, // Don't return password in queries
     },
   },
   {
@@ -73,7 +72,7 @@ userSchema.methods.comparePassword = async function (
 userSchema.methods.generateAuthToken = function (this: IUser): string {
   return jwt.sign(
     { id: this._id },
-    process.env.JWT_SECRET || "your-jwt-secret",
+    import.meta.env.JWT_SECRET || "your-jwt-secret",
     {
       expiresIn: "24h", // Token expires in 15 minutes
     }

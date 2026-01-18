@@ -8,6 +8,12 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { Eye, EyeOff } from "lucide-react";
 import { handleRegister } from "@/lib/auth";
 import type { RootState } from "@/redux/store";
+import {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+} from "@/redux/slices/authSlice";
+import type { AppDispatch } from "@/redux/store";
 
 // Create a forwardRef version of Input
 const Input = forwardRef<
@@ -44,15 +50,35 @@ export default function Register() {
       return;
     }
 
-    try {
-      const response = await handleRegister(
-        {
+     try {
+        dispatch(loginStart());
+    
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
           email: data.email,
           password: data.password,
-        },
-        dispatch
-      );
-      console.log("response=>", response);
+        }),
+        });
+    
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || "Registration failed");
+        }
+    
+        // Update Redux state
+        dispatch(
+          loginSuccess({
+            _id: result._id,
+            email: data.email,
+            token: result.token,
+          })
+        );
+    
+        return result;
       // Redirect to home page after successful registration
       navigate("/");
     } catch (err) {

@@ -5,6 +5,7 @@ import connect from "@/lib/connection";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    // Parse request body
     const { email, password } = await request.json();
 
     // Validate input
@@ -14,10 +15,16 @@ export const POST: APIRoute = async ({ request }) => {
           success: false,
           message: "Please provide all required fields",
         }),
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
     }
 
+    // Connect to database
     await connect();
 
     // Check if user already exists
@@ -25,6 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (existingUser) {
       return new Response(
         JSON.stringify({
+          success: false,
           message: "User with this email already exists",
         }),
         {
@@ -36,29 +44,26 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Create new user
+    // Create new user - simplified (no need to set twice)
     const user = new User({
       email,
-      password,
+      password, // Make sure your User model hashes this!
     });
-
-    user.email = email;
-    user.password = password;
 
     // Save user to database
     await user.save();
 
-    // Generate tokens
+    // Generate token
     const token = jwt.sign(
       { id: user._id },
       import.meta.env.JWT_SECRET || "your_jwt_secret",
       { expiresIn: "24h" }
     );
 
-    let _id = user._id;
     return new Response(
       JSON.stringify({
-        _id,
+        success: true,
+        _id: user._id.toString(), // Convert ObjectId to string
         token,
         message: "Registration successful",
       }),
@@ -71,9 +76,13 @@ export const POST: APIRoute = async ({ request }) => {
     );
   } catch (error) {
     console.error("Registration error:", error);
+    
+    // Return proper JSON error
     return new Response(
       JSON.stringify({
+        success: false,
         message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
       }),
       {
         status: 500,
