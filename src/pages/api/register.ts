@@ -57,18 +57,16 @@ export const POST: APIRoute = async ({ request }) => {
     const token = jwt.sign(
       { id: user._id },
       import.meta.env.JWT_SECRET || "your_jwt_secret",
-      { expiresIn: "24h" }
+      { expiresIn: "1d" }
     );
 
     return new Response(
       JSON.stringify({
-        success: true,
-        _id: user._id.toString(), // Convert ObjectId to string
         token,
         message: "Registration successful",
       }),
       {
-        status: 201,
+        status: 200,
         headers: {
           "Content-Type": "application/json",
         },
@@ -80,7 +78,6 @@ export const POST: APIRoute = async ({ request }) => {
     // Return proper JSON error
     return new Response(
       JSON.stringify({
-        success: false,
         message: "Internal server error",
         error: error instanceof Error ? error.message : "Unknown error",
       }),

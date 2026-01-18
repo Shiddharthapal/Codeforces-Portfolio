@@ -64,10 +64,10 @@ export default function Register() {
         }),
         });
     
-        const result = await response.json();
         if (!response.ok) {
-          throw new Error(result.message || "Registration failed");
+          throw new Error("Registration failed");
         }
+        const result = await response.json();
     
         // Update Redux state
         dispatch(
@@ -77,10 +77,10 @@ export default function Register() {
             token: result.token,
           })
         );
-    
+      navigate("/");  
         return result;
       // Redirect to home page after successful registration
-      navigate("/");
+      
     } catch (err) {
       // Error is handled by handleRegister through Redux
       console.error("Registration error:", err);
