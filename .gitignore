@@ -5,3 +5,6 @@ dist
 !.env.example
 .output
 .astro
+
+# Local Netlify folder
+.netlify
