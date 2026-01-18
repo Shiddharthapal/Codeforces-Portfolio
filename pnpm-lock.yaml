@@ -159,6 +159,9 @@ importers:
       postcss:
         specifier: ^8.4.32
         version: 8.5.3
+      prettier:
+        specifier: 3.8.0
+        version: 3.8.0
       tailwindcss:
         specifier: ^3.3.6
         version: 3.4.17
@@ -4781,6 +4784,11 @@ packages:
   precinct@12.2.0:
     resolution: {integrity: sha512-NFBMuwIfaJ4SocE9YXPU/n4AcNSoFMVFjP72nvl3cx69j/ke61/hPOWFREVxLkFhhEGnA8ZuVfTqJBa+PK3b5w==}
     engines: {node: '>=18'}
+    hasBin: true
+
+  prettier@3.8.0:
+    resolution: {integrity: sha512-yEPsovQfpxYfgWNhCfECjG5AQaO+K3dp6XERmOepyPDVqcJm+bjyCVO3pmU+nAPe0N5dDvekfGezt/EIiRe1TA==}
+    engines: {node: '>=14'}
     hasBin: true
 
   prismjs@1.30.0:
@@ -11186,6 +11194,8 @@ snapshots:
       typescript: 5.8.2
     transitivePeerDependencies:
       - supports-color
+
+  prettier@3.8.0: {}
 
   prismjs@1.30.0: {}
 
