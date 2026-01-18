@@ -10,7 +10,7 @@ const connect = async () => {
 
   try {
     const MONGODB_URI =
-      import.meta.env.PUBLIC_MONGODB_URI || import.meta.env.MONGODB_URI;
+      import.meta.env.MONGODB_URI || import.meta.env.PUBLIC_MONGODB_URI || "mongodb+srv://pal351069:shiddhartha29rikta@cluster0.qcjbn.mongodb.net/contestracker";
 
     if (!MONGODB_URI) {
       throw new Error(
