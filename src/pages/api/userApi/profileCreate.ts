@@ -14,8 +14,6 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Validate required fields
     const { id, newProfile } = profileData;
-    // console.log("_id ==> ", id);
-    // console.log("newProfile ==> ", newProfile);
     const { department, universityName, name, username, codeforces } =
       newProfile;
 
