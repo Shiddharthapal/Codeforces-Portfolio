@@ -2,13 +2,12 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
 import vercel from "@astrojs/vercel";
+import netlify from "@astrojs/netlify";
 
 export default defineConfig({
   output: "server",
-  adapter: vercel({
-    // Disable symlinks - copy files instead
-    includeFiles: [], 
-    functionPerRoute: false, // Use single function
+  adapter: netlify({
+    edgeMiddleware: false,
   }),
   
   integrations: [
@@ -25,11 +24,5 @@ export default defineConfig({
       },
     },
   },
-  build: {
-    rollupOptions: {
-      output: {
-        format: 'esm' // Ensure ESM format
-      }
-    }
-  }
+
 });
