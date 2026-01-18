@@ -1,6 +1,6 @@
 import { U as UserDetails } from '../../../chunks/UserDetails_FAlKQu3v.mjs';
-import { U as User } from '../../../chunks/User_BoVRk9tZ.mjs';
-import { c as connect } from '../../../chunks/connection_suXsM9xL.mjs';
+import { U as User } from '../../../chunks/User_tqs9H9uk.mjs';
+import { c as connect } from '../../../chunks/connection_B9bDQ4iN.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const GET = async ({ params, request }) => {

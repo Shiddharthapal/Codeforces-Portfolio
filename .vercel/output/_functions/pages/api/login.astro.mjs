@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { U as User } from '../../chunks/User_BoVRk9tZ.mjs';
-import { c as connect } from '../../chunks/connection_suXsM9xL.mjs';
+import { U as User } from '../../chunks/User_tqs9H9uk.mjs';
+import { c as connect } from '../../chunks/connection_B9bDQ4iN.mjs';
 import 'mongoose';
 export { renderers } from '../../renderers.mjs';
 
@@ -71,7 +71,7 @@ const POST = async ({ request }) => {
       userId: user._id.toString()
       // Convert ObjectId to string
     };
-    const token = jwt.sign(payload, jwtSecret, { expiresIn: "7d" });
+    const token = jwt.sign(payload, jwtSecret, { expiresIn: "24h" });
     return new Response(
       JSON.stringify({
         _id: user?._id,

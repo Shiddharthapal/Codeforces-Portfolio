@@ -16,9 +16,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Please provide a password"],
-      minlength: [6, "Password must be at least 6 characters long"],
-      select: false
-      // Don't return password in queries
+      minlength: [6, "Password must be at least 6 characters long"]
     }
   },
   {
@@ -52,7 +50,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.methods.generateAuthToken = function() {
   return jwt.sign(
     { id: this._id },
-    process.env.JWT_SECRET || "your-jwt-secret",
+    "your-jwt-secret",
     {
       expiresIn: "24h"
       // Token expires in 15 minutes

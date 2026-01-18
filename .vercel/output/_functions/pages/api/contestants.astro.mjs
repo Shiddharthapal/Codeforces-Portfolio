@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { U as UserDetails } from '../../chunks/UserDetails_FAlKQu3v.mjs';
-import { c as connect } from '../../chunks/connection_suXsM9xL.mjs';
+import { c as connect } from '../../chunks/connection_B9bDQ4iN.mjs';
 import mongoose from 'mongoose';
 export { renderers } from '../../renderers.mjs';
 
