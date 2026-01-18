@@ -99,18 +99,18 @@ export default function App() {
             <Router>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-                  {/* Render routes from configuration */}
-                  {routeConfig.map((route) => (
-                    <Route
-                      key={route.path}
-                      path={route.path}
-                      element={<RouteRenderer route={route} />}
-                    />
-                  ))}
+  {routeConfig.map((route) => (
+    <Route
+      key={route.path}
+      path={route.path}
+      element={<RouteRenderer route={route} />}
+    />
+  ))}
 
-                  {/* Fallback Route - Redirect to home if no match */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
+  {/* Add a proper 404 page instead of redirect */}
+  <Route path="/404" element={<div>Page Not Found</div>} />
+  <Route path="*" element={<Navigate to="/404" replace />} />
+</Routes>
               </Suspense>
             </Router>
           </PersistGate>
