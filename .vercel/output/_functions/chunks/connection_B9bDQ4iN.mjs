@@ -7,7 +7,7 @@ const connect = async () => {
     return;
   }
   try {
-    const MONGODB_URI = "mongodb://localhost:27017/codeforces-portal";
+    const MONGODB_URI = undefined                            || "mongodb+srv://pal351069:shiddhartha29rikta@cluster0.qcjbn.mongodb.net/contestracker";
     if (!MONGODB_URI) ;
     const options = {
       serverSelectionTimeoutMS: 5e3

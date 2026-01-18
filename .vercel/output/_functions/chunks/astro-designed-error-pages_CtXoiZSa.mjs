@@ -676,7 +676,7 @@ const ACTION_QUERY_PARAMS$1 = {
   actionName: "_action"};
 const ACTION_RPC_ROUTE_PATTERN = "/_actions/[...path]";
 
-const __vite_import_meta_env__ = {"ASSETS_PREFIX": undefined, "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "PUBLIC_JWT_SECRET": "your_jwt_secret_key", "PUBLIC_MONGODB_URI": "mongodb://localhost:27017/codeforces-portal", "SITE": undefined, "SSR": true};
+const __vite_import_meta_env__ = {"ASSETS_PREFIX": undefined, "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "PUBLIC_JWT_SECRET": "your_jwt_secret_key", "PUBLIC_MONGODB_URI": "mongodb+srv://pal351069:shiddhartha29rikta@cluster0.qcjbn.mongodb.net/contestracker", "SITE": undefined, "SSR": true};
 const ACTION_QUERY_PARAMS = ACTION_QUERY_PARAMS$1;
 const codeToStatusMap = {
   // Implemented from IANA HTTP Status Code Registry

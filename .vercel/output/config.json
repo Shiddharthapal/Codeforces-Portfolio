@@ -20,6 +20,22 @@
 			"dest": "_render"
 		},
 		{
+			"src": "^/api/auth/forgot-password/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/auth/reset-password/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/auth/send-otp/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/auth/verify-otp/?$",
+			"dest": "_render"
+		},
+		{
 			"src": "^/api/contestants/?$",
 			"dest": "_render"
 		},
