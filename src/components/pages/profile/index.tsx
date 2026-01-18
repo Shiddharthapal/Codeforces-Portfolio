@@ -60,9 +60,12 @@ export default function ProfilePage() {
   const location = useLocation();
   const isDarkMode = location.state?.isDarkMode;
 
-  const { _id, token } = useAppSelector((state) => state.auth);
+  const user = useAppSelector((state) => state.auth);
+  console.log("user ==> ", user);
+  const id=user._id;
+  console.log("id ==> ", id);
   // console.log("🧞‍♂️  token profile --->", token);
-  // console.log("🧞‍♂️  _id profile --->", _id);
+  
 
   //for notification
   useEffect(() => {
@@ -77,7 +80,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchdata = async () => {
       try {
-        let speceficUserResponse = await fetch(`/api/userApi/${_id}`);
+        let speceficUserResponse = await fetch(`/api/userApi/${id}`);
         if (!speceficUserResponse.ok) {
           throw new Error("Failed to fetch all users");
         }
@@ -88,7 +91,7 @@ export default function ProfilePage() {
       }
     };
     fetchdata();
-  }, [_id]);
+  }, [id]);
 
   //handler function of create profile
   const handleCreateProfile = async (newProfile: Profile) => {
@@ -98,7 +101,7 @@ export default function ProfilePage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ newProfile, _id }),
+      body: JSON.stringify({ newProfile, id }),
     });
     if (!response.ok) {
       console.log("Profile not created");

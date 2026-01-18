@@ -55,13 +55,14 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Generate token
     const token = jwt.sign(
-      { id: user._id },
+      { _id: user._id },
       import.meta.env.JWT_SECRET || "your_jwt_secret",
       { expiresIn: "1d" }
     );
 
     return new Response(
       JSON.stringify({
+        _id: user._id,
         token,
         message: "Registration successful",
       }),
