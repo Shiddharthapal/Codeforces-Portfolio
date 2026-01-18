@@ -12,12 +12,14 @@ import { store, persistor } from "@/redux/store";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 // Lazy load components for better performance
-const Home = lazy(() => import("./pages/home"));
-const Login = lazy(() => import("./pages/login"));
-const Register = lazy(() => import("./pages/register"));
-const ForgotPassword = lazy(() => import("./pages/forgot-password"));
+import Home from "./pages/home"
+import Login from "./pages/login";
+import Register from "./pages/register";
+import ProfilePage from "./pages/profile";
+import ForgotPassword from "./pages/forgot-password";
+import Layout from "@/layouts/Layout.astro";
 // Add more lazy imports as needed
-const Profile = lazy(() => import("./pages/profile"));
+
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -26,58 +28,7 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// Route configuration - easily add/modify routes here
-const routeConfig = [
-  // Public Routes
-  {
-    path: "/login",
-    element: Login,
-    protected: false,
-  },
-  {
-    path: "/forgot-password",
-    element: ForgotPassword,
-    protected: false,
-  },
-  {
-    path: "/reset-password",
-    element: Login,
-    protected: false,
-  },
-  {
-    path: "/register",
-    element: Register,
-    protected: false,
-  },
 
-  // Protected Routes
-  {
-    path: "/",
-    element: Home,
-    protected: true,
-  },
-  // Add new routes here easily:
-  {
-    path: "/profile",
-    element: Profile,
-    protected: true,
-  },
-];
-
-// Route renderer component
-const RouteRenderer = ({ route }: any) => {
-  const Component = route.element;
-
-  if (route.protected) {
-    return (
-      <ProtectedRoute>
-        <Component />
-      </ProtectedRoute>
-    );
-  }
-
-  return <Component />;
-};
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -99,18 +50,30 @@ export default function App() {
             <Router>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-  {routeConfig.map((route) => (
-    <Route
-      key={route.path}
-      path={route.path}
-      element={<RouteRenderer route={route} />}
-    />
-  ))}
-
-  {/* Add a proper 404 page instead of redirect */}
-  <Route path="/404" element={<div>Page Not Found</div>} />
-  <Route path="*" element={<Navigate to="/404" replace />} />
-</Routes>
+            
+            
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+            
+            <Route
+            path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage/>
+                </ProtectedRoute>
+              }
+            />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Home />
+                  </ProtectedRoute>
+                }
+              />
+              
+            </Routes>
               </Suspense>
             </Router>
           </PersistGate>
