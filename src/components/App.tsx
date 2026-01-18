@@ -15,6 +15,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 const Home = lazy(() => import("./pages/home"));
 const Login = lazy(() => import("./pages/login"));
 const Register = lazy(() => import("./pages/register"));
+const ForgotPassword = lazy(() => import("./pages/forgot-password"));
 // Add more lazy imports as needed
 const Profile = lazy(() => import("./pages/profile"));
 
@@ -30,6 +31,16 @@ const routeConfig = [
   // Public Routes
   {
     path: "/login",
+    element: Login,
+    protected: false,
+  },
+  {
+    path: "/forgot-password",
+    element: ForgotPassword,
+    protected: false,
+  },
+  {
+    path: "/reset-password",
     element: Login,
     protected: false,
   },
