@@ -20,4 +20,11 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        format: 'esm' // Ensure ESM format
+      }
+    }
+  }
 });
