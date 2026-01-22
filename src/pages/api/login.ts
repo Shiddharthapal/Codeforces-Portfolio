@@ -11,6 +11,8 @@ export const POST: APIRoute = async ({ request }) => {
     "Content-Type": "application/json",
   };
 
+  const { email, name, password } = await request.json();
+
   // Establish database connection first
   try {
     await connect();
@@ -52,7 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const { email, name, password } = await request.json();
+
 
     // Validate input
     if (!email || !password) {
