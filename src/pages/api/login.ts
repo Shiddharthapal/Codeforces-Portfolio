@@ -3,7 +3,7 @@ import type { APIRoute } from "astro";
 import User from "@/model/User";
 import connect from "@/lib/connection";
 import type { Token } from "@/types/token";
-import mongoose from "mongoose";
+
 
 export const POST: APIRoute = async ({ request }) => {
   // Headers for all responses
