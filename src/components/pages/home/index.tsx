@@ -38,6 +38,7 @@ import { logout } from "@/redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { about } from "./about";
 import Graph from "./graph";
+import CursorFollower from "./cursor-following-dot";
 interface User {
   _id: string;
   name: string;
@@ -382,22 +383,26 @@ export default function ContestTracker() {
   }, [isUserMenuOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
+    <div className="min-h-screen  bg-gradient-to-b from-sky-50 to-white">
       <header
-        className={`p-4 ${
+        className={`px-4 py-2 ${
           isDarkMode
             ? "bg-gradient-to-r from-cyan-800 to blue-300"
             : "bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
         }shadow-md`}
       >
-        <div className="container mx-auto flex justify-between items-center">
+        <div className="container mx-auto flex items-center justify-between gap-4">
+          {/* Left */}
           <div
-            onClick={() => handleRefresh()}
-            className="flex items-center gap-2 cursor-pointer"
+            onClick={handleRefresh}
+            className="flex items-center gap-2 cursor-pointer shrink-0"
           >
-            <Trophy className="h-6 w-6" />
-            <h1 className="text-2xl font-bold">Contest Tracker</h1>
+            <Trophy className="h-6 w-6 shrink-0" />
+            <h1 className="text-2xl font-bold whitespace-nowrap">
+              Contest Tracker
+            </h1>
           </div>
+          <CursorFollower/>
           <div className="flex items-center gap-4 md:gap-16">
             <div className="dropdown-container relative">
               <Button
@@ -448,7 +453,7 @@ export default function ContestTracker() {
                     </Badge>
                   </div>
                   <div className="border-t" />
-                  <div className="max-h-[300px] overflow-y-auto px-1">
+                  <div className="max-h-[300px] custom-scrollbar px-1">
                     {upcomingContests?.map((contest) => (
                       <div
                         key={contest?.id}

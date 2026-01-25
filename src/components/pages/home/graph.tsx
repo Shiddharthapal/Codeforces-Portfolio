@@ -238,8 +238,8 @@ export default function Graph({
           
           /* Overflow handling */
           overflow-hidden 
-          overflow-x-auto 
-          overflow-y-auto
+         custom-scrollbar
+          custom-x-scrollbar
           
           /* Smooth transitions */
           transition-all 

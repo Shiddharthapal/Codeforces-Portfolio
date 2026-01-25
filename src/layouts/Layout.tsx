@@ -14,7 +14,9 @@ export default function RootLayout({ children }: LayoutProps) {
       enableSystem
       disableTransitionOnChange
     >
-      <div className="min-h-screen font-sans antialiased">{children}</div>
+      <div className="h-screen min-h-screen font-sans antialiased custom-scrollbar">
+        {children}
+      </div>
     </ThemeProvider>
   );
 }
