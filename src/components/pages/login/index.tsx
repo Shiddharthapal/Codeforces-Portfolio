@@ -22,6 +22,8 @@ interface LoginFormData {
   password: string
 }
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL; 
+
 export default function Login() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
@@ -39,7 +41,7 @@ export default function Login() {
       // Clear any previous errors
       dispatch(loginStart())
 
-      const response = await fetch("/api/login", {
+      const response = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,37 +90,37 @@ export default function Login() {
   }
 
   const handleGoogleLogin = async () => {
-    try {
-      setGoogleLoading(true)
-      // const response = await fetch("/api/auth/google", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      // })
+    // try {
+    //   setGoogleLoading(true)
+    //   // const response = await fetch("/api/auth/google", {
+    //   //   method: "POST",
+    //   //   headers: {
+    //   //     "Content-Type": "application/json",
+    //   //   },
+    //   // })
 
-      const result = await response.json()
+    //   const result = await response.json()
 
-      if (!response.ok) {
-        dispatch(loginFailure(result.message || "Google login failed"))
-        return
-      }
+    //   if (!response.ok) {
+    //     dispatch(loginFailure(result.message || "Google login failed"))
+    //     return
+    //   }
 
-      dispatch(
-        loginSuccess({
-          _id: result._id,
-          email: result.email,
-          name: result.name,
-          token: result.token,
-        }),
-      )
+    //   dispatch(
+    //     loginSuccess({
+    //       _id: result._id,
+    //       email: result.email,
+    //       name: result.name,
+    //       token: result.token,
+    //     }),
+    //   )
 
-      navigate("/")
-    } catch (error) {
-      dispatch(loginFailure("Failed to connect to Google login"))
-    } finally {
-      setGoogleLoading(false)
-    }
+    //   navigate("/")
+    // } catch (error) {
+    //   dispatch(loginFailure("Failed to connect to Google login"))
+    // } finally {
+    //   setGoogleLoading(false)
+    // }
   }
 
   return (
