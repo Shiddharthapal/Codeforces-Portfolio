@@ -41,7 +41,7 @@ export default function Login() {
       // Clear any previous errors
       dispatch(loginStart())
 
-      const response = await fetch(`${API_BASE}/api/login`, {
+      const response = await fetch(`/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
