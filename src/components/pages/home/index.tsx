@@ -382,7 +382,7 @@ export default function ContestTracker() {
   }, [isUserMenuOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
+    <div className="min-h-screen  bg-gradient-to-b from-sky-50 to-white">
       <header
         className={`p-4 ${
           isDarkMode
@@ -390,7 +390,7 @@ export default function ContestTracker() {
             : "bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
         }shadow-md`}
       >
-        <div className="container mx-auto flex justify-between items-center">
+        <div className="container  mx-auto flex justify-between items-center">
           <div
             onClick={() => handleRefresh()}
             className="flex items-center gap-2 cursor-pointer"
