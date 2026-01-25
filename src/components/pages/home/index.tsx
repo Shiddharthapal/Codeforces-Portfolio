@@ -448,7 +448,7 @@ export default function ContestTracker() {
                     </Badge>
                   </div>
                   <div className="border-t" />
-                  <div className="max-h-[300px] overflow-y-auto px-1">
+                  <div className="max-h-[300px] custom-scrollbar px-1">
                     {upcomingContests?.map((contest) => (
                       <div
                         key={contest?.id}
