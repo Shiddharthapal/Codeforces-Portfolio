@@ -1,48 +1,74 @@
-# Astro Starter Kit: Basics
+# Codeforces Contest Tracker
 
-```sh
-pnpm create astro@latest -- --template basics
+A full-stack contest tracking dashboard built with Astro + React. It provides user authentication, profile management, and Codeforces contest and rating insights. The app ships with serverless API routes and uses MongoDB as the database.
+
+## Features
+- User registration and login with JWT-based auth
+- Profile creation and user management
+- Codeforces data integration (contest list, user stats, rating graph)
+- Dashboard UI with tabs, search, and charts
+- Password reset flow (OTP email)
+- Redux state management with persistence
+
+## Tech Stack
+- Astro 5 (server output) with React
+- Tailwind CSS and Radix UI components
+- Redux Toolkit + redux-persist
+- MongoDB + Mongoose
+- Netlify adapter (serverless SSR/API)
+- D3 for rating charts
+
+## Project Structure
+```
+src/
+  components/           # React UI and pages
+  layouts/              # App shell and theme
+  pages/
+    api/                # Serverless API routes
+  lib/                  # DB connection and helpers
+  model/                # Mongoose models
+  redux/                # Store + slices
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+## Environment Variables
+Create a `.env` file (or set in Netlify) with:
+```
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_private_jwt_secret
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+# Email/OTP (optional, for password reset)
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your_email_user
+EMAIL_PASSWORD=your_email_password
+EMAIL_FROM="My App <noreply@example.com>"
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+If you build the frontend against a separate API host, you can also set:
+```
+VITE_API_BASE_URL=https://your-site.netlify.app
+```
 
-## 🧞 Commands
+## Scripts
+```
+pnpm install
+pnpm dev
+pnpm build
+pnpm preview
+```
 
-All commands are run from the root of the project, from a terminal:
+## API Routes (serverless)
+These live under `src/pages/api/` and are deployed as Netlify functions:
+- `POST /api/register`
+- `POST /api/login`
+- `POST /api/auth/send-otp`
+- `POST /api/auth/verify-otp`
+- `POST /api/auth/reset-password`
+- `GET  /api/userApi/allUser`
+- `GET  /api/userApi/codeforces`
+- `POST /api/userApi/profileCreate`
+- `GET  /api/userApi/[id]`
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Deployment
+This project is configured for Netlify via `@astrojs/netlify`. Ensure the environment variables above are set in Netlify, then deploy the build output.
