@@ -41,7 +41,7 @@ export default function Login() {
       // Clear any previous errors
       dispatch(loginStart())
 
-      const response = await fetch(`/api/login`, {
+      const response = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -218,6 +218,39 @@ export default function Login() {
           </form>
         </CardContent>
       </Card>
+      {/* Rolling News Ticker */}
+      <div className="fixed bottom-0 left-0 right-0 bg-yellow-500 text-gray-900 py-2 overflow-hidden">
+        <div className="animate-marquee whitespace-nowrap inline-block">
+          <span className="text-sm font-medium mx-8">
+            ⚠️ Forgot Password and Login using Google icon is under construction
+          </span>
+          <span className="text-sm font-medium mx-8">
+            ⚠️ Forgot Password and Login using Google icon is under construction
+          </span>
+          <span className="text-sm font-medium mx-8">
+            ⚠️ Forgot Password and Login using Google icon is under construction
+          </span>
+          <span className="text-sm font-medium mx-8">
+            ⚠️ Forgot Password and Login using Google icon is under construction
+          </span>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        
+        .animate-marquee {
+          animation: marquee 20s linear infinite;
+        }
+      `}
+      </style>
     </div>
   )
 }

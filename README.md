@@ -1,121 +1,48 @@
-# Contest Tracker (Codeforces Portfolio)
+# Astro Starter Kit: Basics
 
-A focused dashboard for competitive programmers that brings Codeforces activity, teammates, and upcoming contests into one clean home base.
-
-## Story
-
-You open the app the way you open Codeforces: to compete. But instead of a blank dashboard, you see the people you practice with, the contests that are about to start, and the numbers that tell your story as a coder. The app feels like a team room: who is active, who is climbing, who needs a nudge. Your profile becomes your identity card, your stats become a map, and the upcoming contests become your next checkpoints. It is built for that small but powerful moment between practice and performance.
-
-## Purpose and Role
-
-Contest Tracker is a personal and team portfolio for Codeforces users. It helps you:
-- track your own performance over time
-- follow teammates and compare progress
-- stay ready for upcoming contests
-- keep profile and academic identity tied to your competitive handle
-
-## Key Features
-
-- Secure auth flow with register, login, and OTP-based password reset
-- Profile creation with name, username, university, department, and Codeforces link
-- Codeforces data aggregation (solved count, rating, contest participation, success rate)
-- Dashboard with top performers, highest rated, and most active contestants
-- Upcoming contest list with countdowns and formatted times
-- Personal stats graph and quick summary cards
-- Dark and light mode toggles
-- Protected routes for the dashboard and profile
-
-## Tech Stack
-
-- Astro (server routes + static output)
-- React + React Router (client-only SPA shell)
-- Redux Toolkit + redux-persist (auth state)
-- Tailwind CSS + shadcn/ui components
-- MongoDB + Mongoose (users and profiles)
-- JWT authentication
-- Nodemailer + OTP flow for password resets
-- D3 for stats visualization
-- Codeforces API for contests and user stats
-
-## App Flow
-
-1) Register or login
-2) Create your profile and attach your Codeforces handle
-3) View your dashboard with stats, graph, and upcoming contests
-4) Explore teammates and compare performance
-
-## API Routes (Astro)
-
-Auth
-- `POST /api/register`
-- `POST /api/login`
-- `POST /api/auth/send-otp`
-- `POST /api/auth/verify-otp`
-
-User
-- `GET /api/userApi/allUser`
-- `GET /api/userApi/[id]`
-- `POST /api/userApi/profileCreate`
-- `GET /api/userApi/codeforces?handle=...`
-- `GET /api/userApi/upComingContest`
-
-## Project Structure
-
-```
-.
-+-- public/
-+-- src/
-�   +-- components/
-�   �   +-- pages/         # login, register, profile, home
-�   �   +-- ui/            # shared UI primitives
-�   +-- pages/             # Astro pages + API routes
-�   +-- lib/               # DB connection, Codeforces API helpers
-�   +-- model/             # Mongoose schemas
-�   +-- redux/             # auth store and slices
-�   +-- styles/
-+-- astro.config.mjs
-+-- package.json
+```sh
+pnpm create astro@latest -- --template basics
 ```
 
-## Environment Variables
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
+[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
 
-Create a `.env` file (see `.env.example`) and set:
+> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
-```
-MONGODB_URI=...
-JWT_SECRET=...
+![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
 
-# Email (OTP flow)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_SECURE=false
-EMAIL_USER=...
-EMAIL_PASSWORD=...
-EMAIL_FROM="Contest Tracker <noreply@yourapp.com>"
-```
+## 🚀 Project Structure
 
-Optional
-```
-VITE_API_BASE_URL=...   # If hosting API separately
-```
+Inside of your Astro project, you'll see the following folders and files:
 
-## Getting Started
-
-```
-pnpm install
-pnpm dev
+```text
+/
+├── public/
+│   └── favicon.svg
+├── src/
+│   ├── layouts/
+│   │   └── Layout.astro
+│   └── pages/
+│       └── index.astro
+└── package.json
 ```
 
-Then open `http://localhost:4321`.
+To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
 
-## Scripts
+## 🧞 Commands
 
-- `pnpm dev` - start the dev server
-- `pnpm build` - build to `dist/`
-- `pnpm preview` - preview production build
+All commands are run from the root of the project, from a terminal:
 
-## Deployment
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `pnpm install`             | Installs dependencies                            |
+| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
+| `pnpm build`           | Build your production site to `./dist/`          |
+| `pnpm preview`         | Preview your build locally, before deploying     |
+| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `pnpm astro -- --help` | Get help using the Astro CLI                     |
 
-This project ships well on Netlify, Vercel, or any Node-compatible platform that supports Astro server routes.
+## 👀 Want to learn more?
 
----
+Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
