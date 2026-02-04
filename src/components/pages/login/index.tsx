@@ -41,7 +41,7 @@ export default function Login() {
       // Clear any previous errors
       dispatch(loginStart())
 
-      const response = await fetch(`${API_BASE}/api/login`, {
+      const response = await fetch(`/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,18 +124,18 @@ export default function Login() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-background">
-      <Card className="w-[350px]">
+    <div className="flex justify-center items-center min-h-screen  bg-background">
+      <Card className="w-[350px] border border-gray-700">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Login</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 
+                className="flex h-8 w-full rounded-md border border-gray-500 bg-background px-3 py-2 
                 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
                 file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
                 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
@@ -162,7 +162,7 @@ export default function Login() {
               <div className="relative">
                 <Input
                   id="password"
-                  className="flex h-8 w-full rounded-md border border-input bg-background px-3
+                  className="flex h-8 w-full rounded-md border border-gray-500 bg-background px-3
                    py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
                    file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
                    focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 

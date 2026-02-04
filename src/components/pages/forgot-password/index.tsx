@@ -92,7 +92,7 @@ export default function ForgotPassword() {
       setMessage(result.message || "If the email exists, we sent an OTP.");
       setEmailForReset(data.email);
       setStep("verify");
-      setResendCooldown(60);
+      setResendCooldown(120);
 
       if (result.otp) {
         setDevOtp(result.otp);
@@ -228,7 +228,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-background">
-      <Card className="w-[350px]">
+      <Card className="w-[350px] border border-gray-700">
         <CardHeader>
           <CardTitle className="text-2xl text-center">
             {step === "send"
@@ -245,7 +245,7 @@ export default function ForgotPassword() {
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 
+                  className="flex h-8 w-full rounded-md border border-gray-500 bg-background px-3 py-2 
                   text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
                   file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
                   focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
@@ -289,7 +289,7 @@ export default function ForgotPassword() {
                 <Label htmlFor="otp">OTP</Label>
                 <Input
                   id="otp"
-                  className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 
+                  className="flex h-8 w-full rounded-md border border-gray-500 bg-background px-3 py-2 
                   text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
                   file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
                   focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
@@ -349,7 +349,7 @@ export default function ForgotPassword() {
                 <Label htmlFor="new-password">New password</Label>
                 <Input
                   id="new-password"
-                  className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 
+                  className="flex h-8 w-full rounded-md border border-gray-500 bg-background px-3 py-2 
                   text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
                   file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
                   focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
