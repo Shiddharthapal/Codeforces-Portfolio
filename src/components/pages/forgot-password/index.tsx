@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
@@ -39,6 +40,7 @@ export default function ForgotPassword() {
   const [step, setStep] = useState<"send" | "verify" | "reset">("send");
   const [emailForReset, setEmailForReset] = useState<string>("");
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -360,6 +362,14 @@ export default function ForgotPassword() {
                     minLength: { value: 6, message: "Password must be at least 6 characters" },
                   })}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
                 {resetErrors.password && <p className="text-sm text-red-500">{resetErrors.password.message}</p>}
               </div>
 
@@ -379,6 +389,14 @@ export default function ForgotPassword() {
                       value === getResetValues("password") || "Passwords do not match",
                   })}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
                 {resetErrors.confirmPassword && (
                   <p className="text-sm text-red-500">{resetErrors.confirmPassword.message}</p>
                 )}
