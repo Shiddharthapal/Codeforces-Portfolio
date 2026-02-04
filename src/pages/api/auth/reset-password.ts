@@ -1,8 +1,9 @@
-import type { APIRoute } from "astro";
-import crypto from "crypto";
+﻿import type { APIRoute } from "astro";
 import User from "@/model/User";
-import PasswordResetToken from "@/model/PasswordResetToken";
+import PasswordResetOtp from "@/model/PasswordResetOtp";
 import connect from "@/lib/connection";
+
+const RESET_WINDOW_MS = 10 * 60 * 1000;
 
 export const POST: APIRoute = async ({ request }) => {
   const headers = {
@@ -13,27 +14,27 @@ export const POST: APIRoute = async ({ request }) => {
     await connect();
   } catch (error) {
     console.error("Database connection error:", error);
-    return new Response(
-      JSON.stringify({ message: "Database connection failed" }),
-      { status: 500, headers }
-    );
+    return new Response(JSON.stringify({ message: "Database connection failed" }), {
+      status: 500,
+      headers,
+    });
   }
 
   try {
     if (!request.body) {
-      return new Response(
-        JSON.stringify({ message: "Request body is required" }),
-        { status: 400, headers }
-      );
+      return new Response(JSON.stringify({ message: "Request body is required" }), {
+        status: 400,
+        headers,
+      });
     }
 
-    const { token, password } = await request.json();
+    const { email, password } = await request.json();
 
-    if (!token || !password) {
-      return new Response(
-        JSON.stringify({ message: "Token and password are required" }),
-        { status: 400, headers }
-      );
+    if (!email || !password) {
+      return new Response(JSON.stringify({ message: "Email and password are required" }), {
+        status: 400,
+        headers,
+      });
     }
 
     if (password.length < 6) {
@@ -43,24 +44,22 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    const resetRecord = await PasswordResetToken.findOne({
-      tokenHash,
-      usedAt: null,
-      expiresAt: { $gt: new Date() },
-    });
-
-    if (!resetRecord) {
-      return new Response(
-        JSON.stringify({ message: "Reset token is invalid or expired" }),
-        { status: 400, headers }
-      );
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return new Response(JSON.stringify({ message: "OTP verification required" }), {
+        status: 400,
+        headers,
+      });
     }
 
-    const user = await User.findById(resetRecord.userId).select("+password");
-    if (!user) {
+    const validOtp = await PasswordResetOtp.findOne({
+      userId: user._id,
+      usedAt: { $ne: null, $gte: new Date(Date.now() - RESET_WINDOW_MS) },
+    });
+
+    if (!validOtp) {
       return new Response(
-        JSON.stringify({ message: "Reset token is invalid or expired" }),
+        JSON.stringify({ message: "OTP verification required or expired" }),
         { status: 400, headers }
       );
     }
@@ -68,19 +67,17 @@ export const POST: APIRoute = async ({ request }) => {
     user.password = password;
     await user.save();
 
-    resetRecord.usedAt = new Date();
-    await resetRecord.save();
-    await PasswordResetToken.deleteMany({ userId: user._id, _id: { $ne: resetRecord._id } });
+    await PasswordResetOtp.deleteMany({ userId: user._id });
 
-    return new Response(
-      JSON.stringify({ message: "Password reset successful" }),
-      { status: 200, headers }
-    );
+    return new Response(JSON.stringify({ message: "Password reset successful" }), {
+      status: 200,
+      headers,
+    });
   } catch (error) {
     console.error("Reset password error:", error);
-    return new Response(
-      JSON.stringify({ message: "Internal server error" }),
-      { status: 500, headers }
-    );
+    return new Response(JSON.stringify({ message: "Internal server error" }), {
+      status: 500,
+      headers,
+    });
   }
 };
