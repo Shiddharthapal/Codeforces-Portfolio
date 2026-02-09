@@ -9,11 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  (props, ref) => {
-    return <input ref={ref} {...props} />;
-  }
-);
+const Input = forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>((props, ref) => {
+  return <input ref={ref} {...props} />;
+});
 
 interface SendOtpFormData {
   email: string;
@@ -41,6 +42,7 @@ export default function ForgotPassword() {
   const [emailForReset, setEmailForReset] = useState<string>("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -236,8 +238,8 @@ export default function ForgotPassword() {
             {step === "send"
               ? "Forgot Password"
               : step === "verify"
-              ? "Verify OTP"
-              : "Set New Password"}
+                ? "Verify OTP"
+                : "Set New Password"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -261,7 +263,9 @@ export default function ForgotPassword() {
                     },
                   })}
                 />
-                {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                )}
               </div>
 
               {error && <p className="text-sm text-red-500">{error}</p>}
@@ -286,7 +290,10 @@ export default function ForgotPassword() {
           )}
 
           {step === "verify" && (
-            <form onSubmit={handleVerifySubmit(onVerifyOtp)} className="space-y-4">
+            <form
+              onSubmit={handleVerifySubmit(onVerifyOtp)}
+              className="space-y-4"
+            >
               <div className="space-y-2">
                 <Label htmlFor="otp">OTP</Label>
                 <Input
@@ -301,15 +308,21 @@ export default function ForgotPassword() {
                     required: "OTP is required",
                     minLength: { value: 6, message: "OTP must be 6 digits" },
                     maxLength: { value: 6, message: "OTP must be 6 digits" },
-                    pattern: { value: /^\d{6}$/, message: "OTP must be 6 digits" },
+                    pattern: {
+                      value: /^\d{6}$/,
+                      message: "OTP must be 6 digits",
+                    },
                   })}
                 />
-                {verifyErrors.otp && <p className="text-sm text-red-500">{verifyErrors.otp.message}</p>}
+                {verifyErrors.otp && (
+                  <p className="text-sm text-red-500">
+                    {verifyErrors.otp.message}
+                  </p>
+                )}
               </div>
 
               {error && <p className="text-sm text-red-500">{error}</p>}
               {message && <p className="text-sm text-green-600">{message}</p>}
-          
 
               <Button type="submit" className="w-full" disabled={verifyLoading}>
                 {verifyLoading ? "Verifying..." : "Verify OTP"}
@@ -325,8 +338,8 @@ export default function ForgotPassword() {
                 {resendLoading
                   ? "Resending..."
                   : resendCooldown > 0
-                  ? `Resend OTP (${resendCooldown}s)`
-                  : "Resend OTP"}
+                    ? `Resend OTP (${resendCooldown}s)`
+                    : "Resend OTP"}
               </Button>
 
               <div className="text-center text-sm">
@@ -346,59 +359,84 @@ export default function ForgotPassword() {
           )}
 
           {step === "reset" && (
-            <form onSubmit={handleResetSubmit(onResetPassword)} className="space-y-4">
+            <form
+              onSubmit={handleResetSubmit(onResetPassword)}
+              className="space-y-4"
+            >
               <div className="space-y-2">
                 <Label htmlFor="new-password">New password</Label>
-                <Input
-                  id="new-password"
-                  className="flex h-8 w-full rounded-md border border-gray-500 bg-background px-3 py-2 
-                  text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
-                  file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
-                  focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
-                  disabled:opacity-50"
-                  type="password"
-                  {...registerReset("password", {
-                    required: "Password is required",
-                    minLength: { value: 6, message: "Password must be at least 6 characters" },
-                  })}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-                {resetErrors.password && <p className="text-sm text-red-500">{resetErrors.password.message}</p>}
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    className="flex h-8 w-full rounded-md border border-gray-500 bg-background px-3 py-2 
+      text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
+      file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
+      focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
+      disabled:opacity-50 pr-10"
+                    type={showPassword ? "text" : "password"}
+                    {...registerReset("password", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 6,
+                        message: "Password must be at least 6 characters",
+                      },
+                    })}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                {resetErrors.password && (
+                  <p className="text-sm text-red-500">
+                    {resetErrors.password.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm password</Label>
-                <Input
-                  id="confirm-password"
-                  className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-2 
-                  text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
-                  file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
-                  focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
-                  disabled:opacity-50"
-                  type="password"
-                  {...registerReset("confirmPassword", {
-                    required: "Please confirm your password",
-                    validate: (value) =>
-                      value === getResetValues("password") || "Passwords do not match",
-                  })}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
+                <div className="relative">
+                  <Input
+                    id="confirm-password"
+                    className="flex h-8 w-full rounded-md border border-gray-500 bg-background px-3 py-2 
+      text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
+      file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
+      focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
+      disabled:opacity-50 pr-10"
+                    type={showConfirmPassword ? "text" : "password"}
+                    {...registerReset("confirmPassword", {
+                      required: "Please confirm your password",
+                      validate: (value) =>
+                        value === getResetValues("password") ||
+                        "Passwords do not match",
+                    })}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
                 {resetErrors.confirmPassword && (
-                  <p className="text-sm text-red-500">{resetErrors.confirmPassword.message}</p>
+                  <p className="text-sm text-red-500">
+                    {resetErrors.confirmPassword.message}
+                  </p>
                 )}
               </div>
 

@@ -286,7 +286,7 @@ export default function Login() {
         </CardContent>
       </Card>
       {/* Rolling News Ticker */}
-      <div className="fixed bottom-0 left-0 right-0 bg-yellow-500 text-gray-900 py-2 overflow-hidden">
+      <div className="fixed bottom-0 left-0 right-0 bg-yellow-400 text-gray-900 py-2 overflow-hidden">
         <div className="relative flex w-max animate-marquee">
           {/* First set */}
           <div className="flex whitespace-nowrap">

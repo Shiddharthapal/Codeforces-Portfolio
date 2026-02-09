@@ -32,6 +32,9 @@ import {
   User,
   Sun,
   Moon,
+  MessageSquare,
+  Send,
+  X,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
@@ -104,6 +107,12 @@ export default function ContestTracker() {
   const dropdownRef = useRef(null);
 
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<
+    "idle" | "sending" | "sent" | "error"
+  >("idle");
+  const [feedbackError, setFeedbackError] = useState("");
 
   const toggleTheme = (theme: "light" | "dark") => {
     setIsDarkMode(theme === "dark");
@@ -158,6 +167,45 @@ export default function ContestTracker() {
         state: { isDarkMode },
       }); // Navigate to profile page
     }, 0);
+  };
+
+  const handleSendFeedback = async () => {
+    if (!feedbackMessage.trim()) {
+      setFeedbackStatus("error");
+      setFeedbackError("Please write a short feedback message.");
+      return;
+    }
+
+    try {
+      setFeedbackStatus("sending");
+      setFeedbackError("");
+
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: feedbackMessage.trim(),
+          userId: _id || null,
+          email: userDetails?.email || null,
+          name: userDetails?.name || null,
+          page: "home",
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to send feedback.");
+      }
+
+      setFeedbackStatus("sent");
+      setFeedbackMessage("");
+    } catch (error) {
+      setFeedbackStatus("error");
+      setFeedbackError(
+        error instanceof Error ? error.message : "Failed to send feedback."
+      );
+    }
   };
 
   const getPatientInitials = (patientName: string) => {
@@ -1202,6 +1250,111 @@ export default function ContestTracker() {
           </div>
         </div>
       </main>
+
+      {/* Feedback */}
+      <button
+        type="button"
+        onClick={() => {
+          setIsFeedbackOpen(true);
+          setFeedbackStatus("idle");
+          setFeedbackError("");
+        }}
+        className={`fixed right-0 top-1/2 -translate-y-1/2 z-40 rounded-l-lg px-4 py-3 shadow-lg transition-colors ${
+          isDarkMode
+            ? "bg-cyan-800 text-white hover:bg-cyan-700"
+            : "bg-cyan-600 text-white hover:bg-cyan-700"
+        }`}
+      >
+        <span className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4" />
+          Feedback
+        </span>
+      </button>
+
+      {isFeedbackOpen && (
+        <button
+          type="button"
+          aria-label="Close feedback"
+          onClick={() => setIsFeedbackOpen(false)}
+          className="fixed inset-0 z-40 cursor-default bg-black/30"
+        />
+      )}
+
+      <aside
+        className={`fixed right-0 top-0 z-50 h-full w-[340px] max-w-[90vw] transform transition-transform duration-300 ${
+          isFeedbackOpen ? "translate-x-0" : "translate-x-full"
+        } ${isDarkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"} shadow-xl`}
+      >
+        <div
+          className={`flex items-center justify-between px-4 py-3 border-b ${
+            isDarkMode ? "border-gray-700" : "border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2 font-semibold">
+            <MessageSquare className="h-4 w-4" />
+            Share Feedback
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsFeedbackOpen(false)}
+            className={`rounded-md p-1 transition-colors ${
+              isDarkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"
+            }`}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="px-4 py-4 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Tell us what you think. Your message will be sent directly to our
+            team.
+          </p>
+          <textarea
+            value={feedbackMessage}
+            onChange={(e) => setFeedbackMessage(e.target.value)}
+            rows={6}
+            placeholder="Write your feedback here..."
+            className={`w-full resize-none rounded-md border px-3 py-2 text-sm outline-none transition-shadow ${
+              isDarkMode
+                ? "border-gray-700 bg-gray-950 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-cyan-700"
+                : "border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-cyan-500"
+            }`}
+          />
+
+          {feedbackStatus === "error" && (
+            <div className="text-sm text-red-500">{feedbackError}</div>
+          )}
+          {feedbackStatus === "sent" && (
+            <div className="text-sm text-emerald-500">
+              Thanks! Your feedback was sent.
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              onClick={handleSendFeedback}
+              disabled={feedbackStatus === "sending"}
+              className="gap-2"
+            >
+              <Send className="h-4 w-4" />
+              {feedbackStatus === "sending" ? "Sending..." : "Send"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setFeedbackMessage("");
+                setFeedbackStatus("idle");
+                setFeedbackError("");
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }
